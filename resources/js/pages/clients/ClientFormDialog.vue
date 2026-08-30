@@ -1,6 +1,6 @@
 <template>
   <Dialog :visible="visible" :header="client ? 'Editar Cliente' : 'Nuevo Cliente'" modal @hide="$emit('close')">
-    <form @submit.prevent="handleSubmit" class="form">
+    <div class="form">
       <div class="form-row">
         <div class="form-group">
           <label>Nombre *</label>
@@ -69,11 +69,12 @@
         </label>
       </div>
 
-      <template #footer>
-        <Button label="Cancelar" severity="secondary" @click="$emit('close')" />
-        <Button label="Guardar" :loading="submitting" @click="handleSubmit" />
-      </template>
-    </form>
+    </div>
+
+    <template #footer>
+      <Button label="Cancelar" severity="secondary" @click="$emit('close')" />
+      <Button label="Guardar" :loading="submitting" @click="handleSubmit" />
+    </template>
   </Dialog>
 </template>
 
