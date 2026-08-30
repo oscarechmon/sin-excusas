@@ -89,7 +89,16 @@ const sidebarOptions = [
       {
         label: 'Servicios',
         icon: 'pi pi-fw pi-star',
-        badge: '0',
+        items: [
+          {
+            label: 'Categorías',
+            command: () => router.push({ name: 'service-categories' }),
+          },
+          {
+            label: 'Servicios',
+            command: () => router.push({ name: 'services' }),
+          },
+        ],
       },
     ],
   },

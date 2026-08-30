@@ -27,6 +27,18 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true },
   },
   {
+    path: '/admin/services/categories',
+    name: 'service-categories',
+    component: () => import('@/pages/services/CategoriesPage.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/admin/services',
+    name: 'services',
+    component: () => import('@/pages/services/ServicesPage.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: () => import('@/pages/errors/NotFoundPage.vue'),
