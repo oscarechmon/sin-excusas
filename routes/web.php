@@ -1,15 +1,14 @@
 <?php
 
-use App\Http\Controllers\Web\DashboardController;
+use App\Http\Controllers\Web\SiteController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('web');
-});
+Route::get('/', [SiteController::class, 'home']);
+Route::get('/index.html', [SiteController::class, 'home']);
+Route::redirect('/nosotros', '/nosotros.html');
+Route::redirect('/servicios', '/servicios.html');
+Route::redirect('/suplementos', '/suplementos.html');
 
-Route::middleware(['auth:sanctum'])->group(function () {
-    Route::get('/admin', [DashboardController::class, 'index'])->name('dashboard');
-    Route::get('/{any}', [DashboardController::class, 'index'])->where('any', 'admin/.*');
-});
-
-require __DIR__ . '/auth.php';
+Route::view('/login', 'app');
+Route::view('/admin', 'app');
+Route::view('/admin/{any}', 'app')->where('any', '.*');
