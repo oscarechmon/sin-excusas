@@ -1,10 +1,10 @@
-<template>
+﻿<template>
   <AdminLayout>
     <div class="categories-page">
       <div class="page-header">
-        <h1>Categorías de Servicios</h1>
+        <h1>CategorÃ­as de Servicios</h1>
         <Button
-          label="Nueva Categoría"
+          label="Nueva CategorÃ­a"
           icon="pi pi-plus"
           @click="openNewCategoryDialog"
           class="p-button-primary"
@@ -20,7 +20,7 @@
       >
         <Column field="id" header="ID" :style="{ width: '60px' }" />
         <Column field="name" header="Nombre" />
-        <Column field="description" header="Descripción" />
+        <Column field="description" header="DescripciÃ³n" />
         <Column header="Estado">
           <template #body="slotProps">
             <Tag
@@ -65,8 +65,8 @@
 import { ref, onMounted } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
-import { useServicesStore } from '@/js/stores/services';
-import AdminLayout from '@/js/layouts/AdminLayout.vue';
+import { useServicesStore } from '@/stores/services';
+import AdminLayout from '@/layouts/AdminLayout.vue';
 import CategoryFormDialog from './CategoryFormDialog.vue';
 
 const servicesStore = useServicesStore();
@@ -92,18 +92,18 @@ const editCategory = (category: any) => {
 
 const confirmDeleteCategory = (id: number) => {
   confirm.require({
-    message: '¿Estás seguro de que quieres eliminar esta categoría?',
-    header: 'Confirmar eliminación',
+    message: 'Â¿EstÃ¡s seguro de que quieres eliminar esta categorÃ­a?',
+    header: 'Confirmar eliminaciÃ³n',
     icon: 'pi pi-exclamation-triangle',
     accept: async () => {
       try {
         await servicesStore.deleteCategory(id);
-        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Categoría eliminada' });
+        toast.add({ severity: 'success', summary: 'Ã‰xito', detail: 'CategorÃ­a eliminada' });
       } catch (err: any) {
         toast.add({
           severity: 'error',
           summary: 'Error',
-          detail: err.message || 'Error al eliminar categoría',
+          detail: err.message || 'Error al eliminar categorÃ­a',
         });
       }
     },
@@ -114,17 +114,17 @@ const handleCategorySubmit = async (payload: any) => {
   try {
     if (selectedCategory.value) {
       await servicesStore.updateCategory(selectedCategory.value.id, payload);
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Categoría actualizada' });
+      toast.add({ severity: 'success', summary: 'Ã‰xito', detail: 'CategorÃ­a actualizada' });
     } else {
       await servicesStore.createCategory(payload);
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Categoría creada' });
+      toast.add({ severity: 'success', summary: 'Ã‰xito', detail: 'CategorÃ­a creada' });
     }
     showCategoryDialog.value = false;
   } catch (err: any) {
     toast.add({
       severity: 'error',
       summary: 'Error',
-      detail: err.message || 'Error al guardar categoría',
+      detail: err.message || 'Error al guardar categorÃ­a',
     });
   }
 };
@@ -147,3 +147,4 @@ const handleCategorySubmit = async (payload: any) => {
   }
 }
 </style>
+

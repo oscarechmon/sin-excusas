@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <AdminLayout>
     <div class="appointments-page">
       <div class="page-header">
@@ -12,7 +12,7 @@
       </div>
 
       <Tabs v-model:activeIndex="activeTab" class="appointments-tabs">
-        <TabPanel header="Vista de Día">
+        <TabPanel header="Vista de DÃ­a">
           <DayViewAppointments
             :appointments="appointmentsStore.appointments"
             :loading="appointmentsStore.loading"
@@ -61,8 +61,8 @@
 import { ref, onMounted } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
-import { useAppointmentsStore } from '@/js/stores/appointments';
-import AdminLayout from '@/js/layouts/AdminLayout.vue';
+import { useAppointmentsStore } from '@/stores/appointments';
+import AdminLayout from '@/layouts/AdminLayout.vue';
 import AppointmentFormDialog from './AppointmentFormDialog.vue';
 import DayViewAppointments from './DayViewAppointments.vue';
 import WeekViewAppointments from './WeekViewAppointments.vue';
@@ -115,13 +115,13 @@ const editAppointment = (appointment: any) => {
 
 const confirmDeleteAppointment = (id: number) => {
   confirm.require({
-    message: '¿Estás seguro de que quieres eliminar esta cita?',
-    header: 'Confirmar eliminación',
+    message: 'Â¿EstÃ¡s seguro de que quieres eliminar esta cita?',
+    header: 'Confirmar eliminaciÃ³n',
     icon: 'pi pi-exclamation-triangle',
     accept: async () => {
       try {
         await appointmentsStore.deleteAppointment(id);
-        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Cita eliminada' });
+        toast.add({ severity: 'success', summary: 'Ã‰xito', detail: 'Cita eliminada' });
       } catch (err: any) {
         toast.add({
           severity: 'error',
@@ -137,10 +137,10 @@ const handleAppointmentSubmit = async (payload: any) => {
   try {
     if (selectedAppointment.value) {
       await appointmentsStore.updateAppointment(selectedAppointment.value.id, payload);
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Cita actualizada' });
+      toast.add({ severity: 'success', summary: 'Ã‰xito', detail: 'Cita actualizada' });
     } else {
       await appointmentsStore.createAppointment(payload);
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Cita creada' });
+      toast.add({ severity: 'success', summary: 'Ã‰xito', detail: 'Cita creada' });
     }
     showAppointmentDialog.value = false;
     loadDayAppointments(currentDate.value);
@@ -175,3 +175,4 @@ const handleAppointmentSubmit = async (payload: any) => {
   }
 }
 </style>
+

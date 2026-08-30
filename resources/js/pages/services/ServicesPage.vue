@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <AdminLayout>
     <div class="services-page">
       <div class="page-header">
@@ -13,13 +13,13 @@
 
       <div class="filters">
         <div class="filter-group">
-          <label>Categoría:</label>
+          <label>CategorÃ­a:</label>
           <Select
             v-model="selectedCategoryFilter"
             :options="servicesStore.categories"
             option-label="name"
             option-value="id"
-            placeholder="Todas las categorías"
+            placeholder="Todas las categorÃ­as"
             @change="loadServices(1)"
             :show-clear="true"
           />
@@ -51,13 +51,13 @@
       >
         <Column field="id" header="ID" :style="{ width: '60px' }" />
         <Column field="name" header="Nombre" />
-        <Column field="category.name" header="Categoría" />
+        <Column field="category.name" header="CategorÃ­a" />
         <Column field="price" header="Precio">
           <template #body="slotProps">
             {{ formatCurrency(slotProps.data.price) }}
           </template>
         </Column>
-        <Column field="duration_minutes" header="Duración (min)" :style="{ width: '120px' }" />
+        <Column field="duration_minutes" header="DuraciÃ³n (min)" :style="{ width: '120px' }" />
         <Column header="Estado">
           <template #body="slotProps">
             <Tag
@@ -102,8 +102,8 @@
 import { ref, onMounted } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
-import { useServicesStore } from '@/js/stores/services';
-import AdminLayout from '@/js/layouts/AdminLayout.vue';
+import { useServicesStore } from '@/stores/services';
+import AdminLayout from '@/layouts/AdminLayout.vue';
 import ServiceFormDialog from './ServiceFormDialog.vue';
 
 const servicesStore = useServicesStore();
@@ -149,13 +149,13 @@ const editService = (service: any) => {
 
 const confirmDeleteService = (id: number) => {
   confirm.require({
-    message: '¿Estás seguro de que quieres eliminar este servicio?',
-    header: 'Confirmar eliminación',
+    message: 'Â¿EstÃ¡s seguro de que quieres eliminar este servicio?',
+    header: 'Confirmar eliminaciÃ³n',
     icon: 'pi pi-exclamation-triangle',
     accept: async () => {
       try {
         await servicesStore.deleteService(id);
-        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Servicio eliminado' });
+        toast.add({ severity: 'success', summary: 'Ã‰xito', detail: 'Servicio eliminado' });
       } catch (err: any) {
         toast.add({
           severity: 'error',
@@ -171,10 +171,10 @@ const handleServiceSubmit = async (payload: any) => {
   try {
     if (selectedService.value) {
       await servicesStore.updateService(selectedService.value.id, payload);
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Servicio actualizado' });
+      toast.add({ severity: 'success', summary: 'Ã‰xito', detail: 'Servicio actualizado' });
     } else {
       await servicesStore.createService(payload);
-      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Servicio creado' });
+      toast.add({ severity: 'success', summary: 'Ã‰xito', detail: 'Servicio creado' });
     }
     showServiceDialog.value = false;
     await loadServices(1);
@@ -230,3 +230,4 @@ const formatCurrency = (value: number) => {
   }
 }
 </style>
+

@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <Dialog
     v-model:visible="isOpen"
     :header="selectedService ? 'Editar Servicio' : 'Nuevo Servicio'"
@@ -19,14 +19,14 @@
       </div>
 
       <div class="form-group">
-        <label for="category_id">Categoría *</label>
+        <label for="category_id">CategorÃ­a *</label>
         <Select
           id="category_id"
           v-model="form.category_id"
           :options="categories"
           option-label="name"
           option-value="id"
-          placeholder="Selecciona una categoría"
+          placeholder="Selecciona una categorÃ­a"
           class="w-full"
         />
         <small v-if="errors.category_id" class="error-text">{{ errors.category_id }}</small>
@@ -48,7 +48,7 @@
         </div>
 
         <div class="form-group">
-          <label for="duration_minutes">Duración (minutos) *</label>
+          <label for="duration_minutes">DuraciÃ³n (minutos) *</label>
           <InputNumber
             id="duration_minutes"
             v-model="form.duration_minutes"
@@ -60,12 +60,12 @@
       </div>
 
       <div class="form-group">
-        <label for="description">Descripción</label>
+        <label for="description">DescripciÃ³n</label>
         <Textarea
           id="description"
           v-model="form.description"
           class="w-full"
-          placeholder="Descripción del servicio"
+          placeholder="DescripciÃ³n del servicio"
           rows="3"
         />
       </div>
@@ -97,7 +97,7 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
-import { useServicesStore } from '@/js/stores/services';
+import { useServicesStore } from '@/stores/services';
 
 interface Props {
   visible: boolean;
@@ -163,13 +163,13 @@ const handleSubmit = async () => {
     errors.value.name = 'El nombre es requerido';
   }
   if (!form.value.category_id) {
-    errors.value.category_id = 'La categoría es requerida';
+    errors.value.category_id = 'La categorÃ­a es requerida';
   }
   if (!form.value.price) {
     errors.value.price = 'El precio es requerido';
   }
   if (!form.value.duration_minutes) {
-    errors.value.duration_minutes = 'La duración es requerida';
+    errors.value.duration_minutes = 'La duraciÃ³n es requerida';
   }
 
   if (Object.keys(errors.value).length) return;
@@ -225,3 +225,4 @@ const handleSubmit = async () => {
   width: 100%;
 }
 </style>
+

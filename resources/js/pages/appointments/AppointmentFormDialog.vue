@@ -1,4 +1,4 @@
-<template>
+﻿<template>
   <Dialog
     v-model:visible="isOpen"
     :header="selectedAppointment ? 'Editar Cita' : 'Nueva Cita'"
@@ -132,8 +132,8 @@
 
 <script setup lang="ts">
 import { ref, computed, watch, onMounted } from 'vue';
-import { useServicesStore } from '@/js/stores/services';
-import { clientsApi } from '@/js/api/clients.api';
+import { useServicesStore } from '@/stores/services';
+import { clientsApi } from '@/api/clients.api';
 
 interface Props {
   visible: boolean;
@@ -296,3 +296,4 @@ const handleSubmit = async () => {
   width: 100%;
 }
 </style>
+
