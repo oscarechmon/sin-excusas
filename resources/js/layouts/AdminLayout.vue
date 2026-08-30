@@ -79,7 +79,7 @@ const sidebarOptions = [
       {
         label: 'Clientes',
         icon: 'pi pi-fw pi-users',
-        badge: '0',
+        command: () => router.push({ name: 'clients' }),
       },
       {
         label: 'Agenda',
