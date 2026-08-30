@@ -1,0 +1,493 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Servicios · Sin Excusas Centro Estético</title>
+  <meta name="description" content="Tratamientos faciales, corporales, post operatorio, post parto y podología clínica. Protocolos con evaluación previa en Sin Excusas.">
+  <meta name="theme-color" content="#14110C">
+
+  <meta property="og:type" content="website">
+  <meta property="og:title" content="Servicios · Sin Excusas Centro Estético">
+  <meta property="og:description" content="Cuatro líneas de tratamiento: faciales, corporales, post operatorio y podología.">
+  <meta property="og:image" content="assets/img/logo-sin-excusas.png">
+  <meta property="og:locale" content="es_PE">
+
+  <link rel="icon" href="assets/img/logo-sin-excusas.png" type="image/png">
+
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,300;0,400;0,500;0,600;1,400&amp;family=Jost:wght@300;400;500;600&amp;display=swap" rel="stylesheet">
+
+  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/css/bootstrap.min.css" rel="stylesheet"
+        integrity="sha384-QWTKZyjpPEjISv5WaRU9OFeRpok6YctnYmDr5pNlyT2bRjXh0JMhjY6hW+ALEwIH" crossorigin="anonymous">
+
+  <link href="assets/css/main.css" rel="stylesheet">
+</head>
+<body>
+
+  <a class="se-skip-link" href="#contenido">Ir al contenido</a>
+
+  <div class="se-topbar">
+    <div class="se-container">
+      <span class="se-topbar__note">Atención con cita previa · Lun a Sáb</span>
+      <a href="https://wa.me/51999999999" target="_blank" rel="noopener">Reservar por WhatsApp</a>
+    </div>
+  </div>
+
+  <header class="se-header">
+    <nav class="navbar navbar-expand-lg p-0" aria-label="Navegación principal">
+      <div class="se-container d-flex align-items-center gap-3">
+
+        <a class="se-brand" href="index.html" aria-label="Sin Excusas, inicio">
+          <img class="se-brand__logo" src="assets/img/logo-sin-excusas.png" alt="" width="64" height="64">
+          <span>
+            <span class="se-brand__name d-block">SIN EXCUSAS</span>
+            <span class="se-brand__tag d-block">Centro estético</span>
+          </span>
+        </a>
+
+        <button class="navbar-toggler se-toggler ms-auto" type="button"
+                data-bs-toggle="collapse" data-bs-target="#seMainNav"
+                aria-controls="seMainNav" aria-expanded="false" aria-label="Abrir menú">
+          <span class="navbar-toggler-icon"></span>
+        </button>
+
+        <div class="collapse navbar-collapse" id="seMainNav">
+          <ul class="navbar-nav se-nav d-flex flex-lg-row gap-lg-4 mb-0">
+            <li class="nav-item"><a class="nav-link" href="index.html">Inicio</a></li>
+            <li class="nav-item"><a class="nav-link" href="nosotros.html">Nosotros</a></li>
+            <li class="nav-item"><a class="nav-link active" aria-current="page" href="servicios.html">Servicios</a></li>
+            <li class="nav-item"><a class="nav-link" href="suplementos.html">Suplementos</a></li>
+          </ul>
+
+          <a class="se-btn se-btn--gold se-btn--sm ms-lg-auto mt-3 mt-lg-0"
+             href="https://wa.me/51999999999" target="_blank" rel="noopener">Agendar cita</a>
+        </div>
+
+      </div>
+    </nav>
+  </header>
+
+  <main id="contenido">
+
+    <!-- ================================================================
+         Encabezado + selector de categoría
+         ================================================================ -->
+    <section class="se-pagehead se-bg-cream" style="border-bottom: 1px solid var(--se-line);">
+      <div class="se-container">
+        <p class="se-eyebrow se-eyebrow--row">Servicios</p>
+        <h1 class="se-pagehead__title">Nuestros tratamientos</h1>
+
+        <ul class="nav se-tabs" role="tablist" data-category-tabs>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link active" id="tab-faciales" type="button" role="tab"
+                    data-bs-toggle="tab" data-bs-target="#panel-faciales"
+                    data-category="faciales" aria-controls="panel-faciales" aria-selected="true">
+              Faciales
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-corporales" type="button" role="tab"
+                    data-bs-toggle="tab" data-bs-target="#panel-corporales"
+                    data-category="corporales" aria-controls="panel-corporales" aria-selected="false">
+              Corporales
+            </button>
+          </li>
+          <li class="nav-item" role="presentation">
+            <button class="nav-link" id="tab-podologia" type="button" role="tab"
+                    data-bs-toggle="tab" data-bs-target="#panel-podologia"
+                    data-category="podologia" aria-controls="panel-podologia" aria-selected="false">
+              Podología
+            </button>
+          </li>
+        </ul>
+      </div>
+    </section>
+
+    <!-- ================================================================
+         Catálogo por categoría
+         ================================================================ -->
+    <section class="se-section">
+      <div class="se-container">
+        <div class="tab-content">
+
+          <!-- ---------------------------------------------------------
+               Faciales
+               --------------------------------------------------------- -->
+          <div class="tab-pane fade show active" id="panel-faciales" role="tabpanel"
+               aria-labelledby="tab-faciales" tabindex="0">
+
+            <h2 class="se-serif mb-0" style="font-size: 2.375rem;">Tratamientos faciales</h2>
+            <p class="se-lead mt-3" style="max-width: 560px;">
+              Protocolos de limpieza, hidratación y renovación adaptados a cada tipo de piel,
+              con evaluación previa.
+            </p>
+
+            <div class="row g-4 mt-3">
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <article class="se-tile">
+                  <div class="se-media se-media--card"><div class="se-placeholder">Foto: limpieza facial</div></div>
+                  <div class="se-tile__body p-4">
+                    <h3 class="se-tile__title" style="font-size: 1.625rem;">Limpieza facial profunda</h3>
+                    <p class="se-tile__text se-clamp">Higiene, extracción y calmado de la piel. Base de cualquier protocolo facial.</p>
+                    <div class="se-tile__meta">
+                      <span class="se-tile__duration">60 min</span>
+                      <a class="se-link-mini" href="https://wa.me/51999999999" target="_blank" rel="noopener">Consultar →</a>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <article class="se-tile">
+                  <div class="se-media se-media--card"><div class="se-placeholder">Foto: hidratación facial</div></div>
+                  <div class="se-tile__body p-4">
+                    <h3 class="se-tile__title" style="font-size: 1.625rem;">Hidratación facial</h3>
+                    <p class="se-tile__text se-clamp">Recupera la barrera cutánea en pieles secas o deshidratadas.</p>
+                    <div class="se-tile__meta">
+                      <span class="se-tile__duration">50 min</span>
+                      <a class="se-link-mini" href="https://wa.me/51999999999" target="_blank" rel="noopener">Consultar →</a>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <article class="se-tile">
+                  <div class="se-media se-media--card"><div class="se-placeholder">Foto: peeling facial</div></div>
+                  <div class="se-tile__body p-4">
+                    <h3 class="se-tile__title" style="font-size: 1.625rem;">Peeling y renovación</h3>
+                    <p class="se-tile__text se-clamp">Renovación celular para textura irregular, marcas y manchas.</p>
+                    <div class="se-tile__meta">
+                      <span class="se-tile__duration">45 min</span>
+                      <a class="se-link-mini" href="https://wa.me/51999999999" target="_blank" rel="noopener">Consultar →</a>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <article class="se-tile">
+                  <div class="se-media se-media--card"><div class="se-placeholder">Foto: tratamiento antiacné</div></div>
+                  <div class="se-tile__body p-4">
+                    <h3 class="se-tile__title" style="font-size: 1.625rem;">Tratamiento antiacné</h3>
+                    <p class="se-tile__text se-clamp">Control de brotes y regulación de la producción de sebo.</p>
+                    <div class="se-tile__meta">
+                      <span class="se-tile__duration">60 min</span>
+                      <a class="se-link-mini" href="https://wa.me/51999999999" target="_blank" rel="noopener">Consultar →</a>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <article class="se-tile">
+                  <div class="se-media se-media--card"><div class="se-placeholder">Foto: radiofrecuencia facial</div></div>
+                  <div class="se-tile__body p-4">
+                    <h3 class="se-tile__title" style="font-size: 1.625rem;">Radiofrecuencia facial</h3>
+                    <p class="se-tile__text se-clamp">Firmeza y estímulo de colágeno en rostro y cuello.</p>
+                    <div class="se-tile__meta">
+                      <span class="se-tile__duration">50 min</span>
+                      <a class="se-link-mini" href="https://wa.me/51999999999" target="_blank" rel="noopener">Consultar →</a>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <article class="se-tile">
+                  <div class="se-media se-media--card"><div class="se-placeholder">Foto: masaje facial</div></div>
+                  <div class="se-tile__body p-4">
+                    <h3 class="se-tile__title" style="font-size: 1.625rem;">Masaje facial relajante</h3>
+                    <p class="se-tile__text se-clamp">Drenaje y descanso para rostro con signos de tensión.</p>
+                    <div class="se-tile__meta">
+                      <span class="se-tile__duration">40 min</span>
+                      <a class="se-link-mini" href="https://wa.me/51999999999" target="_blank" rel="noopener">Consultar →</a>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ---------------------------------------------------------
+               Corporales
+               --------------------------------------------------------- -->
+          <div class="tab-pane fade" id="panel-corporales" role="tabpanel"
+               aria-labelledby="tab-corporales" tabindex="0">
+
+            <h2 class="se-serif mb-0" style="font-size: 2.375rem;">Tratamientos corporales</h2>
+            <p class="se-lead mt-3" style="max-width: 560px;">
+              Reducción, moldeo y drenaje, además de acompañamiento post operatorio y post parto.
+            </p>
+
+            <div class="row g-4 mt-3">
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <article class="se-tile">
+                  <div class="se-media se-media--card"><div class="se-placeholder">Foto: drenaje linfático</div></div>
+                  <div class="se-tile__body p-4">
+                    <h3 class="se-tile__title" style="font-size: 1.625rem;">Drenaje linfático</h3>
+                    <p class="se-tile__text se-clamp">Estimula la circulación y reduce la retención de líquidos.</p>
+                    <div class="se-tile__meta">
+                      <span class="se-tile__duration">60 min</span>
+                      <a class="se-link-mini" href="https://wa.me/51999999999" target="_blank" rel="noopener">Consultar →</a>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <article class="se-tile">
+                  <div class="se-media se-media--card"><div class="se-placeholder">Foto: masaje reductor</div></div>
+                  <div class="se-tile__body p-4">
+                    <h3 class="se-tile__title" style="font-size: 1.625rem;">Masaje reductor</h3>
+                    <p class="se-tile__text se-clamp">Trabajo localizado sobre zonas de grasa acumulada.</p>
+                    <div class="se-tile__meta">
+                      <span class="se-tile__duration">60 min</span>
+                      <a class="se-link-mini" href="https://wa.me/51999999999" target="_blank" rel="noopener">Consultar →</a>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <article class="se-tile">
+                  <div class="se-media se-media--card"><div class="se-placeholder">Foto: anticelulítico</div></div>
+                  <div class="se-tile__body p-4">
+                    <h3 class="se-tile__title" style="font-size: 1.625rem;">Tratamiento anticelulítico</h3>
+                    <p class="se-tile__text se-clamp">Mejora la apariencia de la piel en muslos y glúteos.</p>
+                    <div class="se-tile__meta">
+                      <span class="se-tile__duration">60 min</span>
+                      <a class="se-link-mini" href="https://wa.me/51999999999" target="_blank" rel="noopener">Consultar →</a>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <article class="se-tile">
+                  <div class="se-media se-media--card"><div class="se-placeholder">Foto: post operatorio</div></div>
+                  <div class="se-tile__body p-4">
+                    <h3 class="se-tile__title" style="font-size: 1.625rem;">Post operatorio</h3>
+                    <p class="se-tile__text se-clamp">Acompañamiento en la recuperación tras cirugía estética, con técnica suave.</p>
+                    <div class="se-tile__meta">
+                      <span class="se-tile__duration">50 min</span>
+                      <a class="se-link-mini" href="https://wa.me/51999999999" target="_blank" rel="noopener">Consultar →</a>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <article class="se-tile">
+                  <div class="se-media se-media--card"><div class="se-placeholder">Foto: post parto</div></div>
+                  <div class="se-tile__body p-4">
+                    <h3 class="se-tile__title" style="font-size: 1.625rem;">Post parto</h3>
+                    <p class="se-tile__text se-clamp">Recuperación corporal progresiva después del embarazo.</p>
+                    <div class="se-tile__meta">
+                      <span class="se-tile__duration">60 min</span>
+                      <a class="se-link-mini" href="https://wa.me/51999999999" target="_blank" rel="noopener">Consultar →</a>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <article class="se-tile">
+                  <div class="se-media se-media--card"><div class="se-placeholder">Foto: maderoterapia</div></div>
+                  <div class="se-tile__body p-4">
+                    <h3 class="se-tile__title" style="font-size: 1.625rem;">Maderoterapia</h3>
+                    <p class="se-tile__text se-clamp">Moldeo corporal con instrumentos de madera y drenaje manual.</p>
+                    <div class="se-tile__meta">
+                      <span class="se-tile__duration">50 min</span>
+                      <a class="se-link-mini" href="https://wa.me/51999999999" target="_blank" rel="noopener">Consultar →</a>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+            </div>
+          </div>
+
+          <!-- ---------------------------------------------------------
+               Podología
+               --------------------------------------------------------- -->
+          <div class="tab-pane fade" id="panel-podologia" role="tabpanel"
+               aria-labelledby="tab-podologia" tabindex="0">
+
+            <h2 class="se-serif mb-0" style="font-size: 2.375rem;">Podología</h2>
+            <p class="se-lead mt-3" style="max-width: 560px;">
+              Atención podológica para todas las personas, sin distinción de género,
+              con material esterilizado.
+            </p>
+
+            <div class="row g-4 mt-3">
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <article class="se-tile">
+                  <div class="se-media se-media--card"><div class="se-placeholder">Foto: quiropodia</div></div>
+                  <div class="se-tile__body p-4">
+                    <h3 class="se-tile__title" style="font-size: 1.625rem;">Quiropodia completa</h3>
+                    <p class="se-tile__text se-clamp">Corte, limado y tratamiento de durezas y callosidades.</p>
+                    <div class="se-tile__meta">
+                      <span class="se-tile__duration">45 min</span>
+                      <a class="se-link-mini" href="https://wa.me/51999999999" target="_blank" rel="noopener">Consultar →</a>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <article class="se-tile">
+                  <div class="se-media se-media--card"><div class="se-placeholder">Foto: uña encarnada</div></div>
+                  <div class="se-tile__body p-4">
+                    <h3 class="se-tile__title" style="font-size: 1.625rem;">Uña encarnada</h3>
+                    <p class="se-tile__text se-clamp">Alivio y tratamiento de la onicocriptosis.</p>
+                    <div class="se-tile__meta">
+                      <span class="se-tile__duration">40 min</span>
+                      <a class="se-link-mini" href="https://wa.me/51999999999" target="_blank" rel="noopener">Consultar →</a>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <article class="se-tile">
+                  <div class="se-media se-media--card"><div class="se-placeholder">Foto: onicomicosis</div></div>
+                  <div class="se-tile__body p-4">
+                    <h3 class="se-tile__title" style="font-size: 1.625rem;">Onicomicosis</h3>
+                    <p class="se-tile__text se-clamp">Manejo de hongos en la uña con seguimiento.</p>
+                    <div class="se-tile__meta">
+                      <span class="se-tile__duration">40 min</span>
+                      <a class="se-link-mini" href="https://wa.me/51999999999" target="_blank" rel="noopener">Consultar →</a>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <article class="se-tile">
+                  <div class="se-media se-media--card"><div class="se-placeholder">Foto: pie diabético</div></div>
+                  <div class="se-tile__body p-4">
+                    <h3 class="se-tile__title" style="font-size: 1.625rem;">Pie diabético</h3>
+                    <p class="se-tile__text se-clamp">Cuidado preventivo y revisión periódica del pie de riesgo.</p>
+                    <div class="se-tile__meta">
+                      <span class="se-tile__duration">50 min</span>
+                      <a class="se-link-mini" href="https://wa.me/51999999999" target="_blank" rel="noopener">Consultar →</a>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <article class="se-tile">
+                  <div class="se-media se-media--card"><div class="se-placeholder">Foto: verrugas plantares</div></div>
+                  <div class="se-tile__body p-4">
+                    <h3 class="se-tile__title" style="font-size: 1.625rem;">Verrugas plantares</h3>
+                    <p class="se-tile__text se-clamp">Tratamiento de papilomas en la planta del pie.</p>
+                    <div class="se-tile__meta">
+                      <span class="se-tile__duration">35 min</span>
+                      <a class="se-link-mini" href="https://wa.me/51999999999" target="_blank" rel="noopener">Consultar →</a>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+              <div class="col-12 col-md-6 col-lg-4">
+                <article class="se-tile">
+                  <div class="se-media se-media--card"><div class="se-placeholder">Foto: spa de pies</div></div>
+                  <div class="se-tile__body p-4">
+                    <h3 class="se-tile__title" style="font-size: 1.625rem;">Spa de pies</h3>
+                    <p class="se-tile__text se-clamp">Exfoliación, hidratación y masaje para pies cansados.</p>
+                    <div class="se-tile__meta">
+                      <span class="se-tile__duration">45 min</span>
+                      <a class="se-link-mini" href="https://wa.me/51999999999" target="_blank" rel="noopener">Consultar →</a>
+                    </div>
+                  </div>
+                </article>
+              </div>
+
+            </div>
+          </div>
+
+        </div>
+      </div>
+    </section>
+
+    <section class="se-cta" aria-labelledby="titulo-cta">
+      <div class="se-edge-top"></div>
+      <div class="se-container">
+        <div>
+          <h2 class="se-cta__title" id="titulo-cta">Agenda tu <em class="se-gold-text">evaluación</em></h2>
+          <p class="se-cta__text">Escríbenos y coordinamos el horario que mejor te acomode.</p>
+        </div>
+        <a class="se-btn se-btn--gold" href="https://wa.me/51999999999" target="_blank" rel="noopener">Reservar por WhatsApp</a>
+      </div>
+    </section>
+
+  </main>
+
+  <footer class="se-footer">
+    <div class="se-container">
+      <div class="row g-4">
+
+        <div class="col-12 col-lg-3">
+          <img class="se-footer__logo" src="assets/img/logo-sin-excusas.png"
+               alt="Sin Excusas, centro estético" width="150" height="150">
+        </div>
+
+        <div class="col-6 col-lg-3">
+          <h2 class="se-footer__heading">Servicios</h2>
+          <ul class="se-footer__list">
+            <li><a href="servicios.html#faciales">Faciales</a></li>
+            <li><a href="servicios.html#corporales">Corporales</a></li>
+            <li><a href="servicios.html#corporales">Post operatorio y post parto</a></li>
+            <li><a href="servicios.html#podologia">Podología</a></li>
+          </ul>
+        </div>
+
+        <div class="col-6 col-lg-3">
+          <h2 class="se-footer__heading">Tienda</h2>
+          <ul class="se-footer__list">
+            <li><a href="suplementos.html">Suplementos Nutricost</a></li>
+            <li><a href="suplementos.html#productos">Productos faciales</a></li>
+            <li><a href="suplementos.html#productos">Productos corporales</a></li>
+            <li><a href="suplementos.html#productos">Productos de podología</a></li>
+          </ul>
+        </div>
+
+        <div class="col-12 col-lg-3">
+          <h2 class="se-footer__heading">Contacto</h2>
+          <ul class="se-footer__list">
+            <li>Dirección por confirmar</li>
+            <li>Teléfono por confirmar</li>
+            <li>Instagram por confirmar</li>
+          </ul>
+        </div>
+
+      </div>
+    </div>
+
+    <div class="se-footer__legal">
+      <div class="se-container">
+        © <span data-current-year>2026</span> Sin Excusas Centro Estético. Todos los derechos reservados.
+      </div>
+    </div>
+  </footer>
+
+  <a class="se-whatsapp" href="https://wa.me/51999999999" target="_blank" rel="noopener"
+     aria-label="Escribir por WhatsApp">
+    <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+      <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Zm5.8 14.13c-.24.68-1.42 1.32-1.95 1.36-.5.05-.98.24-3.3-.69-2.78-1.1-4.53-3.95-4.67-4.13-.14-.19-1.11-1.48-1.11-2.82s.7-2 .95-2.28c.24-.28.53-.35.71-.35.18 0 .36 0 .51.01.16.01.39-.06.6.47.24.57.8 1.96.87 2.1.07.14.12.31.02.5-.09.19-.14.31-.28.47-.14.16-.3.36-.42.48-.14.14-.29.29-.12.57.16.28.73 1.2 1.56 1.94 1.07.95 1.98 1.25 2.26 1.39.28.14.44.12.6-.07.16-.19.7-.81.88-1.09.19-.28.37-.23.63-.14.26.09 1.65.78 1.93.92.28.14.47.21.54.33.07.11.07.66-.17 1.34Z"/>
+    </svg>
+  </a>
+
+  <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"
+          integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
+  <script src="assets/js/main.js" defer></script>
+</body>
+</html>
