@@ -1,0 +1,29 @@
+// ============================================================================
+// Sin Excusas ERP - Main SCSS File
+// ============================================================================
+
+// 1. Abstracts
+@import 'abstracts/variables';
+@import 'abstracts/mixins';
+@import 'abstracts/breakpoints';
+
+// 2. Base
+@import 'base/reset';
+@import 'base/typography';
+@import 'base/utilities';
+
+// 3. Layout
+@import 'layout/sidebar';
+@import 'layout/header';
+@import 'layout/content';
+@import 'layout/responsive';
+
+// 4. Components
+@import 'components/forms';
+@import 'components/tables';
+@import 'components/dialogs';
+@import 'components/cards';
+@import 'components/buttons';
+
+// 5. Pages (if needed)
+@import 'pages/dashboard';

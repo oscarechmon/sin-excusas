@@ -1,0 +1,36 @@
+// ============================================================================
+// Buttons
+// ============================================================================
+
+.p-button {
+  font-weight: $font-weight-medium;
+  border-radius: $border-radius-lg;
+  transition: all $transition-base;
+
+  &.p-button-primary {
+    background-color: $color-primary;
+    border-color: $color-primary;
+
+    &:hover {
+      background-color: $color-primary-light;
+      border-color: $color-primary-light;
+    }
+  }
+
+  &.p-button-rounded {
+    border-radius: $border-radius-2xl;
+    padding: $spacing-md $spacing-lg;
+  }
+
+  &.p-button-text {
+    color: $color-gray-700;
+
+    &:hover {
+      background-color: $color-gray-100;
+    }
+  }
+
+  &:disabled {
+    @include disabled-state;
+  }
+}

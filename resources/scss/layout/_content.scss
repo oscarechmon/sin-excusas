@@ -1,0 +1,33 @@
+// ============================================================================
+// Content Area
+// ============================================================================
+
+.layout-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: $spacing-lg;
+  background-color: $color-gray-50;
+}
+
+.breadcrumb-wrapper {
+  margin-bottom: $spacing-lg;
+
+  .p-breadcrumb {
+    padding: 0;
+    background: transparent;
+    border: none;
+  }
+}
+
+.admin-layout {
+  display: flex;
+  height: 100vh;
+  background-color: $color-gray-50;
+}
+
+.layout-container {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+}

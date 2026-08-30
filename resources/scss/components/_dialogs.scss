@@ -1,0 +1,24 @@
+// ============================================================================
+// Dialogs
+// ============================================================================
+
+.p-dialog {
+  border-radius: $border-radius-2xl;
+  box-shadow: $shadow-2xl;
+}
+
+.p-dialog-header {
+  padding: $spacing-lg;
+  border-bottom: 1px solid $color-gray-200;
+  background-color: $color-gray-50;
+}
+
+.p-dialog-content {
+  padding: $spacing-lg;
+}
+
+.p-dialog-footer {
+  padding: $spacing-lg;
+  border-top: 1px solid $color-gray-200;
+  background-color: $color-gray-50;
+}

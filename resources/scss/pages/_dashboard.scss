@@ -1,0 +1,87 @@
+// ============================================================================
+// Dashboard Page
+// ============================================================================
+
+.dashboard-page {
+  h1 {
+    margin-top: 0;
+    color: $color-gray-900;
+  }
+
+  h2 {
+    color: $color-gray-900;
+    margin-bottom: $spacing-lg;
+  }
+}
+
+.metrics-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+  gap: $spacing-lg;
+  margin: $spacing-2xl 0;
+
+  @include respond-below(md) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include respond-below(sm) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.metric-card {
+  box-shadow: $shadow-sm;
+
+  &:hover {
+    box-shadow: $shadow-md;
+  }
+}
+
+.metric {
+  display: flex;
+  align-items: center;
+  gap: $spacing-lg;
+}
+
+.metric-icon {
+  font-size: 2.5rem;
+  color: $color-primary;
+}
+
+.metric-info {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-sm;
+}
+
+.metric-label {
+  margin: 0;
+  font-size: $font-size-sm;
+  color: $color-gray-500;
+  font-weight: $font-weight-medium;
+}
+
+.metric-value {
+  margin: 0;
+  font-size: 1.75rem;
+  font-weight: $font-weight-bold;
+  color: $color-gray-900;
+}
+
+.quick-actions {
+  margin-top: $spacing-3xl;
+}
+
+.actions-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: $spacing-lg;
+
+  @include respond-below(md) {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  @include respond-below(sm) {
+    grid-template-columns: 1fr;
+  }
+}

@@ -1,0 +1,44 @@
+// ============================================================================
+// Cards
+// ============================================================================
+
+.p-card {
+  background-color: $color-white;
+  border: 1px solid $color-gray-200;
+  border-radius: $border-radius-lg;
+  box-shadow: $shadow-sm;
+  transition: all $transition-base;
+
+  &:hover {
+    box-shadow: $shadow-md;
+  }
+}
+
+.p-card-header {
+  padding: $spacing-lg;
+  border-bottom: 1px solid $color-gray-200;
+}
+
+.p-card-body {
+  padding: $spacing-lg;
+}
+
+.p-card-footer {
+  padding: $spacing-lg;
+  border-top: 1px solid $color-gray-200;
+  background-color: $color-gray-50;
+}
+
+.p-card-content {
+  padding: $spacing-lg;
+}
+
+.p-card-title {
+  font-weight: $font-weight-bold;
+  color: $color-gray-900;
+}
+
+.p-card-subtitle {
+  color: $color-gray-500;
+  font-size: $font-size-sm;
+}

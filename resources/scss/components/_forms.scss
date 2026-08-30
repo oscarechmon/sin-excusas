@@ -1,0 +1,54 @@
+// ============================================================================
+// Forms
+// ============================================================================
+
+.p-inputtext,
+.p-inputnumber,
+.p-inputmask,
+.p-dropdown,
+.p-multiselect,
+textarea {
+  width: 100%;
+  padding: $spacing-sm $spacing-md;
+  border: 1px solid $color-gray-300;
+  border-radius: $border-radius-md;
+  font-family: inherit;
+  transition: all $transition-base;
+
+  @include focus-ring;
+
+  &:hover {
+    border-color: $color-gray-400;
+  }
+
+  &:disabled {
+    @include disabled-state;
+    background-color: $color-gray-100;
+  }
+
+  &.p-invalid {
+    border-color: $color-danger;
+
+    &:focus {
+      outline-color: $color-danger;
+    }
+  }
+}
+
+.p-error {
+  display: block;
+  color: $color-danger;
+  font-size: $font-size-sm;
+  margin-top: $spacing-sm;
+}
+
+.form-group {
+  margin-bottom: $spacing-lg;
+
+  label {
+    display: block;
+    font-weight: $font-weight-medium;
+    margin-bottom: $spacing-sm;
+    color: $color-gray-900;
+  }
+}

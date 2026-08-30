@@ -1,0 +1,57 @@
+// ============================================================================
+// Sidebar
+// ============================================================================
+
+.p-sidebar {
+  background-color: $color-white;
+  border-right: 1px solid $color-gray-200;
+}
+
+.p-sidebar-header {
+  padding: $spacing-lg;
+  border-bottom: 1px solid $color-gray-200;
+}
+
+.p-sidebar-content {
+  padding: $spacing-md 0;
+}
+
+.p-menu {
+  padding: 0;
+  background: transparent;
+
+  .p-menu-list {
+    padding: 0;
+  }
+
+  .p-submenu-header {
+    padding: $spacing-md $spacing-lg;
+    font-size: $font-size-xs;
+    font-weight: $font-weight-bold;
+    color: $color-gray-500;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+  }
+
+  .p-menuitem-link {
+    padding: $spacing-md $spacing-lg;
+    color: $color-gray-700;
+    transition: all $transition-base;
+
+    &:hover {
+      background-color: $color-gray-50;
+      color: $color-primary;
+    }
+
+    .p-icon {
+      margin-right: $spacing-md;
+      color: inherit;
+    }
+  }
+
+  .p-menuitem-active .p-menuitem-link {
+    background-color: $color-gray-100;
+    color: $color-primary;
+    border-left: 3px solid $color-primary;
+  }
+}

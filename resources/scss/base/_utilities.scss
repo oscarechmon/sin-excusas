@@ -1,0 +1,97 @@
+// ============================================================================
+// Utilities
+// ============================================================================
+
+.container {
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 $spacing-md;
+}
+
+.w-full {
+  width: 100%;
+}
+
+.h-full {
+  height: 100%;
+}
+
+.mt-0 {
+  margin-top: 0;
+}
+.mt-1 {
+  margin-top: $spacing-sm;
+}
+.mt-2 {
+  margin-top: $spacing-md;
+}
+.mt-3 {
+  margin-top: $spacing-lg;
+}
+.mt-4 {
+  margin-top: $spacing-xl;
+}
+
+.mb-0 {
+  margin-bottom: 0;
+}
+.mb-1 {
+  margin-bottom: $spacing-sm;
+}
+.mb-2 {
+  margin-bottom: $spacing-md;
+}
+.mb-3 {
+  margin-bottom: $spacing-lg;
+}
+.mb-4 {
+  margin-bottom: $spacing-xl;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.text-left {
+  text-align: left;
+}
+
+.text-right {
+  text-align: right;
+}
+
+.text-muted {
+  color: $color-gray-500;
+}
+
+.text-primary {
+  color: $color-primary;
+}
+
+.text-danger {
+  color: $color-danger;
+}
+
+.bg-white {
+  background-color: $color-white;
+}
+
+.bg-gray-50 {
+  background-color: $color-gray-50;
+}
+
+.rounded {
+  border-radius: $border-radius-lg;
+}
+
+.shadow {
+  box-shadow: $shadow-md;
+}
+
+.opacity-50 {
+  opacity: 0.5;
+}
+
+.hidden {
+  display: none;
+}
