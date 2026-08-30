@@ -1,0 +1,33 @@
+{
+  "name": "sin-excusas-erp",
+  "version": "1.0.0",
+  "description": "ERP System for Sin Excusas Beauty Center",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview",
+    "lint": "eslint . --ext .vue,.js,.jsx,.cjs,.mjs,.ts,.tsx,.cts,.mts --fix --ignore-path .gitignore"
+  },
+  "dependencies": {
+    "vue": "^3.4.21",
+    "vue-router": "^4.3.2",
+    "pinia": "^2.1.7",
+    "axios": "^1.6.2",
+    "primevue": "^4.0.0",
+    "primeicons": "^6.0.1",
+    "chart.js": "^4.4.1"
+  },
+  "devDependencies": {
+    "@vitejs/plugin-vue": "^5.0.4",
+    "vite": "^5.0.8",
+    "typescript": "^5.3.3",
+    "@vue/tsconfig": "^0.5.0",
+    "sass": "^1.69.5",
+    "autoprefixer": "^10.4.16",
+    "eslint": "^8.55.0",
+    "@eslint/create-config": "^0.4.6",
+    "prettier": "^3.1.1"
+  }
+}
