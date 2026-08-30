@@ -84,7 +84,7 @@ const sidebarOptions = [
       {
         label: 'Agenda',
         icon: 'pi pi-fw pi-calendar',
-        badge: '0',
+        command: () => router.push({ name: 'appointments' }),
       },
       {
         label: 'Servicios',
