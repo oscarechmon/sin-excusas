@@ -1,245 +1,148 @@
 <template>
   <div class="admin-layout">
-    <Sidebar
-      v-model:visible="sidebarVisible"
-      :options="sidebarOptions"
-      class="sidebar"
-    />
+    <!-- Escritorio: sidebar fijo. Móvil/tablet: Drawer de PrimeVue. -->
+    <aside class="app-sidebar app-sidebar--fixed" :class="{ 'app-sidebar--collapsed': collapsed }">
+      <SidebarNav :collapsed="collapsed" />
+    </aside>
 
-    <div class="layout-container">
-      <header class="top-header">
-        <button @click="toggleSidebar" class="sidebar-toggle">
-          <i class="pi pi-bars"></i>
-        </button>
+    <Drawer v-model:visible="mobileNavVisible" class="app-sidebar-drawer" :showCloseIcon="true">
+      <template #container="{ closeCallback }">
+        <SidebarNav @navigate="closeCallback" />
+      </template>
+    </Drawer>
 
-        <div class="header-spacer"></div>
+    <div class="app-main">
+      <header class="app-header">
+        <Button
+          class="app-header__toggle"
+          icon="pi pi-bars"
+          text
+          rounded
+          severity="secondary"
+          aria-label="Alternar menú"
+          @click="toggleNav"
+        />
 
-        <div class="header-actions">
+        <Breadcrumb v-if="breadcrumbItems.length" :home="breadcrumbHome" :model="breadcrumbItems" class="app-header__breadcrumb">
+          <template #item="{ item }">
+            <router-link v-if="item.route" :to="item.route" class="app-breadcrumb__link">
+              <span v-if="item.icon" :class="item.icon" />
+              <span v-else>{{ item.label }}</span>
+            </router-link>
+            <span v-else class="app-breadcrumb__current">{{ item.label }}</span>
+          </template>
+        </Breadcrumb>
+
+        <div class="app-header__spacer" />
+
+        <div class="app-header__actions">
           <Button
             icon="pi pi-bell"
             text
             rounded
-            class="p-button-rounded p-button-text"
+            severity="secondary"
+            aria-label="Notificaciones"
           />
-          <Button
-            icon="pi pi-user"
-            text
-            rounded
-            class="p-button-rounded p-button-text"
+
+          <button
+            type="button"
+            class="app-user"
+            aria-haspopup="true"
+            aria-controls="user-menu"
             @click="toggleUserMenu"
-          />
-          <Menu v-model:popup="showUserMenu" :model="userMenuItems" />
+          >
+            <Avatar :label="userInitials" shape="circle" class="app-user__avatar" />
+            <span class="app-user__meta">
+              <span class="app-user__name">{{ userName }}</span>
+              <span class="app-user__role">{{ primaryRole }}</span>
+            </span>
+            <i class="pi pi-angle-down app-user__caret" />
+          </button>
+
+          <Menu id="user-menu" ref="userMenu" :model="userMenuItems" :popup="true" />
         </div>
       </header>
 
-      <main class="layout-content">
-        <div class="breadcrumb-wrapper" v-if="showBreadcrumb">
-          <Breadcrumb :model="breadcrumbItems" />
-        </div>
-
-        <RouterView />
+      <main class="app-content">
+        <slot />
       </main>
     </div>
 
-    <Toast />
+    <!-- Montados una sola vez para toda la app; las páginas usan
+         useToast() / useConfirm() sin declarar sus propios overlays. -->
+    <Toast position="top-right" />
+    <ConfirmDialog />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
-import { useRouter } from 'vue-router'
+import { computed, ref } from 'vue'
+import { useRoute, useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import Sidebar from 'primevue/sidebar'
-import Button from 'primevue/button'
-import Menu from 'primevue/menu'
+import { routeTitles } from '@/config/navigation'
+import SidebarNav from '@/components/common/SidebarNav.vue'
+import Avatar from 'primevue/avatar'
 import Breadcrumb from 'primevue/breadcrumb'
+import Button from 'primevue/button'
+import ConfirmDialog from 'primevue/confirmdialog'
+import Drawer from 'primevue/drawer'
+import Menu from 'primevue/menu'
 import Toast from 'primevue/toast'
 
+const route = useRoute()
 const router = useRouter()
 const authStore = useAuthStore()
 
-const sidebarVisible = ref(true)
-const showUserMenu = ref(false)
-const showBreadcrumb = ref(true)
+const collapsed = ref(false)
+const mobileNavVisible = ref(false)
+const userMenu = ref()
 
-const sidebarOptions = [
-  {
-    label: 'Principal',
-    items: [
-      {
-        label: 'Dashboard',
-        icon: 'pi pi-fw pi-home',
-        command: () => router.push({ name: 'dashboard' }),
-      },
-    ],
-  },
-  {
-    label: 'Gestión',
-    items: [
-      {
-        label: 'Clientes',
-        icon: 'pi pi-fw pi-users',
-        command: () => router.push({ name: 'clients' }),
-      },
-      {
-        label: 'Agenda',
-        icon: 'pi pi-fw pi-calendar',
-        command: () => router.push({ name: 'appointments' }),
-      },
-      {
-        label: 'Servicios',
-        icon: 'pi pi-fw pi-star',
-        items: [
-          {
-            label: 'Categorías',
-            command: () => router.push({ name: 'service-categories' }),
-          },
-          {
-            label: 'Servicios',
-            command: () => router.push({ name: 'services' }),
-          },
-        ],
-      },
-    ],
-  },
-  {
-    label: 'Operaciones',
-    items: [
-      {
-        label: 'Atenciones',
-        icon: 'pi pi-fw pi-check-square',
-        badge: '0',
-      },
-      {
-        label: 'Ventas',
-        icon: 'pi pi-fw pi-shopping-cart',
-        badge: '0',
-      },
-      {
-        label: 'Caja',
-        icon: 'pi pi-fw pi-wallet',
-        badge: '0',
-      },
-    ],
-  },
-  {
-    label: 'Configuración',
-    items: [
-      {
-        label: 'Inventario',
-        icon: 'pi pi-fw pi-boxes',
-        badge: '0',
-      },
-      {
-        label: 'Personal',
-        icon: 'pi pi-fw pi-id-card',
-        badge: '0',
-      },
-      {
-        label: 'Usuarios',
-        icon: 'pi pi-fw pi-users',
-        badge: '0',
-      },
-    ],
-  },
-]
+const isMobile = () => window.matchMedia('(max-width: 1023px)').matches
 
-const userMenuItems = [
-  {
-    label: 'Perfil',
-    icon: 'pi pi-user',
-  },
-  {
-    label: 'Configuración',
-    icon: 'pi pi-cog',
-  },
-  {
-    separator: true,
-  },
-  {
-    label: 'Cerrar Sesión',
-    icon: 'pi pi-sign-out',
-    command: () => handleLogout(),
-  },
-]
-
-const breadcrumbItems = ref([
-  { label: 'Dashboard', command: () => router.push({ name: 'dashboard' }) },
-])
-
-const toggleSidebar = () => {
-  sidebarVisible.value = !sidebarVisible.value
+const toggleNav = () => {
+  if (isMobile()) {
+    mobileNavVisible.value = !mobileNavVisible.value
+  } else {
+    collapsed.value = !collapsed.value
+  }
 }
 
 const toggleUserMenu = (event: Event) => {
-  showUserMenu.value = !showUserMenu.value
+  userMenu.value?.toggle(event)
 }
+
+const userName = computed(() => authStore.user?.name ?? 'Usuario')
+const primaryRole = computed(() => authStore.roles[0] ?? '—')
+
+const userInitials = computed(() =>
+  userName.value
+    .split(' ')
+    .filter(Boolean)
+    .slice(0, 2)
+    .map((part) => part[0]?.toUpperCase() ?? '')
+    .join('')
+)
+
+const breadcrumbHome = computed(() => ({
+  icon: 'pi pi-home',
+  route: { name: 'dashboard' },
+}))
+
+const breadcrumbItems = computed(() => {
+  const name = route.name as string | undefined
+  if (!name || name === 'dashboard') return []
+  return [{ label: routeTitles[name] ?? name }]
+})
 
 const handleLogout = async () => {
   await authStore.logout()
   router.push({ name: 'login' })
 }
+
+const userMenuItems = [
+  { label: 'Perfil', icon: 'pi pi-user', disabled: true },
+  { label: 'Configuración', icon: 'pi pi-cog', disabled: true },
+  { separator: true },
+  { label: 'Cerrar sesión', icon: 'pi pi-sign-out', command: handleLogout },
+]
 </script>
-
-<style scoped lang="scss">
-.admin-layout {
-  display: flex;
-  height: 100vh;
-  background: #f5f5f5;
-}
-
-.sidebar {
-  width: 280px;
-  background: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-}
-
-.layout-container {
-  flex: 1;
-  display: flex;
-  flex-direction: column;
-  overflow: hidden;
-}
-
-.top-header {
-  display: flex;
-  align-items: center;
-  gap: 1rem;
-  padding: 0.75rem 1.5rem;
-  background: white;
-  border-bottom: 1px solid #e0e0e0;
-  height: 60px;
-}
-
-.sidebar-toggle {
-  background: none;
-  border: none;
-  cursor: pointer;
-  font-size: 1.5rem;
-  color: #666;
-
-  &:hover {
-    color: #333;
-  }
-}
-
-.header-spacer {
-  flex: 1;
-}
-
-.header-actions {
-  display: flex;
-  align-items: center;
-  gap: 0.5rem;
-}
-
-.layout-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: 1.5rem;
-}
-
-.breadcrumb-wrapper {
-  margin-bottom: 1rem;
-}
-</style>

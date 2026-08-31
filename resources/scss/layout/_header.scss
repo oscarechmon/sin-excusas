@@ -2,38 +2,109 @@
 // Header
 // ============================================================================
 
-.top-header {
-  display: flex;
-  align-items: center;
-  gap: $spacing-lg;
-  padding: $spacing-md $spacing-lg;
-  background-color: $color-white;
-  border-bottom: 1px solid $color-gray-200;
-  height: 60px;
-  box-shadow: $shadow-sm;
-}
-
-.header-spacer {
-  flex: 1;
-}
-
-.header-actions {
+.app-header {
   display: flex;
   align-items: center;
   gap: $spacing-sm;
+  height: 64px;
+  flex-shrink: 0;
+  padding: 0 $spacing-lg;
+  background-color: $color-white;
+  border-bottom: 1px solid $color-gray-200;
 }
 
-.sidebar-toggle {
-  @include button-reset;
-  font-size: $font-size-lg;
-  color: $color-gray-600;
-  transition: color $transition-base;
+.app-header__spacer {
+  flex: 1;
+}
+
+.app-header__actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-xs;
+}
+
+.app-header__breadcrumb.p-breadcrumb {
+  padding: 0;
+  background: transparent;
+  border: none;
+
+  @include respond-below(sm) {
+    display: none;
+  }
+}
+
+.app-breadcrumb__link {
+  color: $color-gray-500;
+  font-size: $font-size-sm;
 
   &:hover {
-    color: $color-gray-900;
-  }
-
-  &:active {
     color: $color-primary;
+  }
+}
+
+.app-breadcrumb__current {
+  color: $color-gray-800;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+}
+
+// ----------------------------------------------------------------------------
+// Menú de usuario
+// ----------------------------------------------------------------------------
+
+.app-user {
+  @include button-reset;
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-xs $spacing-sm;
+  border-radius: $border-radius-lg;
+  transition: background-color $transition-fast;
+  @include focus-ring;
+
+  &:hover {
+    background-color: $color-gray-100;
+  }
+}
+
+.app-user__avatar.p-avatar {
+  width: 34px;
+  height: 34px;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  background: linear-gradient(135deg, $color-primary, $color-secondary);
+  color: $color-white;
+}
+
+.app-user__meta {
+  @include flex-column;
+  align-items: flex-start;
+  line-height: $line-height-tight;
+  max-width: 160px;
+
+  @include respond-below(md) {
+    display: none;
+  }
+}
+
+.app-user__name {
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  color: $color-gray-800;
+  @include text-truncate;
+  max-width: 100%;
+}
+
+.app-user__role {
+  font-size: $font-size-xs;
+  color: $color-gray-500;
+}
+
+.app-user__caret {
+  font-size: 0.7rem;
+  color: $color-gray-400;
+
+  @include respond-below(md) {
+    display: none;
   }
 }

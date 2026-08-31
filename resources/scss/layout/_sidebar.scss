@@ -1,57 +1,179 @@
 // ============================================================================
-// Sidebar
+// Sidebar / Navegación principal
 // ============================================================================
 
-.p-sidebar {
+$sidebar-width: 260px;
+$sidebar-width-collapsed: 72px;
+
+.app-sidebar {
+  flex-shrink: 0;
+  width: $sidebar-width;
+  transition: width $transition-base;
+
+  &--collapsed {
+    width: $sidebar-width-collapsed;
+  }
+
+  // El sidebar fijo solo existe en escritorio; abajo se usa el Drawer.
+  &--fixed {
+    @include respond-below(lg) {
+      display: none;
+    }
+  }
+}
+
+.app-nav {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
   background-color: $color-white;
   border-right: 1px solid $color-gray-200;
 }
 
-.p-sidebar-header {
-  padding: $spacing-lg;
+.app-nav__brand {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  height: 64px;
+  padding: 0 $spacing-md;
   border-bottom: 1px solid $color-gray-200;
+  flex-shrink: 0;
 }
 
-.p-sidebar-content {
-  padding: $spacing-md 0;
+.app-nav__logo {
+  @include flex-center;
+  width: 36px;
+  height: 36px;
+  flex-shrink: 0;
+  border-radius: $border-radius-lg;
+  background: linear-gradient(135deg, $color-primary, $color-secondary);
+  color: $color-white;
+  font-weight: $font-weight-bold;
+  font-size: $font-size-sm;
+  letter-spacing: 0.02em;
 }
 
-.p-menu {
-  padding: 0;
-  background: transparent;
+.app-nav__brand-text {
+  @include flex-column;
+  line-height: $line-height-tight;
+  overflow: hidden;
+}
 
-  .p-menu-list {
-    padding: 0;
+.app-nav__brand-name {
+  font-weight: $font-weight-semibold;
+  color: $color-gray-900;
+  @include text-truncate;
+}
+
+.app-nav__brand-sub {
+  font-size: $font-size-xs;
+  color: $color-gray-500;
+}
+
+.app-nav__scroll {
+  flex: 1;
+  overflow-y: auto;
+  padding: $spacing-md 0 $spacing-xl;
+}
+
+.app-nav__section {
+  margin: $spacing-lg $spacing-md $spacing-xs;
+  font-size: $font-size-xs;
+  font-weight: $font-weight-semibold;
+  color: $color-gray-400;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+
+  &:first-child {
+    margin-top: 0;
+  }
+}
+
+.app-nav__list {
+  list-style: none;
+  padding: 0 $spacing-sm;
+  margin: 0;
+}
+
+.app-nav__item {
+  display: flex;
+  align-items: center;
+  gap: $spacing-md;
+  padding: $spacing-sm $spacing-md;
+  margin-bottom: 2px;
+  border-radius: $border-radius-md;
+  color: $color-gray-700;
+  font-size: $font-size-sm;
+  font-weight: $font-weight-medium;
+  transition: background-color $transition-fast, color $transition-fast;
+  @include focus-ring;
+
+  &:hover {
+    background-color: $color-gray-100;
+    color: $color-gray-900;
   }
 
-  .p-submenu-header {
-    padding: $spacing-md $spacing-lg;
-    font-size: $font-size-xs;
-    font-weight: $font-weight-bold;
-    color: $color-gray-500;
-    text-transform: uppercase;
-    letter-spacing: 0.05em;
-  }
-
-  .p-menuitem-link {
-    padding: $spacing-md $spacing-lg;
-    color: $color-gray-700;
-    transition: all $transition-base;
+  &--active {
+    background-color: rgba($color-primary, 0.1);
+    color: $color-primary;
 
     &:hover {
-      background-color: $color-gray-50;
+      background-color: rgba($color-primary, 0.14);
       color: $color-primary;
     }
 
-    .p-icon {
-      margin-right: $spacing-md;
-      color: inherit;
+    .app-nav__icon {
+      color: $color-primary;
     }
   }
 
-  .p-menuitem-active .p-menuitem-link {
-    background-color: $color-gray-100;
-    color: $color-primary;
-    border-left: 3px solid $color-primary;
+  &--disabled {
+    color: $color-gray-400;
+    cursor: default;
+
+    &:hover {
+      background-color: transparent;
+      color: $color-gray-400;
+    }
+  }
+}
+
+.app-nav__icon {
+  font-size: 1.05rem;
+  width: 1.25rem;
+  flex-shrink: 0;
+  text-align: center;
+  color: $color-gray-500;
+}
+
+.app-nav__label {
+  @include text-truncate;
+}
+
+.app-nav__tag {
+  margin-left: auto;
+  font-size: 0.65rem;
+}
+
+// Menú colapsado: solo iconos, centrados.
+.app-nav--collapsed {
+  .app-nav__brand {
+    justify-content: center;
+    padding: 0;
+  }
+
+  .app-nav__item {
+    justify-content: center;
+    padding: $spacing-sm;
+    gap: 0;
+  }
+}
+
+// El Drawer reutiliza la misma navegación, sin el padding propio de PrimeVue.
+.app-sidebar-drawer.p-drawer {
+  width: $sidebar-width;
+
+  .p-drawer-content {
+    padding: 0;
   }
 }

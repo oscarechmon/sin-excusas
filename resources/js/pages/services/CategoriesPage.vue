@@ -1,64 +1,60 @@
-﻿<template>
-  <AdminLayout>
-    <div class="categories-page">
-      <div class="page-header">
-        <h1>CategorÃ­as de Servicios</h1>
-        <Button
-          label="Nueva CategorÃ­a"
-          icon="pi pi-plus"
-          @click="openNewCategoryDialog"
-          class="p-button-primary"
-        />
-      </div>
-
-      <DataTable
-        :value="servicesStore.categories"
-        :loading="servicesStore.loading"
-        striped-rows
-        responsive-layout="scroll"
-        class="categories-table"
-      >
-        <Column field="id" header="ID" :style="{ width: '60px' }" />
-        <Column field="name" header="Nombre" />
-        <Column field="description" header="DescripciÃ³n" />
-        <Column header="Estado">
-          <template #body="slotProps">
-            <Tag
-              :value="slotProps.data.active ? 'Activo' : 'Inactivo'"
-              :severity="slotProps.data.active ? 'success' : 'danger'"
-            />
-          </template>
-        </Column>
-        <Column header="Acciones" :style="{ width: '150px' }">
-          <template #body="slotProps">
-            <Button
-              icon="pi pi-pencil"
-              class="p-button-sm p-button-warning"
-              @click="editCategory(slotProps.data)"
-              text
-            />
-            <Button
-              icon="pi pi-trash"
-              class="p-button-sm p-button-danger"
-              @click="confirmDeleteCategory(slotProps.data.id)"
-              text
-            />
-          </template>
-        </Column>
-      </DataTable>
-
-      <CategoryFormDialog
-        v-if="showCategoryDialog"
-        :visible="showCategoryDialog"
-        :category="selectedCategory"
-        @close="showCategoryDialog = false"
-        @submit="handleCategorySubmit"
+<template>
+  <div class="categories-page">
+    <div class="page-header">
+      <h1>Categorías de Servicios</h1>
+      <Button
+        label="Nueva Categoría"
+        icon="pi pi-plus"
+        @click="openNewCategoryDialog"
+        class="p-button-primary"
       />
-
-      <Toast />
-      <ConfirmDialog />
     </div>
-  </AdminLayout>
+
+    <DataTable
+      :value="servicesStore.categories"
+      :loading="servicesStore.loading"
+      striped-rows
+      responsive-layout="scroll"
+      class="categories-table"
+    >
+      <Column field="id" header="ID" :style="{ width: '60px' }" />
+      <Column field="name" header="Nombre" />
+      <Column field="description" header="Descripción" />
+      <Column header="Estado">
+        <template #body="slotProps">
+          <Tag
+            :value="slotProps.data.active ? 'Activo' : 'Inactivo'"
+            :severity="slotProps.data.active ? 'success' : 'danger'"
+          />
+        </template>
+      </Column>
+      <Column header="Acciones" :style="{ width: '150px' }">
+        <template #body="slotProps">
+          <Button
+            icon="pi pi-pencil"
+            class="p-button-sm p-button-warning"
+            @click="editCategory(slotProps.data)"
+            text
+          />
+          <Button
+            icon="pi pi-trash"
+            class="p-button-sm p-button-danger"
+            @click="confirmDeleteCategory(slotProps.data.id)"
+            text
+          />
+        </template>
+      </Column>
+    </DataTable>
+
+    <CategoryFormDialog
+      v-if="showCategoryDialog"
+      :visible="showCategoryDialog"
+      :category="selectedCategory"
+      @close="showCategoryDialog = false"
+      @submit="handleCategorySubmit"
+    />
+
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -66,8 +62,11 @@ import { ref, onMounted } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import { useServicesStore } from '@/stores/services';
-import AdminLayout from '@/layouts/AdminLayout.vue';
 import CategoryFormDialog from './CategoryFormDialog.vue';
+import Button from 'primevue/button';
+import Column from 'primevue/column';
+import DataTable from 'primevue/datatable';
+import Tag from 'primevue/tag';
 
 const servicesStore = useServicesStore();
 const confirm = useConfirm();
@@ -92,18 +91,18 @@ const editCategory = (category: any) => {
 
 const confirmDeleteCategory = (id: number) => {
   confirm.require({
-    message: 'Â¿EstÃ¡s seguro de que quieres eliminar esta categorÃ­a?',
-    header: 'Confirmar eliminaciÃ³n',
+    message: '¿Estás seguro de que quieres eliminar esta categoría?',
+    header: 'Confirmar eliminación',
     icon: 'pi pi-exclamation-triangle',
     accept: async () => {
       try {
         await servicesStore.deleteCategory(id);
-        toast.add({ severity: 'success', summary: 'Ã‰xito', detail: 'CategorÃ­a eliminada' });
+        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Categoría eliminada' });
       } catch (err: any) {
         toast.add({
           severity: 'error',
           summary: 'Error',
-          detail: err.message || 'Error al eliminar categorÃ­a',
+          detail: err.message || 'Error al eliminar categoría',
         });
       }
     },
@@ -114,17 +113,17 @@ const handleCategorySubmit = async (payload: any) => {
   try {
     if (selectedCategory.value) {
       await servicesStore.updateCategory(selectedCategory.value.id, payload);
-      toast.add({ severity: 'success', summary: 'Ã‰xito', detail: 'CategorÃ­a actualizada' });
+      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Categoría actualizada' });
     } else {
       await servicesStore.createCategory(payload);
-      toast.add({ severity: 'success', summary: 'Ã‰xito', detail: 'CategorÃ­a creada' });
+      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Categoría creada' });
     }
     showCategoryDialog.value = false;
   } catch (err: any) {
     toast.add({
       severity: 'error',
       summary: 'Error',
-      detail: err.message || 'Error al guardar categorÃ­a',
+      detail: err.message || 'Error al guardar categoría',
     });
   }
 };

@@ -4,6 +4,7 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Client extends Model
 {
@@ -38,9 +39,32 @@ class Client extends Model
         ];
     }
 
+    public function appointments(): HasMany
+    {
+        return $this->hasMany(Appointment::class);
+    }
+
+    public function attendances(): HasMany
+    {
+        return $this->hasMany(Attendance::class);
+    }
+
+    public function sales(): HasMany
+    {
+        return $this->hasMany(Sale::class);
+    }
+
+    public function packages(): HasMany
+    {
+        return $this->hasMany(ClientPackage::class);
+    }
+
     public static function generateCode(): string
     {
-        $count = static::count() + 1;
-        return 'CLI-' . str_pad($count, 6, '0', STR_PAD_LEFT);
+        // max(id) y no count(): si se elimina un cliente, count() reutilizaría
+        // un código ya emitido.
+        $next = static::max('id') + 1;
+
+        return 'CLI-'.str_pad((string) $next, 6, '0', STR_PAD_LEFT);
     }
 }

@@ -49,6 +49,12 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue';
+import Button from 'primevue/button';
+import Column from 'primevue/column';
+import DataTable from 'primevue/datatable';
+import Tag from 'primevue/tag';
+
 interface Props {
   appointments: any[];
   loading: boolean;

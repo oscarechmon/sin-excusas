@@ -1,11 +1,41 @@
 // ============================================================================
 // Reset & Normalize
 // ============================================================================
+//
+// IMPORTANTE: PrimeVue inyecta sus estilos dentro de @layer primevue
+// (ver resources/js/plugins/primevue-theme.ts). El CSS sin capa gana SIEMPRE
+// al CSS en capas, sin importar la especificidad. Por eso un reset con `*`
+// borraría el padding y el margen de todos los componentes de PrimeVue.
+//
+// El reset debe apuntar solo a elementos HTML nativos, nunca al selector
+// universal, y nunca a clases .p-*.
 
-* {
-  margin: 0;
-  padding: 0;
+*,
+*::before,
+*::after {
   box-sizing: border-box;
+}
+
+html,
+body,
+h1,
+h2,
+h3,
+h4,
+h5,
+h6,
+p,
+figure,
+blockquote,
+dl,
+dd {
+  margin: 0;
+}
+
+ul[class],
+ol[class] {
+  list-style: none;
+  padding: 0;
 }
 
 html {
@@ -14,11 +44,13 @@ html {
 }
 
 body {
+  min-height: 100vh;
   font-family: $font-family-base;
   font-size: $font-size-base;
   line-height: $line-height-normal;
   color: $color-gray-800;
   background-color: $color-gray-50;
+  -webkit-font-smoothing: antialiased;
 }
 
 a {
@@ -36,13 +68,16 @@ button {
 }
 
 input,
+button,
 textarea,
 select {
-  font-family: inherit;
+  font: inherit;
 }
 
-img {
+img,
+picture,
+svg,
+video {
   max-width: 100%;
-  height: auto;
   display: block;
 }

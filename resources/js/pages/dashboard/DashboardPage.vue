@@ -1,144 +1,70 @@
 <template>
-  <AdminLayout>
-    <div class="dashboard-page">
-      <h1>Dashboard</h1>
-
-      <div class="metrics-grid">
-        <Card class="metric-card">
-          <template #content>
-            <div class="metric">
-              <i class="pi pi-users metric-icon"></i>
-              <div class="metric-info">
-                <p class="metric-label">Clientes</p>
-                <p class="metric-value">0</p>
-              </div>
-            </div>
-          </template>
-        </Card>
-
-        <Card class="metric-card">
-          <template #content>
-            <div class="metric">
-              <i class="pi pi-calendar metric-icon"></i>
-              <div class="metric-info">
-                <p class="metric-label">Citas Hoy</p>
-                <p class="metric-value">0</p>
-              </div>
-            </div>
-          </template>
-        </Card>
-
-        <Card class="metric-card">
-          <template #content>
-            <div class="metric">
-              <i class="pi pi-shopping-cart metric-icon"></i>
-              <div class="metric-info">
-                <p class="metric-label">Ventas Hoy</p>
-                <p class="metric-value">S/ 0.00</p>
-              </div>
-            </div>
-          </template>
-        </Card>
-
-        <Card class="metric-card">
-          <template #content>
-            <div class="metric">
-              <i class="pi pi-wallet metric-icon"></i>
-              <div class="metric-info">
-                <p class="metric-label">Caja</p>
-                <p class="metric-value">S/ 0.00</p>
-              </div>
-            </div>
-          </template>
-        </Card>
-      </div>
-
-      <div class="quick-actions">
-        <h2>Acciones Rápidas</h2>
-        <div class="actions-grid">
-          <Button label="Nueva Cita" icon="pi pi-calendar-plus" class="p-button-rounded" />
-          <Button label="Nuevo Cliente" icon="pi pi-user-plus" class="p-button-rounded" />
-          <Button label="Nueva Venta" icon="pi pi-plus" class="p-button-rounded" />
-          <Button label="Registrar Atención" icon="pi pi-check" class="p-button-rounded" />
-        </div>
+  <div class="dashboard-page">
+    <div class="page-header">
+      <div>
+        <h1 class="page-header__title">Dashboard</h1>
+        <p class="page-header__subtitle">Resumen operativo de hoy</p>
       </div>
     </div>
-  </AdminLayout>
+
+    <div class="metrics-grid">
+      <Card v-for="metric in metrics" :key="metric.label" class="metric-card">
+        <template #content>
+          <div class="metric">
+            <span class="metric__icon" :class="`metric__icon--${metric.tone}`">
+              <i :class="metric.icon" />
+            </span>
+            <div class="metric__info">
+              <p class="metric__label">{{ metric.label }}</p>
+              <p class="metric__value">{{ metric.value }}</p>
+            </div>
+          </div>
+        </template>
+      </Card>
+    </div>
+
+    <section class="quick-actions">
+      <h2 class="quick-actions__title">Accesos rápidos</h2>
+      <div class="quick-actions__grid">
+        <Button
+          v-for="action in quickActions"
+          :key="action.label"
+          :label="action.label"
+          :icon="action.icon"
+          :disabled="!action.route"
+          severity="secondary"
+          outlined
+          @click="action.route && router.push({ name: action.route })"
+        />
+      </div>
+    </section>
+
+    <Message severity="info" :closable="false" class="dashboard-note">
+      Los indicadores se conectarán a datos reales al implementar Ventas, Caja y
+      Atenciones (fases 7 a 9 de la especificación).
+    </Message>
+  </div>
 </template>
 
 <script setup lang="ts">
-import AdminLayout from '@/layouts/AdminLayout.vue'
-import Card from 'primevue/card'
+import { useRouter } from 'vue-router'
 import Button from 'primevue/button'
+import Card from 'primevue/card'
+import Message from 'primevue/message'
+
+const router = useRouter()
+
+const metrics = [
+  { label: 'Clientes', value: '0', icon: 'pi pi-users', tone: 'primary' },
+  { label: 'Citas de hoy', value: '0', icon: 'pi pi-calendar', tone: 'info' },
+  { label: 'Ventas de hoy', value: 'S/ 0.00', icon: 'pi pi-shopping-cart', tone: 'success' },
+  { label: 'Caja', value: 'S/ 0.00', icon: 'pi pi-wallet', tone: 'warning' },
+]
+
+const quickActions = [
+  { label: 'Nueva cita', icon: 'pi pi-calendar-plus', route: 'appointments' },
+  { label: 'Nuevo cliente', icon: 'pi pi-user-plus', route: 'clients' },
+  { label: 'Nueva venta', icon: 'pi pi-plus', route: null },
+  { label: 'Registrar atención', icon: 'pi pi-check', route: null },
+]
 </script>
-
-<style scoped lang="scss">
-.dashboard-page {
-  h1 {
-    margin-top: 0;
-    color: #333;
-    font-size: 2rem;
-  }
-}
-
-.metrics-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1.5rem;
-  margin: 2rem 0;
-}
-
-.metric-card {
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-
-  :deep(.p-card-content) {
-    padding: 1.5rem;
-  }
-}
-
-.metric {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.metric-icon {
-  font-size: 2.5rem;
-  color: #667eea;
-}
-
-.metric-info {
-  display: flex;
-  flex-direction: column;
-  gap: 0.25rem;
-}
-
-.metric-label {
-  margin: 0;
-  font-size: 0.875rem;
-  color: #999;
-  font-weight: 500;
-}
-
-.metric-value {
-  margin: 0;
-  font-size: 1.75rem;
-  font-weight: 700;
-  color: #333;
-}
-
-.quick-actions {
-  margin-top: 3rem;
-
-  h2 {
-    color: #333;
-    margin-bottom: 1rem;
-  }
-}
-
-.actions-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: 1rem;
-}
-</style>

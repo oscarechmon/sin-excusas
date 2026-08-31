@@ -48,6 +48,7 @@ const routes: RouteRecordRaw[] = [
     path: '/:pathMatch(.*)*',
     name: 'not-found',
     component: () => import('@/pages/errors/NotFoundPage.vue'),
+    meta: { requiresAuth: false, layout: 'blank' },
   },
 ]
 
@@ -56,8 +57,14 @@ const router = createRouter({
   routes,
 })
 
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
+
+  // Con un token guardado hay que resolver la sesión antes de decidir:
+  // de lo contrario un refresh redirige al login pese a estar autenticado.
+  if (authStore.token && !authStore.user) {
+    await authStore.ensureSession()
+  }
 
   if (to.meta.requiresAuth && !authStore.isAuthenticated) {
     next({ name: 'login', query: { redirect: to.fullPath } })

@@ -1,33 +1,60 @@
 // ============================================================================
-// Content Area
+// Estructura general y área de contenido
 // ============================================================================
-
-.layout-content {
-  flex: 1;
-  overflow-y: auto;
-  padding: $spacing-lg;
-  background-color: $color-gray-50;
-}
-
-.breadcrumb-wrapper {
-  margin-bottom: $spacing-lg;
-
-  .p-breadcrumb {
-    padding: 0;
-    background: transparent;
-    border: none;
-  }
-}
 
 .admin-layout {
   display: flex;
   height: 100vh;
+  overflow: hidden;
   background-color: $color-gray-50;
 }
 
-.layout-container {
+.app-main {
   flex: 1;
   display: flex;
   flex-direction: column;
+  min-width: 0; // permite que las tablas anchas hagan scroll en lugar de empujar el layout
   overflow: hidden;
+}
+
+.app-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: $spacing-lg;
+  background-color: $color-gray-50;
+
+  @include respond-below(md) {
+    padding: $spacing-md;
+  }
+}
+
+// ----------------------------------------------------------------------------
+// Encabezado de página, reutilizable por todos los módulos
+// ----------------------------------------------------------------------------
+
+.page-header {
+  @include flex-between;
+  gap: $spacing-md;
+  flex-wrap: wrap;
+  margin-bottom: $spacing-lg;
+}
+
+.page-header__title {
+  margin: 0;
+  font-size: $font-size-2xl;
+  font-weight: $font-weight-semibold;
+  color: $color-gray-900;
+  line-height: $line-height-tight;
+}
+
+.page-header__subtitle {
+  margin: $spacing-xs 0 0;
+  font-size: $font-size-sm;
+  color: $color-gray-500;
+}
+
+.page-header__actions {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
 }

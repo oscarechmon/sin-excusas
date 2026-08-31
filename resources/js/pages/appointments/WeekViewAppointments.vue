@@ -49,6 +49,8 @@
 <script setup lang="ts">
 import { ref, computed } from 'vue';
 import AppointmentCard from './AppointmentCard.vue';
+import Button from 'primevue/button';
+import ProgressSpinner from 'primevue/progressspinner';
 
 interface Props {
   appointments: any[];

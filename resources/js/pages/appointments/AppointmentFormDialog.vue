@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <Dialog
     v-model:visible="isOpen"
     :header="selectedAppointment ? 'Editar Cita' : 'Nueva Cita'"
@@ -134,6 +134,13 @@
 import { ref, computed, watch, onMounted } from 'vue';
 import { useServicesStore } from '@/stores/services';
 import { clientsApi } from '@/api/clients.api';
+import AutoComplete from 'primevue/autocomplete';
+import Button from 'primevue/button';
+import DatePicker from 'primevue/datepicker';
+import Dialog from 'primevue/dialog';
+import InputMask from 'primevue/inputmask';
+import Select from 'primevue/select';
+import Textarea from 'primevue/textarea';
 
 interface Props {
   visible: boolean;

@@ -1,4 +1,4 @@
-import client from './client';
+import { api as client } from './client';
 
 export const appointmentsApi = {
   async list(params?: any) {

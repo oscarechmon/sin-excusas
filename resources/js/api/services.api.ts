@@ -1,4 +1,4 @@
-import client from './client';
+import { api as client } from './client';
 
 export const servicesApi = {
   async list(page = 1, categoryId?: number, active?: boolean) {

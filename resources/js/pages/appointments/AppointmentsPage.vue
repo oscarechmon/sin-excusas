@@ -1,18 +1,24 @@
-﻿<template>
-  <AdminLayout>
-    <div class="appointments-page">
-      <div class="page-header">
-        <h1>Agenda</h1>
-        <Button
-          label="Nueva Cita"
-          icon="pi pi-plus"
-          @click="openNewAppointmentDialog"
-          class="p-button-primary"
-        />
-      </div>
+<template>
+  <div class="appointments-page">
+    <div class="page-header">
+      <h1>Agenda</h1>
+      <Button
+        label="Nueva Cita"
+        icon="pi pi-plus"
+        @click="openNewAppointmentDialog"
+        class="p-button-primary"
+      />
+    </div>
 
-      <Tabs v-model:activeIndex="activeTab" class="appointments-tabs">
-        <TabPanel header="Vista de DÃ­a">
+    <Tabs v-model:value="activeTab" class="appointments-tabs">
+      <TabList>
+        <Tab value="day">Vista de día</Tab>
+        <Tab value="week">Vista semanal</Tab>
+        <Tab value="table">Tabla</Tab>
+      </TabList>
+
+      <TabPanels>
+        <TabPanel value="day">
           <DayViewAppointments
             :appointments="appointmentsStore.appointments"
             :loading="appointmentsStore.loading"
@@ -21,7 +27,8 @@
             @date-change="handleDateChange"
           />
         </TabPanel>
-        <TabPanel header="Vista Semanal">
+
+        <TabPanel value="week">
           <WeekViewAppointments
             :appointments="appointmentsStore.appointments"
             :loading="appointmentsStore.loading"
@@ -30,7 +37,8 @@
             @week-change="handleWeekChange"
           />
         </TabPanel>
-        <TabPanel header="Tabla">
+
+        <TabPanel value="table">
           <TableViewAppointments
             :appointments="appointmentsStore.appointments"
             :loading="appointmentsStore.loading"
@@ -41,20 +49,18 @@
             @page-change="handlePageChange"
           />
         </TabPanel>
-      </Tabs>
+      </TabPanels>
+    </Tabs>
 
-      <AppointmentFormDialog
-        v-if="showAppointmentDialog"
-        :visible="showAppointmentDialog"
-        :appointment="selectedAppointment"
-        @close="showAppointmentDialog = false"
-        @submit="handleAppointmentSubmit"
-      />
+    <AppointmentFormDialog
+      v-if="showAppointmentDialog"
+      :visible="showAppointmentDialog"
+      :appointment="selectedAppointment"
+      @close="showAppointmentDialog = false"
+      @submit="handleAppointmentSubmit"
+    />
 
-      <Toast />
-      <ConfirmDialog />
-    </div>
-  </AdminLayout>
+  </div>
 </template>
 
 <script setup lang="ts">
@@ -62,17 +68,22 @@ import { ref, onMounted } from 'vue';
 import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import { useAppointmentsStore } from '@/stores/appointments';
-import AdminLayout from '@/layouts/AdminLayout.vue';
 import AppointmentFormDialog from './AppointmentFormDialog.vue';
 import DayViewAppointments from './DayViewAppointments.vue';
 import WeekViewAppointments from './WeekViewAppointments.vue';
 import TableViewAppointments from './TableViewAppointments.vue';
+import Button from 'primevue/button';
+import Tab from 'primevue/tab';
+import TabList from 'primevue/tablist';
+import TabPanel from 'primevue/tabpanel';
+import TabPanels from 'primevue/tabpanels';
+import Tabs from 'primevue/tabs';
 
 const appointmentsStore = useAppointmentsStore();
 const confirm = useConfirm();
 const toast = useToast();
 
-const activeTab = ref(0);
+const activeTab = ref('day');
 const showAppointmentDialog = ref(false);
 const selectedAppointment = ref<any | null>(null);
 const currentDate = ref(new Date());
@@ -115,13 +126,13 @@ const editAppointment = (appointment: any) => {
 
 const confirmDeleteAppointment = (id: number) => {
   confirm.require({
-    message: 'Â¿EstÃ¡s seguro de que quieres eliminar esta cita?',
-    header: 'Confirmar eliminaciÃ³n',
+    message: '¿Estás seguro de que quieres eliminar esta cita?',
+    header: 'Confirmar eliminación',
     icon: 'pi pi-exclamation-triangle',
     accept: async () => {
       try {
         await appointmentsStore.deleteAppointment(id);
-        toast.add({ severity: 'success', summary: 'Ã‰xito', detail: 'Cita eliminada' });
+        toast.add({ severity: 'success', summary: 'Éxito', detail: 'Cita eliminada' });
       } catch (err: any) {
         toast.add({
           severity: 'error',
@@ -137,10 +148,10 @@ const handleAppointmentSubmit = async (payload: any) => {
   try {
     if (selectedAppointment.value) {
       await appointmentsStore.updateAppointment(selectedAppointment.value.id, payload);
-      toast.add({ severity: 'success', summary: 'Ã‰xito', detail: 'Cita actualizada' });
+      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Cita actualizada' });
     } else {
       await appointmentsStore.createAppointment(payload);
-      toast.add({ severity: 'success', summary: 'Ã‰xito', detail: 'Cita creada' });
+      toast.add({ severity: 'success', summary: 'Éxito', detail: 'Cita creada' });
     }
     showAppointmentDialog.value = false;
     loadDayAppointments(currentDate.value);

@@ -1,20 +1,30 @@
 // ============================================================================
-// Responsive Layout
+// Ajustes responsive del layout
 // ============================================================================
 
-@include respond-below(md) {
-  .p-sidebar {
-    position: fixed;
-    z-index: 999;
-    height: 100vh;
-    width: 280px;
+// El botón que abre el menú solo aporta en pantallas donde el sidebar
+// se oculta o se colapsa; en escritorio ancho el menú siempre está visible.
+.app-header__toggle {
+  flex-shrink: 0;
+}
+
+@include respond-below(lg) {
+  .app-content {
+    padding: $spacing-md;
+  }
+}
+
+@include respond-below(sm) {
+  .page-header {
+    flex-direction: column;
+    align-items: stretch;
   }
 
-  .layout-container {
+  .page-header__actions {
     width: 100%;
-  }
 
-  .sidebar-toggle {
-    display: flex;
+    > * {
+      flex: 1;
+    }
   }
 }

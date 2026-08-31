@@ -28,6 +28,9 @@
 </template>
 
 <script setup lang="ts">
+import Button from 'primevue/button';
+import Tag from 'primevue/tag';
+
 interface Props {
   appointment: any;
   compact?: boolean;
@@ -39,7 +42,7 @@ interface Emits {
 }
 
 defineProps<Props>();
-defineEmits<Emits>();
+const emit = defineEmits<Emits>();
 </script>
 
 <style scoped lang="scss">

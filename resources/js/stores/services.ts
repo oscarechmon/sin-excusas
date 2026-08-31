@@ -1,6 +1,6 @@
 import { defineStore } from 'pinia';
 import { ref, computed } from 'vue';
-import { servicesApi, serviceCategoriesApi } from '@/js/api/services.api';
+import { servicesApi, serviceCategoriesApi } from '@/api/services.api';
 
 export const useServicesStore = defineStore('services', () => {
   const services = ref<any[]>([]);

@@ -56,6 +56,11 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import Button from 'primevue/button';
+import Checkbox from 'primevue/checkbox';
+import Dialog from 'primevue/dialog';
+import InputText from 'primevue/inputtext';
+import Textarea from 'primevue/textarea';
 
 interface Props {
   visible: boolean;

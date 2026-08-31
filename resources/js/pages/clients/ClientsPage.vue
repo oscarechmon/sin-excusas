@@ -95,14 +95,11 @@
       @close="closeFormDialog"
       @save="handleSave"
     />
-
-    <Toast />
-    <ConfirmDialog />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted } from 'vue'
+import { computed, ref, onMounted } from 'vue'
 import { useToast } from 'primevue/usetoast'
 import { useConfirm } from 'primevue/useconfirm'
 import { useRouter } from 'vue-router'
@@ -115,8 +112,6 @@ import Button from 'primevue/button'
 import InputText from 'primevue/inputtext'
 import MultiSelect from 'primevue/multiselect'
 import Tag from 'primevue/tag'
-import Toast from 'primevue/toast'
-import ConfirmDialog from 'primevue/confirmdialog'
 
 const toast = useToast()
 const confirm = useConfirm()
@@ -133,9 +128,9 @@ const filterOptions = [
   { label: 'Inactivos', value: false },
 ]
 
-const clients = () => clientsStore.clients
-const loading = () => clientsStore.loading
-const total = () => clientsStore.total
+const clients = computed(() => clientsStore.clients)
+const loading = computed(() => clientsStore.loading)
+const total = computed(() => clientsStore.total)
 
 onMounted(() => {
   clientsStore.loadClients()
@@ -229,11 +224,19 @@ const onPageChange = (event: any) => {
 .filter-card {
   .filters {
     display: flex;
-    gap: 1rem;
-    align-items: flex-end;
+    gap: 0.75rem;
+    align-items: center;
+    flex-wrap: wrap;
 
+    // El buscador ocupa el espacio libre; el filtro de estado tiene un ancho
+    // acotado para que no se coma la fila.
     :deep(.p-inputtext) {
-      flex: 1;
+      flex: 1 1 260px;
+      min-width: 0;
+    }
+
+    :deep(.p-multiselect) {
+      flex: 0 1 220px;
     }
   }
 }

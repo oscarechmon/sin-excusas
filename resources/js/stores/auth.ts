@@ -31,6 +31,18 @@ export const useAuthStore = defineStore('auth', () => {
     }
   }
 
+  /**
+   * Restaura la sesión desde el token guardado, una sola vez por carga.
+   * El guard del router debe esperarla: si no, en un F5 el usuario todavía
+   * no está resuelto y la navegación rebota al login.
+   */
+  let sessionPromise: Promise<void> | null = null
+
+  const ensureSession = () => {
+    if (!sessionPromise) sessionPromise = checkAuth()
+    return sessionPromise
+  }
+
   const login = async (email: string, password: string) => {
     try {
       const response = await api.post('/auth/login', { email, password })
@@ -72,6 +84,7 @@ export const useAuthStore = defineStore('auth', () => {
     permissions,
     isAuthenticated,
     checkAuth,
+    ensureSession,
     login,
     logout,
     hasRole,

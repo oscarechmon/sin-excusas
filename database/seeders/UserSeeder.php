@@ -20,5 +20,16 @@ class UserSeeder extends Seeder
         );
 
         $admin->assignRole(RoleName::ADMINISTRADOR->value);
+
+        $genericAdmin = User::firstOrCreate(
+            ['email' => 'admin@admin.com'],
+            [
+                'name' => 'Admin',
+                'password' => bcrypt('admin123'),
+                'active' => true,
+            ]
+        );
+
+        $genericAdmin->assignRole(RoleName::ADMINISTRADOR->value);
     }
 }

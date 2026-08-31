@@ -1,4 +1,4 @@
-﻿<template>
+<template>
   <Dialog
     v-model:visible="isOpen"
     :header="selectedService ? 'Editar Servicio' : 'Nuevo Servicio'"
@@ -19,14 +19,14 @@
       </div>
 
       <div class="form-group">
-        <label for="category_id">CategorÃ­a *</label>
+        <label for="category_id">Categoría *</label>
         <Select
           id="category_id"
           v-model="form.category_id"
           :options="categories"
           option-label="name"
           option-value="id"
-          placeholder="Selecciona una categorÃ­a"
+          placeholder="Selecciona una categoría"
           class="w-full"
         />
         <small v-if="errors.category_id" class="error-text">{{ errors.category_id }}</small>
@@ -48,7 +48,7 @@
         </div>
 
         <div class="form-group">
-          <label for="duration_minutes">DuraciÃ³n (minutos) *</label>
+          <label for="duration_minutes">Duración (minutos) *</label>
           <InputNumber
             id="duration_minutes"
             v-model="form.duration_minutes"
@@ -60,12 +60,12 @@
       </div>
 
       <div class="form-group">
-        <label for="description">DescripciÃ³n</label>
+        <label for="description">Descripción</label>
         <Textarea
           id="description"
           v-model="form.description"
           class="w-full"
-          placeholder="DescripciÃ³n del servicio"
+          placeholder="Descripción del servicio"
           rows="3"
         />
       </div>
@@ -98,6 +98,13 @@
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
 import { useServicesStore } from '@/stores/services';
+import Button from 'primevue/button';
+import Checkbox from 'primevue/checkbox';
+import Dialog from 'primevue/dialog';
+import InputNumber from 'primevue/inputnumber';
+import InputText from 'primevue/inputtext';
+import Select from 'primevue/select';
+import Textarea from 'primevue/textarea';
 
 interface Props {
   visible: boolean;
@@ -163,13 +170,13 @@ const handleSubmit = async () => {
     errors.value.name = 'El nombre es requerido';
   }
   if (!form.value.category_id) {
-    errors.value.category_id = 'La categorÃ­a es requerida';
+    errors.value.category_id = 'La categoría es requerida';
   }
   if (!form.value.price) {
     errors.value.price = 'El precio es requerido';
   }
   if (!form.value.duration_minutes) {
-    errors.value.duration_minutes = 'La duraciÃ³n es requerida';
+    errors.value.duration_minutes = 'La duración es requerida';
   }
 
   if (Object.keys(errors.value).length) return;
