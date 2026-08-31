@@ -1,44 +1,48 @@
 // ============================================================================
 // Cards
 // ============================================================================
+//
+// El tema ya define fondo, borde y sombra. Se corrige únicamente el padding
+// duplicado: en PrimeVue 4 el contenido vive dentro de .p-card-body, así que
+// dar padding a ambos deja el doble de espacio.
 
-.p-card {
-  background-color: $color-white;
+.p-card .p-card-content {
+  padding: 0;
+}
+
+// Bloque de totales que usan Ventas y Caja.
+.summary-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(160px, 1fr));
+  gap: $spacing-md;
+  margin-bottom: $spacing-lg;
+}
+
+.summary-tile {
+  padding: $spacing-md;
   border: 1px solid $color-gray-200;
   border-radius: $border-radius-lg;
-  box-shadow: $shadow-sm;
-  transition: all $transition-base;
+  background-color: $color-white;
 
-  &:hover {
-    box-shadow: $shadow-md;
+  &__label {
+    margin: 0 0 $spacing-xs;
+    font-size: $font-size-sm;
+    color: $color-gray-500;
   }
-}
 
-.p-card-header {
-  padding: $spacing-lg;
-  border-bottom: 1px solid $color-gray-200;
-}
+  &__value {
+    margin: 0;
+    font-size: $font-size-xl;
+    font-weight: $font-weight-semibold;
+    color: $color-gray-900;
+    font-variant-numeric: tabular-nums;
+  }
 
-.p-card-body {
-  padding: $spacing-lg;
-}
+  &--danger &__value {
+    color: $color-danger;
+  }
 
-.p-card-footer {
-  padding: $spacing-lg;
-  border-top: 1px solid $color-gray-200;
-  background-color: $color-gray-50;
-}
-
-.p-card-content {
-  padding: $spacing-lg;
-}
-
-.p-card-title {
-  font-weight: $font-weight-bold;
-  color: $color-gray-900;
-}
-
-.p-card-subtitle {
-  color: $color-gray-500;
-  font-size: $font-size-sm;
+  &--success &__value {
+    color: $color-success;
+  }
 }

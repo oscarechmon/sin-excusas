@@ -1,54 +1,95 @@
 // ============================================================================
-// Forms
+// Formularios
 // ============================================================================
+//
+// El tema de PrimeVue ya define bordes, padding y estados de foco. Aquí solo
+// se define el LAYOUT de los formularios; sobrescribir la apariencia de los
+// componentes duplicaría responsabilidades y rompería el tema (§5).
 
-.p-inputtext,
-.p-inputnumber,
-.p-inputmask,
-.p-dropdown,
-.p-multiselect,
-textarea {
-  width: 100%;
-  padding: $spacing-sm $spacing-md;
-  border: 1px solid $color-gray-300;
-  border-radius: $border-radius-md;
-  font-family: inherit;
-  transition: all $transition-base;
+.form-grid {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-md;
+}
 
-  @include focus-ring;
+.form-row {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+  gap: $spacing-md;
+}
 
-  &:hover {
-    border-color: $color-gray-400;
+.form-field {
+  display: flex;
+  flex-direction: column;
+  gap: $spacing-xs;
+  min-width: 0;
+
+  > label {
+    font-size: $font-size-sm;
+    font-weight: $font-weight-medium;
+    color: $color-gray-700;
   }
 
-  &:disabled {
-    @include disabled-state;
-    background-color: $color-gray-100;
+  // Los controles de PrimeVue ocupan el ancho de su campo dentro del
+  // formulario; fuera de él conservan su ancho natural.
+  .p-inputtext,
+  .p-inputnumber,
+  .p-inputmask,
+  .p-select,
+  .p-multiselect,
+  .p-datepicker,
+  .p-autocomplete,
+  .p-textarea {
+    width: 100%;
   }
 
-  &.p-invalid {
-    border-color: $color-danger;
+  &--inline {
+    flex-direction: row;
+    align-items: center;
+    gap: $spacing-sm;
 
-    &:focus {
-      outline-color: $color-danger;
+    > label {
+      margin: 0;
+      cursor: pointer;
     }
   }
 }
 
-.p-error {
-  display: block;
+.form-error {
   color: $color-danger;
-  font-size: $font-size-sm;
-  margin-top: $spacing-sm;
+  font-size: $font-size-xs;
 }
 
-.form-group {
-  margin-bottom: $spacing-lg;
+.required {
+  color: $color-danger;
+}
 
-  label {
-    display: block;
-    font-weight: $font-weight-medium;
-    margin-bottom: $spacing-sm;
-    color: $color-gray-900;
+// ----------------------------------------------------------------------------
+// Barra de filtros, común a todos los listados
+// ----------------------------------------------------------------------------
+
+.filter-card {
+  margin-bottom: $spacing-md;
+}
+
+.filters {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  flex-wrap: wrap;
+
+  .p-iconfield {
+    flex: 1 1 240px;
+    min-width: 0;
+  }
+
+  .p-inputtext {
+    width: 100%;
+  }
+
+  .p-select,
+  .p-multiselect,
+  .p-datepicker {
+    flex: 0 1 200px;
   }
 }

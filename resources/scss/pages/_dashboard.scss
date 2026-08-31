@@ -6,21 +6,16 @@
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
   gap: $spacing-md;
-  margin-bottom: $spacing-xl;
+  margin-bottom: $spacing-lg;
 }
 
 .metric-card.p-card {
-  border: 1px solid $color-gray-200;
   box-shadow: $shadow-sm;
-
-  .p-card-body {
-    padding: $spacing-lg;
-  }
 }
 
 .metric {
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   gap: $spacing-md;
 }
 
@@ -49,7 +44,7 @@
 
   &--warning {
     background-color: rgba($color-warning, 0.14);
-    color: $color-warning;
+    color: darken($color-warning, 10%);
   }
 }
 
@@ -71,21 +66,74 @@
   font-weight: $font-weight-semibold;
   color: $color-gray-900;
   line-height: $line-height-tight;
+  font-variant-numeric: tabular-nums;
 }
 
-.quick-actions__title {
+.metric__hint {
+  margin: 0;
+  font-size: $font-size-xs;
+  color: $color-gray-400;
+}
+
+// ----------------------------------------------------------------------------
+// Alertas y accesos rápidos
+// ----------------------------------------------------------------------------
+
+.dashboard-columns {
+  display: grid;
+  grid-template-columns: 1.4fr 1fr;
+  gap: $spacing-md;
+
+  @include respond-below(lg) {
+    grid-template-columns: 1fr;
+  }
+}
+
+.section-title {
   margin: 0 0 $spacing-md;
-  font-size: $font-size-lg;
+  font-size: $font-size-base;
   font-weight: $font-weight-semibold;
   color: $color-gray-800;
 }
 
-.quick-actions__grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
-  gap: $spacing-sm;
+.alerts {
+  list-style: none;
+  margin: 0;
+  padding: 0;
 }
 
-.dashboard-note {
-  margin-top: $spacing-xl;
+.alert {
+  display: flex;
+  align-items: center;
+  gap: $spacing-sm;
+  padding: $spacing-sm 0;
+  border-bottom: 1px solid $color-gray-100;
+
+  &:last-child {
+    border-bottom: none;
+  }
+
+  &__icon {
+    color: $color-warning;
+    flex-shrink: 0;
+  }
+
+  &__text {
+    flex: 1;
+    font-size: $font-size-sm;
+    color: $color-gray-700;
+  }
+}
+
+.alerts-empty {
+  margin: 0;
+  padding: $spacing-lg 0;
+  text-align: center;
+  font-size: $font-size-sm;
+  color: $color-gray-500;
+}
+
+.quick-actions {
+  display: grid;
+  gap: $spacing-sm;
 }

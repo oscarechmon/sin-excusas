@@ -2,27 +2,21 @@
  * Definición única del menú lateral.
  *
  * Se mantiene aquí (y no dentro del layout) para que agregar un módulo sea
- * tocar un solo archivo, y para que los roles no queden repartidos por varios
- * componentes.
+ * tocar un solo archivo, y para que los permisos no queden repartidos por
+ * varios componentes.
  *
- * - `route`: nombre de la ruta en vue-router. Si falta, el módulo aún no existe
- *   y el item se muestra deshabilitado en lugar de enlazar a la nada.
- * - `roles`: roles que ven el item. Vacío u omitido = visible para todos.
+ * - `route`: nombre de la ruta en vue-router. Si falta, el módulo aún no
+ *   existe y el item se muestra deshabilitado en lugar de enlazar a la nada.
+ * - `permission`: mismo nombre que protege el endpoint en el backend. El menú
+ *   solo oculta lo que el usuario no podría usar; la seguridad real está en la
+ *   API (§29).
  */
-
-export const RoleName = {
-  ADMINISTRADOR: 'Administrador',
-  RECEPCION: 'Recepción',
-  ESPECIALISTA: 'Especialista',
-} as const
-
-export type RoleValue = (typeof RoleName)[keyof typeof RoleName]
 
 export interface NavItem {
   label: string
   icon: string
   route?: string
-  roles?: RoleValue[]
+  permission?: string
 }
 
 export interface NavSection {
@@ -30,64 +24,37 @@ export interface NavSection {
   items: NavItem[]
 }
 
-const ALL = [RoleName.ADMINISTRADOR, RoleName.RECEPCION, RoleName.ESPECIALISTA]
-
 export const navigation: NavSection[] = [
   {
     label: 'Principal',
-    items: [
-      { label: 'Dashboard', icon: 'pi pi-home', route: 'dashboard', roles: ALL },
-    ],
+    items: [{ label: 'Dashboard', icon: 'pi pi-home', route: 'dashboard' }],
   },
   {
     label: 'Gestión',
     items: [
-      {
-        label: 'Clientes',
-        icon: 'pi pi-users',
-        route: 'clients',
-        roles: [RoleName.ADMINISTRADOR, RoleName.RECEPCION],
-      },
-      { label: 'Agenda', icon: 'pi pi-calendar', route: 'appointments', roles: ALL },
-      {
-        label: 'Servicios',
-        icon: 'pi pi-star',
-        route: 'services',
-        roles: [RoleName.ADMINISTRADOR],
-      },
-      {
-        label: 'Categorías',
-        icon: 'pi pi-tags',
-        route: 'service-categories',
-        roles: [RoleName.ADMINISTRADOR],
-      },
+      { label: 'Clientes', icon: 'pi pi-users', route: 'clients', permission: 'clients.view' },
+      { label: 'Agenda', icon: 'pi pi-calendar', route: 'appointments', permission: 'appointments.view' },
+      { label: 'Atenciones', icon: 'pi pi-check-square', route: 'attendances', permission: 'attendances.view' },
     ],
   },
   {
     label: 'Operaciones',
     items: [
-      { label: 'Atenciones', icon: 'pi pi-check-square', roles: ALL },
-      {
-        label: 'Ventas',
-        icon: 'pi pi-shopping-cart',
-        roles: [RoleName.ADMINISTRADOR, RoleName.RECEPCION],
-      },
-      {
-        label: 'Caja',
-        icon: 'pi pi-wallet',
-        roles: [RoleName.ADMINISTRADOR, RoleName.RECEPCION],
-      },
-      { label: 'Paquetes', icon: 'pi pi-box', roles: [RoleName.ADMINISTRADOR, RoleName.RECEPCION] },
+      { label: 'Ventas', icon: 'pi pi-shopping-cart', route: 'sales', permission: 'sales.view' },
+      { label: 'Caja', icon: 'pi pi-wallet', route: 'cash', permission: 'cash.view' },
+      { label: 'Paquetes', icon: 'pi pi-box', route: 'packages', permission: 'packages.view' },
+      { label: 'Inventario', icon: 'pi pi-database', route: 'inventory', permission: 'inventory.view' },
     ],
   },
   {
-    label: 'Administración',
+    label: 'Configuración',
     items: [
-      { label: 'Inventario', icon: 'pi pi-database', roles: [RoleName.ADMINISTRADOR] },
-      { label: 'Personal', icon: 'pi pi-id-card', roles: [RoleName.ADMINISTRADOR] },
-      { label: 'Comisiones', icon: 'pi pi-percentage', roles: [RoleName.ADMINISTRADOR] },
-      { label: 'Reportes', icon: 'pi pi-chart-bar', roles: [RoleName.ADMINISTRADOR] },
-      { label: 'Usuarios', icon: 'pi pi-lock', roles: [RoleName.ADMINISTRADOR] },
+      { label: 'Servicios', icon: 'pi pi-star', route: 'services', permission: 'services.view' },
+      { label: 'Categorías', icon: 'pi pi-tags', route: 'service-categories', permission: 'services.manage' },
+      { label: 'Personal', icon: 'pi pi-id-card', route: 'staff', permission: 'employees.view' },
+      { label: 'Comisiones', icon: 'pi pi-percentage', route: 'commissions', permission: 'commissions.view' },
+      { label: 'Reportes', icon: 'pi pi-chart-bar', route: 'reports', permission: 'reports.view' },
+      { label: 'Usuarios', icon: 'pi pi-lock', permission: 'users.view' },
     ],
   },
 ]
@@ -98,6 +65,15 @@ export const routeTitles: Record<string, string> = {
   clients: 'Clientes',
   'client-detail': 'Ficha de cliente',
   appointments: 'Agenda',
+  attendances: 'Atenciones',
   services: 'Servicios',
   'service-categories': 'Categorías',
+  staff: 'Personal',
+  inventory: 'Inventario',
+  packages: 'Paquetes',
+  sales: 'Ventas',
+  cash: 'Caja',
+  commissions: 'Comisiones',
+  reports: 'Reportes',
+  forbidden: 'Sin acceso',
 }

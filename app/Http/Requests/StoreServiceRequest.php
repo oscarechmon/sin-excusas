@@ -19,7 +19,8 @@ class StoreServiceRequest extends FormRequest
             'price' => 'required|numeric|min:0',
             'duration_minutes' => 'required|integer|min:15',
             'description' => 'nullable|string',
-            'employee_ids' => 'nullable|array|exists:users,id',
+            'employee_ids' => 'nullable|array',
+            'employee_ids.*' => 'integer|exists:employees,id',
             'active' => 'boolean',
         ];
     }

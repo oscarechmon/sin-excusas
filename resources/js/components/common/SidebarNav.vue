@@ -18,18 +18,13 @@
               :to="{ name: item.route }"
               class="app-nav__item"
               :class="{ 'app-nav__item--active': isActive(item.route) }"
-              v-tooltip.right="collapsed ? item.label : undefined"
               @click="emit('navigate')"
             >
               <i :class="item.icon" class="app-nav__icon" />
               <span v-if="!collapsed" class="app-nav__label">{{ item.label }}</span>
             </router-link>
 
-            <span
-              v-else
-              class="app-nav__item app-nav__item--disabled"
-              v-tooltip.right="collapsed ? `${item.label} (próximamente)` : 'Módulo aún no disponible'"
-            >
+            <span v-else class="app-nav__item app-nav__item--disabled">
               <i :class="item.icon" class="app-nav__icon" />
               <template v-if="!collapsed">
                 <span class="app-nav__label">{{ item.label }}</span>
@@ -47,7 +42,7 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { navigation, type RoleValue } from '@/config/navigation'
+import { navigation } from '@/config/navigation'
 import Tag from 'primevue/tag'
 
 withDefaults(defineProps<{ collapsed?: boolean }>(), { collapsed: false })
@@ -56,12 +51,12 @@ const emit = defineEmits<{ navigate: [] }>()
 const route = useRoute()
 const authStore = useAuthStore()
 
-const canSee = (roles?: RoleValue[]) =>
-  !roles?.length || roles.some((role) => authStore.hasRole(role))
+// Un item sin permiso declarado es visible para cualquier usuario autenticado.
+const canSee = (permission?: string) => !permission || authStore.hasPermission(permission)
 
 const visibleSections = computed(() =>
   navigation
-    .map((section) => ({ ...section, items: section.items.filter((i) => canSee(i.roles)) }))
+    .map((section) => ({ ...section, items: section.items.filter((i) => canSee(i.permission)) }))
     .filter((section) => section.items.length > 0)
 )
 

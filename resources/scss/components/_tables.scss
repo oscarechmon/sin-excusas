@@ -1,30 +1,36 @@
 // ============================================================================
-// Tables
+// Tablas
 // ============================================================================
+//
+// El tema resuelve la apariencia de DataTable. Aquí solo van los patrones
+// propios de la aplicación que se repiten en varios módulos.
 
-.p-datatable {
-  font-size: $font-size-sm;
-  border-color: $color-gray-200;
-  background-color: $color-white;
+.table-empty {
+  margin: 0;
+  padding: $spacing-xl 0;
+  text-align: center;
+  color: $color-gray-500;
 }
 
-.p-datatable-thead > tr > th {
-  background-color: $color-gray-50;
-  color: $color-gray-900;
+.row-actions {
+  display: flex;
+  gap: $spacing-xs;
+  justify-content: flex-end;
+}
+
+// Columna de importes: alineada a la derecha y en cifras tabulares, para que
+// los decimales queden bajo los decimales.
+.cell-amount {
+  display: block;
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+
+.cell-muted {
+  color: $color-gray-500;
+}
+
+.cell-strong {
   font-weight: $font-weight-semibold;
-  border-color: $color-gray-200;
-  padding: $spacing-md;
-}
-
-.p-datatable-tbody > tr {
-  border-color: $color-gray-200;
-
-  > td {
-    padding: $spacing-md;
-    border-color: $color-gray-200;
-  }
-
-  &:hover {
-    background-color: $color-gray-50;
-  }
+  color: $color-gray-900;
 }
