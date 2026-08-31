@@ -28,11 +28,27 @@ class RolePermissionSeeder extends Seeder
                 ['guard_name' => 'web']
             );
 
-            // syncPermissions deja el rol exactamente con lo declarado en el
-            // enum: si se retira un permiso del código, también se retira aquí.
-            $role->syncPermissions(PermissionName::forRole($roleName));
+            $this->applyPermissions($role, $roleName);
         }
 
         app(PermissionRegistrar::class)->forgetCachedPermissions();
+    }
+
+    private function applyPermissions(Role $role, RoleName $roleName): void
+    {
+        // El Administrador siempre recibe todos los permisos, incluidos los que
+        // se agreguen al enum más adelante: su definición es "acceso general".
+        if ($roleName === RoleName::ADMINISTRADOR) {
+            $role->syncPermissions(PermissionName::values());
+
+            return;
+        }
+
+        // Los demás roles solo se siembran al crearse. Después son
+        // configurables desde la pantalla de Usuarios y roles, y volver a
+        // ejecutar el seeder no debe descartar esa configuración (§45).
+        if ($role->wasRecentlyCreated) {
+            $role->syncPermissions(PermissionName::forRole($roleName));
+        }
     }
 }

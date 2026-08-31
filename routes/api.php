@@ -15,9 +15,11 @@ use App\Http\Controllers\Api\InventoryItemController;
 use App\Http\Controllers\Api\PackageController;
 use App\Http\Controllers\Api\PaymentMethodController;
 use App\Http\Controllers\Api\ReportController;
+use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SaleController;
 use App\Http\Controllers\Api\ServiceCategoryController;
 use App\Http\Controllers\Api\ServiceController;
+use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
 /*
@@ -172,6 +174,20 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/cash', [ReportController::class, 'cash']);
         Route::get('/commissions', [ReportController::class, 'commissions']);
         Route::get('/stock', [ReportController::class, 'stock']);
+    });
+
+    // ------------------------------------------------------ Usuarios y roles
+    Route::middleware('permission:users.view')->group(function () {
+        Route::get('/users', [UserController::class, 'index']);
+        Route::get('/users/{user}', [UserController::class, 'show']);
+        Route::get('/roles', [RoleController::class, 'index']);
+    });
+    Route::middleware('permission:users.manage')->group(function () {
+        Route::post('/users', [UserController::class, 'store']);
+        Route::match(['put', 'patch'], '/users/{user}', [UserController::class, 'update']);
+        Route::delete('/users/{user}', [UserController::class, 'destroy']);
+        Route::post('/users/{user}/revoke-sessions', [UserController::class, 'revokeSessions']);
+        Route::put('/roles/{role}/permissions', [RoleController::class, 'syncPermissions']);
     });
 
     // --------------------------------------------------------- Métodos de pago

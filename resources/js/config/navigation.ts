@@ -54,7 +54,7 @@ export const navigation: NavSection[] = [
       { label: 'Personal', icon: 'pi pi-id-card', route: 'staff', permission: 'employees.view' },
       { label: 'Comisiones', icon: 'pi pi-percentage', route: 'commissions', permission: 'commissions.view' },
       { label: 'Reportes', icon: 'pi pi-chart-bar', route: 'reports', permission: 'reports.view' },
-      { label: 'Usuarios', icon: 'pi pi-lock', permission: 'users.view' },
+      { label: 'Usuarios', icon: 'pi pi-lock', route: 'users', permission: 'users.view' },
     ],
   },
 ]
@@ -75,5 +75,6 @@ export const routeTitles: Record<string, string> = {
   cash: 'Caja',
   commissions: 'Comisiones',
   reports: 'Reportes',
+  users: 'Usuarios y roles',
   forbidden: 'Sin acceso',
 }
