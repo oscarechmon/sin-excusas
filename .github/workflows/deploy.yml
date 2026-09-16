@@ -88,10 +88,16 @@ jobs:
             resources/js/**
             resources/scss/**
             public/hot
-            # Datos del servidor que nunca deben pisarse ni borrarse:
-            storage/app/**
-            storage/logs/**
-            storage/framework/cache/**
-            storage/framework/sessions/**
-            storage/framework/views/**
+            # Datos del servidor que nunca deben pisarse ni borrarse. Los patrones
+            # [!.]* dejan pasar los .gitignore, que son los que crean las carpetas.
+            storage/app/public/[!.]*
+            storage/app/public/[!.]*/**
+            storage/app/private/[!.]*
+            storage/app/private/[!.]*/**
+            storage/logs/[!.]*
+            storage/framework/cache/data/[!.]*
+            storage/framework/cache/data/[!.]*/**
+            storage/framework/sessions/[!.]*
+            storage/framework/views/[!.]*
+            storage/framework/testing/**
             public/storage
