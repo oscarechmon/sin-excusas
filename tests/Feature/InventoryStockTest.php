@@ -101,4 +101,25 @@ class InventoryStockTest extends TestCase
         $this->assertEquals(35, $item->fresh()->stock);
         $this->assertEquals(35, $sumOfMovements);
     }
+    /** Al crear desde el panel, el stock inicial se acepta y queda como compra inicial. */
+    #[Test]
+    public function crear_un_producto_con_stock_inicial_registra_el_movimiento(): void
+    {
+        $this->seed(\Database\Seeders\RolePermissionSeeder::class);
+        $admin = \App\Models\User::factory()->create(['active' => true]);
+        $admin->assignRole(\App\Enums\RoleName::ADMINISTRADOR->value);
+        \Laravel\Sanctum\Sanctum::actingAs($admin);
+
+        $response = $this->postJson('/api/inventory-items', [
+            'name' => 'Omega 3', 'unit' => 'unidad', 'stock' => 20, 'min_stock' => 2, 'cost' => 30, 'is_sellable' => true, 'sale_price' => 55,
+        ])->assertCreated();
+
+        $item = InventoryItem::findOrFail($response->json('data.id'));
+        $this->assertEquals(20, $item->stock);
+        $this->assertSame(1, $item->movements()->count());
+
+        // Al editar, el stock sigue bloqueado.
+        $this->patchJson("/api/inventory-items/{$item->id}", ['name' => 'Omega 3', 'unit' => 'unidad', 'min_stock' => 2, 'cost' => 30, 'stock' => 99])
+            ->assertUnprocessable()->assertJsonValidationErrors('stock');
+    }
 }
