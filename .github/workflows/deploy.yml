@@ -40,7 +40,10 @@ jobs:
           coverage: none
 
       - name: Instalar dependencias PHP (sin dev)
-        run: composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
+        # bootstrap/cache está en .gitignore: sin la carpeta, package:discover falla.
+        run: |
+          mkdir -p bootstrap/cache storage/framework/{cache/data,sessions,views} storage/logs
+          composer install --no-dev --prefer-dist --no-interaction --no-progress --optimize-autoloader
 
       - name: Preparar Node 20
         uses: actions/setup-node@v4
