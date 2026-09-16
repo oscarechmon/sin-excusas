@@ -57,6 +57,7 @@ export const navigation: NavSection[] = [
     items: [
       { label: 'Servicios', icon: 'pi pi-star', route: 'services', permission: 'services.view' },
       { label: 'Categorías', icon: 'pi pi-tags', route: 'service-categories', permission: 'services.manage' },
+      { label: 'Contenido web', icon: 'pi pi-images', route: 'site-content', permission: 'settings.manage' },
     ],
   },
   {
@@ -84,6 +85,7 @@ export const routeTitles: Record<string, string> = {
   packages: 'Paquetes',
   sales: 'Ventas',
   'online-sales': 'Ventas online',
+  'site-content': 'Contenido web',
   cash: 'Caja',
   commissions: 'Comisiones',
   reports: 'Reportes',

@@ -21,7 +21,11 @@
       </div>
 
       <div class="se-media se-media--wide mt-5" style="border-radius: var(--se-radius);">
-        <div class="se-placeholder">Foto amplia: equipo o recepción del centro</div>
+        @if ($content['about.photo']['image_url'])
+          <img src="{{ $content['about.photo']['image_url'] }}" alt="Equipo de Sin Excusas Centro Estético" loading="lazy">
+        @else
+          <div class="se-placeholder">Foto amplia: equipo o recepción del centro</div>
+        @endif
       </div>
 
     </div>

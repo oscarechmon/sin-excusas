@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\InventoryItem;
 use App\Models\Package;
 use App\Models\ServiceCategory;
+use App\Support\SiteContentRepository;
 use App\Support\SiteMenu;
 use Illuminate\Contracts\View\View;
 use Illuminate\Support\Str;
@@ -13,19 +14,19 @@ use Illuminate\Support\Str;
 /**
  * Web pública.
  *
- * Inicio y Nosotros son contenido fijo; Servicios y Suplementos se arman con
- * lo que el administrador publicó desde el ERP.
+ * Inicio y Nosotros toman sus fotos y textos de "Contenido web"; Servicios y
+ * Productos se arman con lo que el administrador publicó desde el ERP.
  */
 class SiteController extends Controller
 {
     public function home(): View
     {
-        return view('site.home');
+        return view('site.home', ['content' => SiteContentRepository::all()]);
     }
 
     public function about(): View
     {
-        return view('site.about');
+        return view('site.about', ['content' => SiteContentRepository::all()]);
     }
 
     public function services(): View

@@ -7,7 +7,8 @@
   {{-- ============================================================ Hero --}}
   <section class="se-hero">
     <div class="se-hero__media">
-      <img src="{{ asset('assets/img/imagen-1.png') }}" alt="Tratamiento facial en cabina" fetchpriority="high">
+      <img src="{{ $content['home.hero']['image_url'] ?? asset('assets/img/imagen-1.png') }}"
+           alt="Tratamiento facial en cabina" fetchpriority="high">
     </div>
     <div class="se-hero__veil"></div>
     <div class="se-edge-bottom"></div>
@@ -97,25 +98,21 @@
         <a class="se-link-arrow flex-shrink-0" href="{{ route('site.services') }}">Ver todo →</a>
       </header>
 
-      @php
-        $lines = [
-            ['Faciales', 'Limpieza, hidratación, peeling y firmeza.', 'faciales'],
-            ['Corporales', 'Reducción, drenaje y moldeo corporal.', 'corporales'],
-            ['Post operatorio', 'Recuperación tras cirugía y post parto.', 'corporales'],
-            ['Podología', 'Cuidado clínico del pie para todos.', 'podologia'],
-        ];
-      @endphp
-
+      {{-- Fotos y textos editables desde el panel: Catálogo > Contenido web. --}}
       <div class="row g-4 mt-4">
-        @foreach ($lines as [$title, $text, $anchor])
+        @foreach ($content->filter(fn ($slot, $key) => str_starts_with($key, 'home.line.')) as $line)
           <div class="col-12 col-sm-6 col-lg-3">
-            <a class="se-tile" href="{{ route('site.services') }}#{{ $anchor }}">
+            <a class="se-tile" href="{{ route('site.services') }}#{{ $line['anchor'] }}">
               <div class="se-media se-media--tile">
-                <div class="se-placeholder">Foto: {{ mb_strtolower($title) }}</div>
+                @if ($line['image_url'])
+                  <img src="{{ $line['image_url'] }}" alt="{{ $line['title'] }}" loading="lazy">
+                @else
+                  <div class="se-placeholder">Foto: {{ mb_strtolower($line['title']) }}</div>
+                @endif
               </div>
               <div class="se-tile__body se-tile__body--ruled">
-                <h3 class="se-tile__title mb-0">{{ $title }}</h3>
-                <p class="se-tile__text mb-0">{{ $text }}</p>
+                <h3 class="se-tile__title mb-0">{{ $line['title'] }}</h3>
+                <p class="se-tile__text mb-0">{{ $line['text'] }}</p>
                 <p class="se-tile__cue mb-0 mt-auto pt-3">Descubrir →</p>
               </div>
             </a>
@@ -132,7 +129,8 @@
 
         <div class="col-12 col-lg-6">
           <div class="se-framed">
-            <img src="{{ asset('assets/img/imagen-1.png') }}" alt="Espacio y cabina del centro estético"
+            <img src="{{ $content['home.products']['image_url'] ?? asset('assets/img/imagen-1.png') }}"
+                 alt="Espacio y cabina del centro estético"
                  class="se-framed__media se-media se-media--portrait" loading="lazy">
           </div>
         </div>

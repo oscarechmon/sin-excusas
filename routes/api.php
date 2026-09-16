@@ -22,6 +22,7 @@ use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SaleController;
 use App\Http\Controllers\Api\ServiceCategoryController;
 use App\Http\Controllers\Api\ServiceController;
+use App\Http\Controllers\Api\SiteContentController;
 use App\Http\Controllers\Api\StoreSettingController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
@@ -210,6 +211,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::delete('/users/{user}', [UserController::class, 'destroy']);
         Route::post('/users/{user}/revoke-sessions', [UserController::class, 'revokeSessions']);
         Route::put('/roles/{role}/permissions', [RoleController::class, 'syncPermissions']);
+    });
+
+    // ------------------------------------------------------- Contenido web
+    // Fotos y textos de la web pública: es configuración del sitio.
+    Route::middleware("permission:settings.manage")->group(function () {
+        Route::get("/site-contents", [SiteContentController::class, "index"]);
+        Route::match(["put", "patch"], "/site-contents/{key}", [SiteContentController::class, "update"]);
+        Route::post("/site-contents/{key}/image", [SiteContentController::class, "storeImage"]);
+        Route::delete("/site-contents/{key}/image", [SiteContentController::class, "destroyImage"]);
     });
 
     // --------------------------------------------------------- Métodos de pago
