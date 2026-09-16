@@ -3,7 +3,8 @@
     :visible="visible"
     modal
     header="Nueva venta"
-    :style="{ width: '780px' }"
+    :style="{ width: '960px' }"
+    :breakpoints="{ '1000px': '96vw' }"
     @update:visible="$emit('update:visible', $event)"
   >
     <form class="form-grid" @submit.prevent="submit">
@@ -364,34 +365,37 @@ const submit = async () => {
 }
 
 .line {
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(0, 2.2fr) 6rem 8.5rem minmax(0, 1.4fr) 6.5rem 2.5rem;
   align-items: center;
   gap: 0.5rem;
   padding: 0.375rem 0;
 
-  &__item {
-    flex: 2;
-    min-width: 0;
-  }
-
-  &__qty {
-    width: 90px;
-  }
-
-  &__price {
-    width: 130px;
-  }
-
-  &__employee {
-    flex: 1;
+  // Los InputNumber y Select de PrimeVue traen ancho propio: se fuerza a que
+  // ocupen su celda para que la fila no se desborde.
+  :deep(.p-select),
+  :deep(.p-inputnumber),
+  :deep(.p-inputtext) {
+    width: 100%;
     min-width: 0;
   }
 
   &__subtotal {
-    width: 100px;
     text-align: right;
     font-variant-numeric: tabular-nums;
     font-weight: 600;
+  }
+
+  @media (max-width: 860px) {
+    grid-template-columns: minmax(0, 1fr) 6rem 8.5rem 2.5rem;
+
+    &__employee {
+      grid-column: 1 / 3;
+    }
+
+    &__subtotal {
+      grid-column: 3 / 5;
+    }
   }
 }
 

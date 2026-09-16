@@ -55,7 +55,9 @@
   --se-hairline-l:   linear-gradient(90deg, #C8A15A, transparent);
 
   /* Tipografía */
-  --se-font-serif:   'Cormorant Garamond', Georgia, 'Times New Roman', serif;
+  /* El sitio usa una sola tipografía (Jost). La variable "serif" se mantiene
+     como alias para no reescribir las reglas que ya la referencian. */
+  --se-font-serif:   'Jost', system-ui, -apple-system, 'Segoe UI', sans-serif;
   --se-font-sans:    'Jost', system-ui, -apple-system, 'Segoe UI', sans-serif;
 
   /* Layout */
@@ -1047,7 +1049,7 @@ button:focus-visible,
 }
 
 .se-price {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--se-font-serif);
   font-size: 1.5rem;
   font-weight: 600;
   line-height: 1;
@@ -1084,13 +1086,13 @@ button:focus-visible,
 .se-testimonials .accordion-item + .accordion-item { border-top: none; }
 
 .se-testimonials .accordion-button {
-  font-family: 'Jost', sans-serif;
+  font-family: var(--se-font-sans);
   font-weight: 500;
   color: var(--se-ink);
 }
 
 .se-testimonials .accordion-body {
-  font-family: 'Cormorant Garamond', serif;
+  font-family: var(--se-font-serif);
   font-size: 1.05rem;
   line-height: 1.6;
   color: #4A4340;
@@ -1450,3 +1452,41 @@ button:focus-visible,
 }
 
 .se-dropdown .dropdown-item-text { padding: 6px 20px; }
+
+/* ==========================================================================
+   16. Ajuste tipográfico (una sola familia)
+   ========================================================================== */
+
+.se-serif,
+.se-hero__title,
+.se-pagehead__title,
+.se-pagehead__title--lg,
+.se-cta__title,
+.se-tile__title,
+.se-card__title,
+.se-price {
+  font-weight: 300;
+  letter-spacing: -.015em;
+}
+
+.se-hero__title,
+.se-pagehead__title,
+.se-pagehead__title--lg,
+.se-cta__title {
+  line-height: 1.08;
+}
+
+.se-tile__title,
+.se-card__title,
+.se-price {
+  font-weight: 500;
+  letter-spacing: -.005em;
+}
+
+/* Las cursivas decorativas pierden sentido sin la serif. */
+.se-hero__title em,
+.se-pagehead__title em,
+.se-cta__title em,
+.se-serif em {
+  font-style: normal;
+}

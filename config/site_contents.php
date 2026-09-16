@@ -16,6 +16,7 @@
 
 return [
     'home.hero' => [
+        'aspect' => 16 / 9,
         'label' => 'Portada · foto principal',
         'group' => 'Inicio',
         'hint' => 'Horizontal y de buena calidad; se ve a pantalla completa. Ideal 1920×1080.',
@@ -24,6 +25,7 @@ return [
     ],
 
     'home.line.faciales' => [
+        'aspect' => 4 / 5,
         'label' => 'Línea 1 · Faciales',
         'group' => 'Inicio · Líneas de tratamiento',
         'hint' => 'Foto vertical (4:5).',
@@ -33,6 +35,7 @@ return [
     ],
 
     'home.line.corporales' => [
+        'aspect' => 4 / 5,
         'label' => 'Línea 2 · Corporales',
         'group' => 'Inicio · Líneas de tratamiento',
         'hint' => 'Foto vertical (4:5).',
@@ -42,6 +45,7 @@ return [
     ],
 
     'home.line.post-operatorio' => [
+        'aspect' => 4 / 5,
         'label' => 'Línea 3 · Post operatorio',
         'group' => 'Inicio · Líneas de tratamiento',
         'hint' => 'Foto vertical (4:5).',
@@ -51,6 +55,7 @@ return [
     ],
 
     'home.line.podologia' => [
+        'aspect' => 4 / 5,
         'label' => 'Línea 4 · Podología',
         'group' => 'Inicio · Líneas de tratamiento',
         'hint' => 'Foto vertical (4:5).',
@@ -60,6 +65,7 @@ return [
     ],
 
     'home.products' => [
+        'aspect' => 3 / 4,
         'label' => 'Inicio · Foto del bloque de productos',
         'group' => 'Inicio',
         'hint' => 'Foto vertical (3:4). Acompaña al texto de suplementos.',
@@ -68,6 +74,7 @@ return [
     ],
 
     'about.photo' => [
+        'aspect' => 21 / 9,
         'label' => 'Nosotros · Foto amplia',
         'group' => 'Nosotros',
         'hint' => 'Foto panorámica (21:9): equipo o recepción del centro.',

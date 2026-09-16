@@ -9,6 +9,7 @@ export interface SiteContentSlot {
   group: string
   hint: string | null
   fields: string[]
+  aspect: number
   title: string | null
   text: string | null
   image_url: string | null

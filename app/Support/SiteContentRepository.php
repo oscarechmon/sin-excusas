@@ -53,6 +53,8 @@ final class SiteContentRepository
             'group' => $slot['group'],
             'hint' => $slot['hint'] ?? null,
             'fields' => $slot['fields'],
+            // Proporción con la que se recorta la foto al subirla.
+            'aspect' => $slot['aspect'] ?? 4 / 3,
             'anchor' => $slot['anchor'] ?? null,
             // El valor editado manda; si está vacío se usa el de la configuración.
             'title' => $saved?->title ?: ($slot['default']['title'] ?? null),

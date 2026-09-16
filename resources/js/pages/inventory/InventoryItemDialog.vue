@@ -96,6 +96,8 @@
 
       <CatalogImageField
         v-if="form.is_sellable"
+        :aspect-ratio="4 / 3"
+        aspect-label="4:3"
         :image-url="imageUrl"
         :enabled="isEdit"
         :busy="imageBusy"

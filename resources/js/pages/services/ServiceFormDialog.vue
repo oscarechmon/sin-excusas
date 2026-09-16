@@ -71,6 +71,8 @@
       </div>
 
       <CatalogImageField
+        :aspect-ratio="4 / 3"
+        aspect-label="4:3"
         :image-url="imageUrl"
         :enabled="!!selectedService"
         :busy="imageBusy"
