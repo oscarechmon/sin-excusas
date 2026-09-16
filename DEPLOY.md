@@ -1,8 +1,8 @@
 # Despliegue en Hostinger (erp.noaspamassage.com)
 
 Cada `git push origin main` dispara `.github/workflows/deploy.yml`, que compila y
-sube por FTP a `public_html/erp/`. El `.htaccess` de la raíz reenvía las
-peticiones a `public/`.
+sube por FTP a `public_html/erp/`. El subdominio apunta a `public_html/erp/public`.
+El `.env` del servidor se crea a mano (Administrador de archivos) y el deploy nunca lo toca.
 
 ## Secretos en GitHub (Settings → Secrets and variables → Actions)
 
