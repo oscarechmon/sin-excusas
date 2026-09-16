@@ -74,9 +74,11 @@ select {
   font: inherit;
 }
 
+// Los íconos SVG de PrimeVue (.p-icon) quedan fuera: tienen tamaño propio y
+// con max-width: 100% se encogían a 0 px dentro de botones de solo ícono.
 img,
 picture,
-svg,
+svg:not(.p-icon),
 video {
   max-width: 100%;
   display: block;

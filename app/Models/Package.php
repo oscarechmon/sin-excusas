@@ -19,6 +19,7 @@ class Package extends Model
         'total_sessions',
         'validity_days',
         'active',
+        'is_published',
     ];
 
     protected function casts(): array
@@ -28,6 +29,7 @@ class Package extends Model
             'total_sessions' => 'integer',
             'validity_days' => 'integer',
             'active' => 'boolean',
+            'is_published' => 'boolean',
         ];
     }
 
@@ -44,5 +46,11 @@ class Package extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('active', true);
+    }
+
+    /** Visible en la web: publicado y todavía activo en el ERP. */
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('is_published', true)->where('active', true);
     }
 }

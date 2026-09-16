@@ -4,6 +4,7 @@ use App\Http\Controllers\Api\AppointmentController;
 use App\Http\Controllers\Api\AttendanceController;
 use App\Http\Controllers\Api\AuthController;
 use App\Http\Controllers\Api\CashSessionController;
+use App\Http\Controllers\Api\CatalogImageController;
 use App\Http\Controllers\Api\ClientController;
 use App\Http\Controllers\Api\ClientPackageController;
 use App\Http\Controllers\Api\CommissionController;
@@ -12,13 +13,16 @@ use App\Http\Controllers\Api\DashboardController;
 use App\Http\Controllers\Api\EmployeeController;
 use App\Http\Controllers\Api\InventoryCategoryController;
 use App\Http\Controllers\Api\InventoryItemController;
+use App\Http\Controllers\Api\OnlineOrderController;
 use App\Http\Controllers\Api\PackageController;
 use App\Http\Controllers\Api\PaymentMethodController;
+use App\Http\Controllers\Api\PublicationController;
 use App\Http\Controllers\Api\ReportController;
 use App\Http\Controllers\Api\RoleController;
 use App\Http\Controllers\Api\SaleController;
 use App\Http\Controllers\Api\ServiceCategoryController;
 use App\Http\Controllers\Api\ServiceController;
+use App\Http\Controllers\Api\StoreSettingController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
 
@@ -75,6 +79,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/services', [ServiceController::class, 'store']);
         Route::match(['put', 'patch'], '/services/{service}', [ServiceController::class, 'update']);
         Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
+        Route::patch('/services/{service}/publish', [PublicationController::class, 'service']);
+        Route::post('/services/{service}/image', [CatalogImageController::class, 'storeService']);
+        Route::delete('/services/{service}/image', [CatalogImageController::class, 'destroyService']);
 
         Route::post('/service-categories', [ServiceCategoryController::class, 'store']);
         Route::match(['put', 'patch'], '/service-categories/{service_category}', [ServiceCategoryController::class, 'update']);
@@ -103,6 +110,9 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/inventory-items', [InventoryItemController::class, 'store']);
         Route::match(['put', 'patch'], '/inventory-items/{inventory_item}', [InventoryItemController::class, 'update']);
         Route::delete('/inventory-items/{inventory_item}', [InventoryItemController::class, 'destroy']);
+        Route::patch('/inventory-items/{inventory_item}/publish', [PublicationController::class, 'inventoryItem']);
+        Route::post('/inventory-items/{inventory_item}/image', [CatalogImageController::class, 'storeInventoryItem']);
+        Route::delete('/inventory-items/{inventory_item}/image', [CatalogImageController::class, 'destroyInventoryItem']);
 
         Route::post('/inventory-categories', [InventoryCategoryController::class, 'store']);
         Route::match(['put', 'patch'], '/inventory-categories/{inventory_category}', [InventoryCategoryController::class, 'update']);
@@ -123,6 +133,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/packages', [PackageController::class, 'store']);
         Route::match(['put', 'patch'], '/packages/{package}', [PackageController::class, 'update']);
         Route::delete('/packages/{package}', [PackageController::class, 'destroy']);
+        Route::patch('/packages/{package}/publish', [PublicationController::class, 'package']);
     });
     Route::post('/packages/sell', [PackageController::class, 'sell'])->middleware('permission:packages.sell');
 
@@ -144,6 +155,17 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/sales/{sale}/payments', [SaleController::class, 'addPayment']);
     });
     Route::post('/sales/{sale}/cancel', [SaleController::class, 'cancel'])->middleware('permission:sales.cancel');
+
+    // ----------------------------------------------------------- Ventas online
+    Route::middleware('permission:online_sales.view')->group(function () {
+        Route::get('/online-orders', [OnlineOrderController::class, 'index']);
+        Route::get('/online-orders/{online_order}', [OnlineOrderController::class, 'show']);
+        Route::get('/store-settings', [StoreSettingController::class, 'show']);
+    });
+    Route::post('/online-orders/{online_order}/status', [OnlineOrderController::class, 'updateStatus'])
+        ->middleware('permission:online_sales.manage');
+    // El costo de delivery cambia lo que se cobra: es configuración, no operación.
+    Route::put('/store-settings', [StoreSettingController::class, 'update'])->middleware('permission:settings.manage');
 
     // -------------------------------------------------------------------- Caja
     Route::middleware('permission:cash.view')->group(function () {

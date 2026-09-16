@@ -70,6 +70,14 @@
         />
       </div>
 
+      <CatalogImageField
+        :image-url="imageUrl"
+        :enabled="!!selectedService"
+        :busy="imageBusy"
+        @upload="changeImage"
+        @remove="changeImage(null)"
+      />
+
       <div class="form-group">
         <label for="active">
           <Checkbox v-model="form.active" binary input-id="active" />
@@ -97,7 +105,9 @@
 
 <script setup lang="ts">
 import { ref, computed, watch } from 'vue';
+import { useToast } from 'primevue/usetoast';
 import { useServicesStore } from '@/stores/services';
+import CatalogImageField from '@/components/common/CatalogImageField.vue';
 import Button from 'primevue/button';
 import Checkbox from 'primevue/checkbox';
 import Dialog from 'primevue/dialog';
@@ -126,6 +136,30 @@ const selectedService = computed(() => props.service);
 const categories = computed(() => servicesStore.categories);
 const loading = ref(false);
 const errors = ref<any>({});
+const toast = useToast();
+
+// La foto se guarda al instante, independiente del botón "Guardar".
+const imageUrl = ref<string | null>(null);
+const imageBusy = ref(false);
+
+const changeImage = async (file: File | null) => {
+  if (!selectedService.value) return;
+  imageBusy.value = true;
+  try {
+    const response = await servicesStore.setImage(selectedService.value.id, file);
+    imageUrl.value = response.data.image_url;
+    toast.add({ severity: 'success', summary: 'Listo', detail: response.message, life: 3000 });
+  } catch (err: any) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: err.response?.data?.message || 'No se pudo guardar la foto.',
+      life: 5000,
+    });
+  } finally {
+    imageBusy.value = false;
+  }
+};
 const form = ref({
   name: '',
   category_id: null,
@@ -139,6 +173,7 @@ watch(
   () => props.visible,
   (newVal) => {
     if (newVal) {
+      imageUrl.value = selectedService.value?.image_url ?? null;
       if (selectedService.value) {
         form.value = {
           name: selectedService.value.name,
@@ -172,7 +207,8 @@ const handleSubmit = async () => {
   if (!form.value.category_id) {
     errors.value.category_id = 'La categoría es requerida';
   }
-  if (!form.value.price) {
+  // Precio 0 es válido: la web muestra "Consultar" en lugar del monto.
+  if (form.value.price === null) {
     errors.value.price = 'El precio es requerido';
   }
   if (!form.value.duration_minutes) {

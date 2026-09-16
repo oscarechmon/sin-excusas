@@ -15,6 +15,7 @@ class StoreInventoryItemRequest extends FormRequest
     {
         return [
             'name' => ['required', 'string', 'max:255'],
+            'description' => ['nullable', 'string', 'max:500'],
             'category_id' => ['nullable', 'exists:inventory_categories,id'],
             'unit' => ['required', 'string', 'max:20'],
             // El stock inicial solo se acepta al crear; después solo cambia

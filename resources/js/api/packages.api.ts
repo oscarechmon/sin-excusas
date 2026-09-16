@@ -21,6 +21,12 @@ export const packagesApi = {
     return data
   },
 
+  /** Publica o retira el paquete del catálogo de la web. */
+  async setPublished(id: number, isPublished: boolean) {
+    const { data } = await client.patch(`/packages/${id}/publish`, { is_published: isPublished })
+    return data
+  },
+
   /** Asigna un paquete a un cliente sin pasar por el módulo de ventas. */
   async sell(payload: Record<string, unknown>) {
     const { data } = await client.post('/packages/sell', payload)

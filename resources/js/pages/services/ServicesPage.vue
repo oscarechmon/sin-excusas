@@ -65,6 +65,16 @@
           />
         </template>
       </Column>
+      <Column header="Publicado en web" :style="{ width: '140px' }">
+        <template #body="slotProps">
+          <ToggleSwitch
+            :model-value="slotProps.data.is_published"
+            :disabled="publishingId === slotProps.data.id"
+            :aria-label="`Publicar ${slotProps.data.name} en la web`"
+            @update:model-value="(value: boolean) => togglePublished(slotProps.data, value)"
+          />
+        </template>
+      </Column>
       <Column header="Acciones" :style="{ width: '150px' }">
         <template #body="slotProps">
           <Button
@@ -105,10 +115,30 @@ import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
 import Select from 'primevue/select';
 import Tag from 'primevue/tag';
+import ToggleSwitch from 'primevue/toggleswitch';
 
 const servicesStore = useServicesStore();
 const confirm = useConfirm();
 const toast = useToast();
+
+const publishingId = ref<number | null>(null);
+
+const togglePublished = async (service: any, value: boolean) => {
+  publishingId.value = service.id;
+  try {
+    const response = await servicesStore.setPublished(service.id, value);
+    toast.add({ severity: 'success', summary: 'Listo', detail: response.message, life: 3000 });
+  } catch (err: any) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: err.response?.data?.message || 'No se pudo cambiar la publicación.',
+      life: 5000,
+    });
+  } finally {
+    publishingId.value = null;
+  }
+};
 
 const showServiceDialog = ref(false);
 const selectedService = ref<any | null>(null);

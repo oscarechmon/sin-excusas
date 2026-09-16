@@ -72,6 +72,16 @@
                 />
               </template>
             </Column>
+            <Column header="Publicado en web" :style="{ width: '140px' }">
+              <template #body="{ data }">
+                <ToggleSwitch
+                  :model-value="data.is_published"
+                  :disabled="publishingId === data.id"
+                  :aria-label="`Publicar ${data.name} en la web`"
+                  @update:model-value="(value: boolean) => togglePublished(data, value)"
+                />
+              </template>
+            </Column>
             <Column header="Acciones" :style="{ width: '110px' }">
               <template #body="{ data }">
                 <div class="row-actions">
@@ -170,11 +180,31 @@ import TabPanel from 'primevue/tabpanel'
 import TabPanels from 'primevue/tabpanels'
 import Tabs from 'primevue/tabs'
 import Tag from 'primevue/tag'
+import ToggleSwitch from 'primevue/toggleswitch'
 
 const store = usePackagesStore()
 const toast = useToast()
 const confirm = useConfirm()
 const format = useFormat()
+
+const publishingId = ref<number | null>(null)
+
+const togglePublished = async (item: any, value: boolean) => {
+  publishingId.value = item.id
+  try {
+    const response = await store.setPublished(item.id, value)
+    toast.add({ severity: 'success', summary: 'Listo', detail: response.message, life: 3000 })
+  } catch (err) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: extractMessage(err, 'No se pudo cambiar la publicación.'),
+      life: 5000,
+    })
+  } finally {
+    publishingId.value = null
+  }
+}
 
 const activeTab = ref('catalog')
 const statusFilter = ref<string | null>(null)

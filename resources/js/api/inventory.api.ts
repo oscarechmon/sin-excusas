@@ -32,6 +32,27 @@ export const inventoryApi = {
     return data
   },
 
+  /** Foto para la web. El header explícito evita que axios convierta el FormData a JSON. */
+  async uploadImage(id: number, file: File) {
+    const body = new FormData()
+    body.append('image', file)
+    const { data } = await client.post(`/inventory-items/${id}/image`, body, {
+      headers: { 'Content-Type': 'multipart/form-data' },
+    })
+    return data
+  },
+
+  async removeImage(id: number) {
+    const { data } = await client.delete(`/inventory-items/${id}/image`)
+    return data
+  },
+
+  /** Publica o retira el producto del catálogo de la web. Solo aplica a vendibles. */
+  async setPublished(id: number, isPublished: boolean) {
+    const { data } = await client.patch(`/inventory-items/${id}/publish`, { is_published: isPublished })
+    return data
+  },
+
   async movements(id: number, params: Record<string, unknown> = {}) {
     const { data } = await client.get(`/inventory-items/${id}/movements`, { params })
     return data

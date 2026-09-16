@@ -1,0 +1,18 @@
+# Hostinger sirve erp.noaspamassage.com desde esta carpeta (public_html/erp),
+# pero la raíz pública de Laravel es public/. Este archivo reenvía todo
+# hacia public/ sin exponer app/, vendor/ ni el .env.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    # Nunca servir archivos sensibles aunque alguien pida la ruta directa.
+    RewriteRule ^(\.env|composer\.(json|lock)|artisan|\.ftp-deploy-sync-state\.json) - [F,L]
+    RewriteRule ^(app|bootstrap|config|database|routes|storage|vendor|resources)(/|$) - [F,L]
+
+    # Todo lo demás se atiende desde public/.
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+<IfModule mod_autoindex.c>
+    Options -Indexes
+</IfModule>

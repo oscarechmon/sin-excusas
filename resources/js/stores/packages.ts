@@ -38,6 +38,14 @@ export const usePackagesStore = defineStore('packages', () => {
     return response
   }
 
+  /** Actualiza la fila en sitio: recargar la tabla haría saltar la paginación. */
+  const setPublished = async (id: number, isPublished: boolean) => {
+    const response = await packagesApi.setPublished(id, isPublished)
+    const row = list.items.value.find((item) => item.id === id)
+    if (row) row.is_published = response.data.is_published
+    return response
+  }
+
   const sellPackage = async (payload: Record<string, unknown>) => {
     const response = await packagesApi.sell(payload)
     await loadClientPackages()
@@ -52,6 +60,7 @@ export const usePackagesStore = defineStore('packages', () => {
     createPackage,
     updatePackage,
     deletePackage,
+    setPublished,
     sellPackage,
   }
 })

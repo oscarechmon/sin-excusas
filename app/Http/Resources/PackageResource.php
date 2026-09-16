@@ -17,6 +17,7 @@ class PackageResource extends JsonResource
             'total_sessions' => $this->total_sessions,
             'validity_days' => $this->validity_days,
             'active' => $this->active,
+            'is_published' => (bool) $this->is_published,
             'services' => ServiceResource::collection($this->whenLoaded('services')),
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,

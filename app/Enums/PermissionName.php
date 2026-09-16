@@ -54,6 +54,11 @@ enum PermissionName: string
     case SALES_CREATE = 'sales.create';
     case SALES_CANCEL = 'sales.cancel';
 
+    // Ventas online (pedidos de la web)
+    case ONLINE_SALES_VIEW = 'online_sales.view';
+    /** Cambiar el estado de entrega o anular pedidos. */
+    case ONLINE_SALES_MANAGE = 'online_sales.manage';
+
     // Caja
     case CASH_VIEW = 'cash.view';
     case CASH_OPEN = 'cash.open';
@@ -98,6 +103,7 @@ enum PermissionName: string
                 self::PACKAGES_VIEW, self::PACKAGES_SELL,
                 self::ATTENDANCES_VIEW,
                 self::SALES_VIEW, self::SALES_CREATE,
+                self::ONLINE_SALES_VIEW, self::ONLINE_SALES_MANAGE,
                 self::CASH_VIEW, self::CASH_OPEN, self::CASH_CLOSE, self::CASH_EXPENSE,
                 self::INVENTORY_VIEW,
             ]),

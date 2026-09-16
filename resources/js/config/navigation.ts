@@ -47,10 +47,21 @@ export const navigation: NavSection[] = [
     ],
   },
   {
-    label: 'Configuración',
+    label: 'Tienda online',
+    items: [
+      { label: 'Ventas online', icon: 'pi pi-globe', route: 'online-sales', permission: 'online_sales.view' },
+    ],
+  },
+  {
+    label: 'Catálogo',
     items: [
       { label: 'Servicios', icon: 'pi pi-star', route: 'services', permission: 'services.view' },
       { label: 'Categorías', icon: 'pi pi-tags', route: 'service-categories', permission: 'services.manage' },
+    ],
+  },
+  {
+    label: 'Administración',
+    items: [
       { label: 'Personal', icon: 'pi pi-id-card', route: 'staff', permission: 'employees.view' },
       { label: 'Comisiones', icon: 'pi pi-percentage', route: 'commissions', permission: 'commissions.view' },
       { label: 'Reportes', icon: 'pi pi-chart-bar', route: 'reports', permission: 'reports.view' },
@@ -72,6 +83,7 @@ export const routeTitles: Record<string, string> = {
   inventory: 'Inventario',
   packages: 'Paquetes',
   sales: 'Ventas',
+  'online-sales': 'Ventas online',
   cash: 'Caja',
   commissions: 'Comisiones',
   reports: 'Reportes',

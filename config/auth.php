@@ -40,6 +40,12 @@ return [
             'driver' => 'session',
             'provider' => 'users',
         ],
+
+        // Clientes que compran en la web (sesión propia, sin acceso al ERP).
+        'customer' => [
+            'driver' => 'session',
+            'provider' => 'client_users',
+        ],
     ],
 
     /*
@@ -63,6 +69,12 @@ return [
         'users' => [
             'driver' => 'eloquent',
             'model' => env('AUTH_MODEL', App\Models\User::class),
+        ],
+
+        // Cuentas de la tienda web; independientes del personal del ERP.
+        'client_users' => [
+            'driver' => 'eloquent',
+            'model' => App\Models\ClientUser::class,
         ],
 
         // 'users' => [

@@ -40,6 +40,24 @@ export const useInventoryStore = defineStore('inventory', () => {
     return response
   }
 
+  /** Actualiza la fila en sitio: recargar la tabla haría saltar la paginación. */
+  const setPublished = async (id: number, isPublished: boolean) => {
+    const response = await inventoryApi.setPublished(id, isPublished)
+    const row = list.items.value.find((item) => item.id === id)
+    if (row) row.is_published = response.data.is_published
+    return response
+  }
+
+  /** Sube o quita la foto y refleja la nueva URL en la fila del listado. */
+  const setImage = async (id: number, file: File | null) => {
+    const response = file
+      ? await inventoryApi.uploadImage(id, file)
+      : await inventoryApi.removeImage(id)
+    const row = list.items.value.find((item) => item.id === id)
+    if (row) row.image_url = response.data.image_url
+    return response
+  }
+
   const movements = ref<any[]>([])
   const movementsLoading = ref(false)
 
@@ -81,6 +99,8 @@ export const useInventoryStore = defineStore('inventory', () => {
     updateItem,
     deleteItem,
     adjustStock,
+    setPublished,
+    setImage,
     loadMovements,
     createCategory,
     updateCategory,

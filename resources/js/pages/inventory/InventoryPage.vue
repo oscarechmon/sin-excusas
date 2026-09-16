@@ -110,6 +110,20 @@
             </template>
           </Column>
 
+          <Column header="Publicado en web" :style="{ width: '140px' }">
+            <template #body="{ data }">
+              <!-- Los insumos de uso interno no se venden, así que no se publican. -->
+              <ToggleSwitch
+                v-if="data.is_sellable"
+                :model-value="data.is_published"
+                :disabled="publishingId === data.id"
+                :aria-label="`Publicar ${data.name} en la web`"
+                @update:model-value="(value: boolean) => togglePublished(data, value)"
+              />
+              <span v-else class="cell-muted" title="Solo los productos vendibles se publican">—</span>
+            </template>
+          </Column>
+
           <Column header="Acciones" :style="{ width: '170px' }">
             <template #body="{ data }">
               <div class="row-actions">
@@ -167,11 +181,31 @@ import Message from 'primevue/message'
 import Select from 'primevue/select'
 import Tag from 'primevue/tag'
 import ToggleButton from 'primevue/togglebutton'
+import ToggleSwitch from 'primevue/toggleswitch'
 
 const store = useInventoryStore()
 const toast = useToast()
 const confirm = useConfirm()
 const format = useFormat()
+
+const publishingId = ref<number | null>(null)
+
+const togglePublished = async (item: any, value: boolean) => {
+  publishingId.value = item.id
+  try {
+    const response = await store.setPublished(item.id, value)
+    toast.add({ severity: 'success', summary: 'Listo', detail: response.message, life: 3000 })
+  } catch (err) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: extractMessage(err, 'No se pudo cambiar la publicación.'),
+      life: 5000,
+    })
+  } finally {
+    publishingId.value = null
+  }
+}
 
 const search = ref('')
 const categoryId = ref<number | null>(null)

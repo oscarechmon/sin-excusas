@@ -12,6 +12,8 @@ class InventoryItemResource extends JsonResource
         return [
             'id' => $this->id,
             'name' => $this->name,
+            'description' => $this->description,
+            'image_url' => $this->imageUrl(),
             'category_id' => $this->category_id,
             'category' => new InventoryCategoryResource($this->whenLoaded('category')),
             'unit' => $this->unit,
@@ -24,6 +26,7 @@ class InventoryItemResource extends JsonResource
             'supplier' => $this->supplier,
             'is_sellable' => $this->is_sellable,
             'active' => $this->active,
+            'is_published' => (bool) $this->is_published,
             'created_at' => $this->created_at,
             'updated_at' => $this->updated_at,
         ];

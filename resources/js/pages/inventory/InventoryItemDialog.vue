@@ -13,6 +13,12 @@
         <small v-if="errors.name" class="form-error">{{ errors.name }}</small>
       </div>
 
+      <div class="form-field">
+        <label for="description">Descripción corta</label>
+        <Textarea id="description" v-model="form.description" rows="2" maxlength="500" auto-resize />
+        <small class="form-hint">Se muestra en la web si el producto está publicado.</small>
+      </div>
+
       <div class="form-row">
         <div class="form-field">
           <label for="category">Categoría</label>
@@ -88,6 +94,15 @@
         <InputText id="supplier" v-model="form.supplier" />
       </div>
 
+      <CatalogImageField
+        v-if="form.is_sellable"
+        :image-url="imageUrl"
+        :enabled="isEdit"
+        :busy="imageBusy"
+        @upload="changeImage"
+        @remove="changeImage(null)"
+      />
+
       <div class="form-field form-field--inline">
         <ToggleSwitch v-model="form.is_sellable" input-id="is_sellable" />
         <label for="is_sellable">Se vende al cliente (no es solo insumo interno)</label>
@@ -116,20 +131,47 @@
 
 <script setup lang="ts">
 import { computed, ref, watch } from 'vue'
+import { useToast } from 'primevue/usetoast'
 import { useInventoryStore } from '@/stores/inventory'
 import { extractMessage } from '@/composables/usePaginatedList'
+import CatalogImageField from '@/components/common/CatalogImageField.vue'
 import Button from 'primevue/button'
 import Dialog from 'primevue/dialog'
 import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
 import Select from 'primevue/select'
+import Textarea from 'primevue/textarea'
 import ToggleSwitch from 'primevue/toggleswitch'
 
 const props = defineProps<{ visible: boolean; item: any | null }>()
 const emit = defineEmits<{ 'update:visible': [boolean]; saved: [string] }>()
 
 const store = useInventoryStore()
+const toast = useToast()
+
+// La foto se guarda al instante, independiente del botón "Guardar".
+const imageUrl = ref<string | null>(null)
+const imageBusy = ref(false)
+
+const changeImage = async (file: File | null) => {
+  if (!props.item) return
+  imageBusy.value = true
+  try {
+    const response = await store.setImage(props.item.id, file)
+    imageUrl.value = response.data.image_url
+    toast.add({ severity: 'success', summary: 'Listo', detail: response.message, life: 3000 })
+  } catch (err) {
+    toast.add({
+      severity: 'error',
+      summary: 'Error',
+      detail: extractMessage(err, 'No se pudo guardar la foto.'),
+      life: 5000,
+    })
+  } finally {
+    imageBusy.value = false
+  }
+}
 
 const saving = ref(false)
 const errors = ref<Record<string, string>>({})
@@ -140,6 +182,7 @@ const units = ['unidad', 'par', 'caja', 'ml', 'gr', 'litro']
 
 const emptyForm = () => ({
   name: '',
+  description: '',
   category_id: null as number | null,
   unit: 'unidad',
   stock: 0,
@@ -160,10 +203,12 @@ watch(
 
     errors.value = {}
     generalError.value = null
+    imageUrl.value = props.item?.image_url ?? null
 
     form.value = props.item
       ? {
           name: props.item.name,
+          description: props.item.description ?? '',
           category_id: props.item.category_id,
           unit: props.item.unit,
           stock: Number(props.item.stock),

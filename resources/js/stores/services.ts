@@ -69,6 +69,28 @@ export const useServicesStore = defineStore('services', () => {
     }
   };
 
+  /** Actualiza la fila en sitio: recargar la tabla haría saltar la paginación. */
+  const setPublished = async (id: number, isPublished: boolean) => {
+    const response = await servicesApi.setPublished(id, isPublished);
+    const index = services.value.findIndex((s) => s.id === id);
+    if (index !== -1) {
+      services.value[index] = { ...services.value[index], is_published: response.data.is_published };
+    }
+    return response;
+  };
+
+  /** Sube o quita la foto y refleja la nueva URL en la fila del listado. */
+  const setImage = async (id: number, file: File | null) => {
+    const response = file
+      ? await servicesApi.uploadImage(id, file)
+      : await servicesApi.removeImage(id);
+    const index = services.value.findIndex((s) => s.id === id);
+    if (index !== -1) {
+      services.value[index] = { ...services.value[index], image_url: response.data.image_url };
+    }
+    return response;
+  };
+
   const createCategory = async (payload: any) => {
     try {
       const response = await serviceCategoriesApi.create(payload);
@@ -115,6 +137,8 @@ export const useServicesStore = defineStore('services', () => {
     createService,
     updateService,
     deleteService,
+    setPublished,
+    setImage,
     createCategory,
     updateCategory,
     deleteCategory,

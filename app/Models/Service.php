@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasCatalogImage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,15 +12,18 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class Service extends Model
 {
-    use HasFactory;
+    use HasCatalogImage, HasFactory;
 
-    protected $fillable = ['name', 'category_id', 'price', 'duration_minutes', 'description', 'active'];
+    protected $fillable = [
+        'name', 'category_id', 'price', 'duration_minutes', 'description', 'image_path', 'active', 'is_published',
+    ];
 
     protected function casts(): array
     {
         return [
             'price' => 'decimal:2',
             'active' => 'boolean',
+            'is_published' => 'boolean',
         ];
     }
 
@@ -54,5 +58,11 @@ class Service extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('active', true);
+    }
+
+    /** Visible en la web: publicado y todavía activo en el ERP. */
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('is_published', true)->where('active', true);
     }
 }

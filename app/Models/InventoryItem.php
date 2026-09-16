@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Models\Concerns\HasCatalogImage;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -11,10 +12,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class InventoryItem extends Model
 {
-    use HasFactory;
+    use HasCatalogImage, HasFactory;
 
     protected $fillable = [
         'name',
+        'description',
+        'image_path',
         'category_id',
         'unit',
         'stock',
@@ -24,6 +27,7 @@ class InventoryItem extends Model
         'supplier',
         'is_sellable',
         'active',
+        'is_published',
     ];
 
     protected function casts(): array
@@ -35,6 +39,7 @@ class InventoryItem extends Model
             'sale_price' => 'decimal:2',
             'is_sellable' => 'boolean',
             'active' => 'boolean',
+            'is_published' => 'boolean',
         ];
     }
 
@@ -68,5 +73,13 @@ class InventoryItem extends Model
     public function scopeActive(Builder $query): Builder
     {
         return $query->where('active', true);
+    }
+
+    /** Visible en la web: publicado, vendible y activo. Los insumos nunca se muestran. */
+    public function scopePublished(Builder $query): Builder
+    {
+        return $query->where('is_published', true)
+            ->where('is_sellable', true)
+            ->where('active', true);
     }
 }
