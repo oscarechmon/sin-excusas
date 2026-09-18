@@ -1550,3 +1550,79 @@ button:focus-visible,
 
   .se-panel.se-table-wrap { padding-block: 8px; }
 }
+
+/* ==========================================================================
+   18. Menú móvil
+   ========================================================================== */
+
+/* Por debajo de lg el header es: [marca] [carrito] [hamburguesa] en una fila,
+   y el menú desplegado ocupa una segunda fila completa. Sin flex-wrap, el
+   menú abierto se metía en la misma fila y quedaba fuera de la pantalla. */
+@media (max-width: 991.98px) {
+  .se-header .navbar > .se-container {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
+
+  .se-header .navbar-collapse {
+    flex-basis: 100%;
+    width: 100%;
+    order: 10;
+    border-top: 1px solid var(--se-line);
+    margin-top: 14px;
+    padding-bottom: 8px;
+  }
+
+  .se-nav .nav-link {
+    display: block;
+    padding: 14px 0;
+    font-size: .875rem;
+    border-bottom: 1px solid var(--se-line);
+  }
+
+  .se-nav .nav-item:last-child .nav-link { border-bottom: 0; }
+
+  /* El submenú de Productos se despliega en línea, no flotando. */
+  .se-nav .dropdown-menu {
+    position: static;
+    float: none;
+    border: 0;
+    box-shadow: none;
+    padding: 0 0 8px 16px;
+    background: transparent;
+  }
+
+  .se-nav .dropdown-item { padding: 8px 0; }
+
+  .se-header__actions {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+    padding-top: 14px;
+    margin-top: 0 !important;
+  }
+
+  .se-header__actions .se-cart-link { padding: 4px 0; }
+
+  .se-header__actions .se-btn {
+    display: block;
+    width: 100%;
+    text-align: center;
+  }
+
+  .se-header__actions .dropdown .dropdown-menu {
+    position: static;
+    float: none;
+    border: 0;
+    box-shadow: none;
+    padding: 0 0 0 16px;
+  }
+}
+
+/* El bloque de productos usaba g-5 (márgenes de -24 px) dentro de un
+   contenedor con 20 px de relleno: desbordaba 4 px por lado en móvil. */
+@media (max-width: 575.98px) {
+  .row.g-5 {
+    --bs-gutter-x: 2.5rem;
+  }
+}
