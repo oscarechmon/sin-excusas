@@ -44,7 +44,7 @@
         <div @class(['tab-pane fade', 'show active' => $loop->first]) id="panel-{{ $slug }}" role="tabpanel"
              aria-labelledby="tab-{{ $slug }}" tabindex="0">
 
-          <h2 class="se-serif mb-0" style="font-size: 2.375rem;">{{ $category->name }}</h2>
+          <h2 class="se-serif mb-0" style="--fs: 2.375rem;">{{ $category->name }}</h2>
           @if ($category->description)
             <p class="se-lead mt-3" style="max-width: 560px;">{{ $category->description }}</p>
           @endif
@@ -61,7 +61,7 @@
                     @endif
                   </div>
                   <div class="se-tile__body p-4">
-                    <h3 class="se-tile__title" style="font-size: 1.625rem;">{{ $service->name }}</h3>
+                    <h3 class="se-tile__title" style="--fs: 1.625rem;">{{ $service->name }}</h3>
                     @if ($service->description)
                       <p class="se-tile__text se-clamp">{{ $service->description }}</p>
                     @endif
@@ -101,7 +101,7 @@
     <section class="se-section se-bg-cream" id="paquetes" aria-labelledby="titulo-paquetes">
       <div class="se-container">
         <p class="se-eyebrow">Paquetes</p>
-        <h2 class="se-serif mt-3 mb-0" id="titulo-paquetes" style="font-size: 2.375rem;">Tratamientos por sesiones</h2>
+        <h2 class="se-serif mt-3 mb-0" id="titulo-paquetes" style="--fs: 2.375rem;">Tratamientos por sesiones</h2>
         <hr class="se-rule">
 
         <div class="row g-4 mt-3">
@@ -110,7 +110,7 @@
               <article class="se-tile">
                 <div class="se-tile__body p-4">
                   <p class="se-tile__kicker mb-0">{{ $package->total_sessions }} sesiones</p>
-                  <h3 class="se-tile__title mt-2" style="font-size: 1.625rem;">{{ $package->name }}</h3>
+                  <h3 class="se-tile__title mt-2" style="--fs: 1.625rem;">{{ $package->name }}</h3>
                   @if ($package->description)
                     <p class="se-tile__text">{{ $package->description }}</p>
                   @endif

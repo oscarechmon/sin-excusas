@@ -50,7 +50,7 @@
       <div class="row g-4">
         <div class="col-12 col-lg-7">
           <div class="se-panel se-table-wrap">
-            <h2 class="se-serif mb-3" style="font-size: 1.75rem;">Detalle</h2>
+            <h2 class="se-serif mb-3" style="--fs: 1.75rem;">Detalle</h2>
             <table class="se-table">
               <thead>
                 <tr>
@@ -79,7 +79,7 @@
 
         <div class="col-12 col-lg-5">
           <div class="se-panel mb-4">
-            <h2 class="se-serif mb-3" style="font-size: 1.75rem;">Entrega</h2>
+            <h2 class="se-serif mb-3" style="--fs: 1.75rem;">Entrega</h2>
             <p class="mb-1"><strong>{{ $order->fulfillment->label() }}</strong></p>
             <p class="se-muted-note mb-0">
               {{ $order->recipient_name }} · {{ $order->phone }}
@@ -89,7 +89,7 @@
           </div>
 
           <div class="se-panel">
-            <h2 class="se-serif mb-3" style="font-size: 1.75rem;">Historial</h2>
+            <h2 class="se-serif mb-3" style="--fs: 1.75rem;">Historial</h2>
             <ul class="se-history">
               @foreach ($order->histories->reverse() as $history)
                 <li>

@@ -14,7 +14,7 @@
   </div>
   <div class="se-tile__body">
     <p class="se-tile__kicker mb-0">{{ $kicker }}</p>
-    <h3 class="se-tile__title mt-2" style="font-size: 1.438rem;">{{ $product->name }}</h3>
+    <h3 class="se-tile__title mt-2" style="--fs: 1.438rem;">{{ $product->name }}</h3>
     @if ($product->description)
       <p class="se-tile__text se-clamp-sm" style="font-size: .844rem;">{{ $product->description }}</p>
     @endif

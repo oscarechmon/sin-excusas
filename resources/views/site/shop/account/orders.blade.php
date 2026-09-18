@@ -27,7 +27,7 @@
         </div>
       @else
         <div class="se-panel se-table-wrap">
-          <table class="se-table">
+          <table class="se-table se-table--stack">
             <thead>
               <tr>
                 <th scope="col">Pedido</th>
@@ -42,11 +42,11 @@
               @foreach ($orders as $order)
                 <tr>
                   <td><strong>{{ $order->code }}</strong><span class="se-muted-note d-block">{{ $order->items_count }} artículo(s)</span></td>
-                  <td>{{ $order->created_at->format('d/m/Y H:i') }}</td>
-                  <td>{{ $order->fulfillment->label() }}</td>
-                  <td><span class="se-status se-status--{{ $order->status->value }}">{{ $order->status->label() }}</span></td>
-                  <td class="text-end">S/ {{ number_format((float) $order->total, 2) }}</td>
-                  <td class="text-end"><a class="se-link-mini" href="{{ route('shop.account.order', $order->code) }}">Seguimiento →</a></td>
+                  <td data-label="Fecha">{{ $order->created_at->format('d/m/Y H:i') }}</td>
+                  <td data-label="Entrega">{{ $order->fulfillment->label() }}</td>
+                  <td data-label="Estado"><span class="se-status se-status--{{ $order->status->value }}">{{ $order->status->label() }}</span></td>
+                  <td class="text-end" data-label="Total">S/ {{ number_format((float) $order->total, 2) }}</td>
+                  <td class="text-end se-table__action"><a class="se-link-mini" href="{{ route('shop.account.order', $order->code) }}">Seguimiento →</a></td>
                 </tr>
               @endforeach
             </tbody>

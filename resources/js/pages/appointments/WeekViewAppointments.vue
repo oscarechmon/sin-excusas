@@ -150,7 +150,10 @@ const getAppointmentsForDay = (dateStr: string) => {
 
 .week-calendar {
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
+  // Cada día conserva un ancho legible; en pantallas chicas la semana se
+  // desplaza de lado en lugar de aplastar las citas.
+  grid-template-columns: repeat(7, minmax(140px, 1fr));
+  overflow-x: auto;
   gap: 0.5rem;
   background: white;
   padding: 1rem;

@@ -34,3 +34,15 @@
   font-weight: $font-weight-semibold;
   color: $color-gray-900;
 }
+
+// En pantallas chicas una tabla con muchas columnas se desplaza dentro de su
+// tarjeta, en lugar de ensanchar toda la página.
+.p-datatable-table-container {
+  overflow-x: auto;
+}
+
+@include respond-below(sm) {
+  .row-actions {
+    flex-wrap: nowrap;
+  }
+}

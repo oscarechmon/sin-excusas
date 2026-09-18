@@ -74,7 +74,7 @@
 
         <div class="col-12 col-lg-5">
           <aside class="se-panel">
-            <h2 class="se-serif mb-3" style="font-size: 1.75rem;">Resumen</h2>
+            <h2 class="se-serif mb-3" style="--fs: 1.75rem;">Resumen</h2>
             @foreach ($order->items as $item)
               <div class="se-summary-row">
                 <span>{{ $item->name }} <span class="se-muted-note">× {{ $item->quantity }}</span></span>

@@ -45,7 +45,7 @@
         @foreach ($values as [$title, $text])
           <div class="col-12 col-lg-4">
             <article class="se-card p-4 p-lg-5">
-              <h2 class="se-card__title" style="font-size: 1.688rem;">{{ $title }}</h2>
+              <h2 class="se-card__title" style="--fs: 1.688rem;">{{ $title }}</h2>
               <hr class="se-rule se-rule--left">
               <p class="se-card__text mb-0" style="font-size: .938rem; line-height: 1.85;">{{ $text }}</p>
             </article>

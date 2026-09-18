@@ -13,7 +13,7 @@
     <div class="se-container">
       <div class="se-panel se-auth text-center">
         <p class="se-eyebrow">Último paso</p>
-        <h1 class="se-serif mt-3 mb-2" style="font-size: 2.5rem;">Verifica tu correo</h1>
+        <h1 class="se-serif mt-3 mb-2" style="--fs: 2.5rem;">Verifica tu correo</h1>
         <p class="se-muted-note mb-4">
           Enviamos un código de 6 dígitos a <strong>{{ $email }}</strong>.
           Vence en {{ $minutes }} minutos. Revisa también la carpeta de spam.

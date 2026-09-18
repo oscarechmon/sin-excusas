@@ -29,7 +29,7 @@
         <div class="row g-4">
           <div class="col-12 col-lg-8">
             <div class="se-panel se-table-wrap">
-              <table class="se-table">
+              <table class="se-table se-table--stack">
                 <thead>
                   <tr>
                     <th scope="col">Artículo</th>
@@ -55,8 +55,8 @@
                           </span>
                         </div>
                       </td>
-                      <td>{{ $money($line->unitPrice()) }}</td>
-                      <td>
+                      <td data-label="Precio">{{ $money($line->unitPrice()) }}</td>
+                      <td data-label="Cantidad">
                         <form method="post" action="{{ route('shop.cart.update', $line->key) }}" class="d-flex gap-2 align-items-center">
                           @csrf
                           @method('PATCH')
@@ -69,8 +69,8 @@
                           <span class="se-muted-note text-danger">Solo quedan {{ $line->maxQuantity }}</span>
                         @endif
                       </td>
-                      <td class="text-end">{{ $money($line->subtotal()) }}</td>
-                      <td class="text-end">
+                      <td class="text-end" data-label="Subtotal">{{ $money($line->subtotal()) }}</td>
+                      <td class="text-end se-table__action">
                         <form method="post" action="{{ route('shop.cart.remove', $line->key) }}">
                           @csrf
                           @method('DELETE')
@@ -86,7 +86,7 @@
 
           <div class="col-12 col-lg-4">
             <aside class="se-panel">
-              <h2 class="se-serif mb-3" style="font-size: 1.75rem;">Resumen</h2>
+              <h2 class="se-serif mb-3" style="--fs: 1.75rem;">Resumen</h2>
               <div class="se-summary-row"><span>Subtotal</span><strong>{{ $money($subtotal) }}</strong></div>
               <p class="se-muted-note mt-2">El costo de delivery se calcula en el siguiente paso.</p>
               <a class="se-btn se-btn--gold w-100 mt-3" href="{{ route('shop.checkout') }}">Finalizar compra</a>

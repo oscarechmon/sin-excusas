@@ -58,7 +58,7 @@
 
       <header class="text-center mx-auto" style="max-width: 640px;">
         <p class="se-eyebrow">La experiencia</p>
-        <h2 class="se-serif mt-3 mb-0" id="titulo-experiencia" style="font-size: 2.875rem;">Cuidado con método</h2>
+        <h2 class="se-serif mt-3 mb-0" id="titulo-experiencia" style="--fs: 2.875rem;">Cuidado con método</h2>
         <hr class="se-rule se-rule--center">
       </header>
 
@@ -93,7 +93,7 @@
       <header class="d-flex flex-column flex-md-row align-items-md-end justify-content-between gap-4">
         <div>
           <p class="se-eyebrow">Nuestros servicios</p>
-          <h2 class="se-serif mt-3 mb-0" id="titulo-lineas" style="font-size: 3rem;">Cuatro líneas de tratamiento</h2>
+          <h2 class="se-serif mt-3 mb-0" id="titulo-lineas" style="--fs: 3rem;">Cuatro líneas de tratamiento</h2>
         </div>
         <a class="se-link-arrow flex-shrink-0" href="{{ route('site.services') }}">Ver todo →</a>
       </header>
@@ -137,7 +137,7 @@
 
         <div class="col-12 col-lg-6">
           <p class="se-eyebrow">Suplementos Nutricost</p>
-          <h2 class="se-serif mt-3 mb-0" id="titulo-nutricost" style="font-size: 2.875rem;">
+          <h2 class="se-serif mt-3 mb-0" id="titulo-nutricost" style="--fs: 2.875rem;">
             El complemento <em>de tu tratamiento</em>
           </h2>
           <p class="se-lead mt-4" style="max-width: 460px;">
@@ -163,7 +163,7 @@
 
       <header class="text-center mx-auto" style="max-width: 640px;">
         <p class="se-eyebrow">Lo que dicen de nosotros</p>
-        <h2 class="se-serif mt-3 mb-0" id="titulo-testimonios" style="font-size: 2.875rem;">Testimonios</h2>
+        <h2 class="se-serif mt-3 mb-0" id="titulo-testimonios" style="--fs: 2.875rem;">Testimonios</h2>
         <hr class="se-rule se-rule--center">
       </header>
 

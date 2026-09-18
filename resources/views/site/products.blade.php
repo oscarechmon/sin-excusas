@@ -35,7 +35,7 @@
       @forelse ($groups as $group)
         <div class="se-catalog-group">
           @unless ($current)
-            <h2 class="se-serif mb-0" style="font-size: 2.125rem;">{{ $group->name }}</h2>
+            <h2 class="se-serif mb-0" style="--fs: 2.125rem;">{{ $group->name }}</h2>
             @if ($group->description)
               <p class="se-lead mt-2 mb-0" style="max-width: 560px;">{{ $group->description }}</p>
             @endif
@@ -56,7 +56,7 @@
 
       @if ($uncategorized->isNotEmpty())
         <div class="se-catalog-group">
-          <h2 class="se-serif mb-0" style="font-size: 2.125rem;">Otros productos</h2>
+          <h2 class="se-serif mb-0" style="--fs: 2.125rem;">Otros productos</h2>
           <hr class="se-rule">
           <div class="row g-4 mt-2 row-cols-1 row-cols-sm-2 row-cols-lg-3 row-cols-xl-4">
             @foreach ($uncategorized as $product)

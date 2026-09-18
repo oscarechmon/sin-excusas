@@ -1490,3 +1490,63 @@ button:focus-visible,
 .se-serif em {
   font-style: normal;
 }
+
+/* ==========================================================================
+   17. Responsive complementario
+   ========================================================================== */
+
+/* Títulos con tamaño propio (style="--fs: 2.875rem"): se escalan con el ancho
+   de la pantalla, desde el 72 % en celulares hasta su tamaño de escritorio. */
+[style*="--fs"] {
+  font-size: clamp(calc(var(--fs) * .72), calc(var(--fs) * .5 + 1.8vw), var(--fs));
+}
+
+/* El resumen del checkout solo se queda fijo al lado del formulario en
+   escritorio; apilado en móvil debe desplazarse con el resto. */
+@media (max-width: 991.98px) {
+  .se-sticky { position: static; }
+}
+
+/* Carrito y Mis pedidos: en celulares cada fila pasa a ser una ficha, con la
+   etiqueta de cada dato a la izquierda (data-label). */
+@media (max-width: 575.98px) {
+  .se-table--stack thead { display: none; }
+
+  .se-table--stack tr {
+    display: block;
+    padding-block: 14px;
+    border-bottom: 1px solid var(--se-line);
+  }
+
+  .se-table--stack td {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 4px 0;
+    border: 0;
+    text-align: right;
+  }
+
+  .se-table--stack td[data-label]::before {
+    content: attr(data-label);
+    font-size: .7rem;
+    letter-spacing: .12em;
+    text-transform: uppercase;
+    color: var(--se-muted);
+    text-align: left;
+  }
+
+  .se-table--stack td:first-child {
+    display: block;
+    padding-bottom: 8px;
+    text-align: left;
+  }
+
+  .se-table--stack .se-table__action {
+    justify-content: flex-end;
+    padding-top: 8px;
+  }
+
+  .se-panel.se-table-wrap { padding-block: 8px; }
+}

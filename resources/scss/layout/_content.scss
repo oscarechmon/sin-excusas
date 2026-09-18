@@ -5,6 +5,7 @@
 .admin-layout {
   display: flex;
   height: 100vh;
+  height: 100dvh; // en móviles descuenta la barra del navegador
   overflow: hidden;
   background-color: $color-gray-50;
 }

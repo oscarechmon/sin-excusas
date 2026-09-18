@@ -9,7 +9,7 @@
     <div class="se-container">
       <div class="se-panel se-auth">
         <p class="se-eyebrow se-eyebrow--row">Mi cuenta</p>
-        <h1 class="se-serif mt-3 mb-2" style="font-size: 2.5rem;">Crear cuenta</h1>
+        <h1 class="se-serif mt-3 mb-2" style="--fs: 2.5rem;">Crear cuenta</h1>
         <p class="se-muted-note mb-4">Con tu cuenta compras en línea y ves el seguimiento de cada pedido.</p>
 
         @include('site.shop.partials.google-button', ['label' => 'Registrarme con Google'])

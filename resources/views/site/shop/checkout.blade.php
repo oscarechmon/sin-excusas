@@ -30,7 +30,7 @@
             <div class="se-panel">
               @error('cart')<div class="se-alert se-alert--error mb-4">{{ $message }}</div>@enderror
 
-              <h2 class="se-serif mb-3" style="font-size: 1.75rem;">¿Cómo recibes tu pedido?</h2>
+              <h2 class="se-serif mb-3" style="--fs: 1.75rem;">¿Cómo recibes tu pedido?</h2>
               @error('fulfillment')<div class="se-alert se-alert--error mb-3">{{ $message }}</div>@enderror
 
               <div class="d-grid gap-3">
@@ -68,7 +68,7 @@
                 </div>
               @endif
 
-              <h2 class="se-serif mt-5 mb-3" style="font-size: 1.75rem;">Datos de contacto</h2>
+              <h2 class="se-serif mt-5 mb-3" style="--fs: 1.75rem;">Datos de contacto</h2>
               <div class="row g-3">
                 @include('site.shop.partials.field', ['name' => 'recipient_name', 'label' => 'Nombre de quien recibe', 'value' => $customer->name, 'required' => true, 'class' => 'col-12 col-md-6', 'autocomplete' => 'name'])
                 @include('site.shop.partials.field', ['name' => 'phone', 'label' => 'Teléfono / WhatsApp', 'value' => $customer->phone, 'required' => true, 'type' => 'tel', 'class' => 'col-12 col-md-6', 'autocomplete' => 'tel'])
@@ -79,7 +79,7 @@
 
           <div class="col-12 col-lg-5">
             <aside class="se-panel se-sticky">
-              <h2 class="se-serif mb-3" style="font-size: 1.75rem;">Tu pedido</h2>
+              <h2 class="se-serif mb-3" style="--fs: 1.75rem;">Tu pedido</h2>
 
               @foreach ($lines as $line)
                 <div class="se-summary-row">

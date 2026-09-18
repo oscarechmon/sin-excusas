@@ -93,3 +93,20 @@
     flex: 0 1 200px;
   }
 }
+
+// Filtros en móvil: cada control ocupa la fila completa para que se lea y se
+// pueda tocar sin problemas.
+@include respond-below(sm) {
+  .filters {
+    align-items: stretch;
+
+    > *,
+    .p-iconfield,
+    .p-select,
+    .p-multiselect,
+    .p-datepicker,
+    .p-togglebutton {
+      flex: 1 1 100%;
+    }
+  }
+}

@@ -5,6 +5,9 @@
 .p-dialog {
   border-radius: $border-radius-2xl;
   box-shadow: $shadow-2xl;
+  // Cada diálogo declara su ancho (480px, 760px...). En pantallas más angostas
+  // se limita al espacio disponible en lugar de salirse de la ventana.
+  max-width: calc(100vw - 1.5rem);
 }
 
 .p-dialog-header {
@@ -21,4 +24,21 @@
   padding: $spacing-lg;
   border-top: 1px solid $color-gray-200;
   background-color: $color-gray-50;
+}
+
+@include respond-below(sm) {
+  .p-dialog-header,
+  .p-dialog-content,
+  .p-dialog-footer {
+    padding: $spacing-md;
+  }
+
+  // Los botones del pie se reparten el ancho para que se puedan tocar bien.
+  .p-dialog-footer {
+    flex-wrap: wrap;
+
+    > .p-button {
+      flex: 1 1 auto;
+    }
+  }
 }
