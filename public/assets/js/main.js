@@ -93,11 +93,90 @@
     tick();
   }
 
+  /* ------------------------------------------------------------------
+   * Agregar al carrito sin recargar la página
+   *
+   * Antes cada clic costaba dos viajes al servidor (enviar el formulario y
+   * volver a pedir la página) y devolvía al inicio del listado. Ahora es una
+   * sola petición: se actualiza el contador del carrito y se muestra un
+   * aviso. Si algo falla, el formulario se envía de la forma normal.
+   * ------------------------------------------------------------------ */
+  var toastTimer = null;
+
+  function showToast(message, isError) {
+    var toast = document.querySelector('.se-toast');
+    if (!toast) {
+      toast = document.createElement('div');
+      toast.className = 'se-toast';
+      toast.setAttribute('role', 'status');
+      toast.innerHTML = '<span></span><a href="/carrito">Ver carrito</a>';
+      document.body.appendChild(toast);
+    }
+    toast.querySelector('span').textContent = message;
+    toast.classList.toggle('se-toast--error', !!isError);
+    toast.querySelector('a').hidden = !!isError;
+    toast.classList.add('is-visible');
+    clearTimeout(toastTimer);
+    toastTimer = setTimeout(function () { toast.classList.remove('is-visible'); }, 3500);
+  }
+
+  function updateCartCount(count) {
+    document.querySelectorAll('[data-cart-link]').forEach(function (link) {
+      var badge = link.querySelector('.se-cart-badge');
+      if (count > 0 && !badge) {
+        badge = document.createElement('span');
+        badge.className = 'se-cart-badge';
+        link.appendChild(badge);
+      }
+      if (badge) {
+        badge.textContent = String(count);
+        badge.hidden = count <= 0;
+      }
+      link.setAttribute('aria-label', 'Carrito, ' + count + ' artículos');
+    });
+  }
+
+  function initCartForms() {
+    // Un solo listener delegado: sirve también para el contenido que Turbo
+    // cambie después, sin volver a registrarlo en cada navegación.
+    document.addEventListener('submit', function (event) {
+      var form = event.target;
+      if (!form.matches || !form.matches('form[data-cart-add]') || !window.fetch) return;
+      event.preventDefault();
+
+      var button = form.querySelector('button[type="submit"]');
+      var label = button ? button.textContent : '';
+      if (button) { button.classList.add('is-busy'); button.textContent = 'Agregando…'; }
+
+      fetch(form.action, {
+        method: 'POST',
+        headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+        body: new FormData(form),
+        credentials: 'same-origin'
+      })
+        .then(function (response) {
+          // 419: la página llevaba mucho abierta y el token venció.
+          if (response.status === 419) { window.location.reload(); return null; }
+          return response.json();
+        })
+        .then(function (data) {
+          if (!data) return;
+          if (typeof data.count === 'number') updateCartCount(data.count);
+          showToast(data.message || 'Listo', !data.success);
+        })
+        .catch(function () { form.submit(); })
+        .finally(function () {
+          if (button) { button.classList.remove('is-busy'); button.textContent = label; }
+        });
+    });
+  }
   function init() {
     initCategoryTabs();
     initCheckout();
     initResendCountdown();
   }
+
+  initCartForms();
 
   if (window.Turbo) {
     document.addEventListener('turbo:load', init);

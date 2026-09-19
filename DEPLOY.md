@@ -43,3 +43,20 @@ php artisan migrate --force && php artisan optimize:clear
 - hPanel → Avanzado → Configuración PHP: versión **8.2** o superior.
 - Google Cloud: agregar `https://erp.noaspamassage.com/cuenta/google/callback`.
 - Izipay → Reglas de notificaciones: `https://erp.noaspamassage.com/pagos/izipay/notificacion`.
+
+## Migrar y cachear automáticamente en cada deploy
+
+El FTP no ejecuta comandos, así que al terminar la subida GitHub Actions llama a
+`POST /deploy/optimize`, que corre `optimize:clear`, `migrate --force` y
+`optimize` (config, rutas y vistas en caché: Laravel deja de leer el `.env` y
+todos los archivos de configuración en cada visita).
+
+1. Genera un token largo y aleatorio (por ejemplo, 64 caracteres).
+2. En el `.env` del servidor: `DEPLOY_TOKEN=<ese token>`.
+3. En GitHub → Settings → Secrets → Actions:
+   - `DEPLOY_TOKEN` = el mismo token
+   - `DEPLOY_URL` = `https://erp.noaspamassage.com`
+
+Sin esos secretos el paso se omite y el deploy funciona igual que antes. Con
+config en caché, **cada cambio del `.env` del servidor exige volver a cachear**:
+`php artisan optimize` por SSH (o hacer un nuevo push).

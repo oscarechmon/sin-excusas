@@ -50,6 +50,8 @@ const props = defineProps<{
   file: File | null
   aspectRatio?: number
   aspectLabel?: string
+  /** Lado mayor de la foto exportada, en píxeles. */
+  maxSize?: number
 }>()
 
 const emit = defineEmits<{ 'update:visible': [boolean]; cropped: [File] }>()
@@ -108,10 +110,12 @@ const confirm = () => {
   if (!cropper || !props.file) return
   working.value = true
 
-  // Tope de 2000 px: suficiente para la web y evita subir fotos enormes.
+  // Una tarjeta se muestra a ~360 px: 1200 px cubre pantallas 2x y pesa un
+  // tercio que 2000 px. Las fotos a lo ancho (portada) piden 2000.
+  const size = props.maxSize ?? 1200
   const canvas = cropper.getCroppedCanvas({
-    maxWidth: 2000,
-    maxHeight: 2000,
+    maxWidth: size,
+    maxHeight: size,
     fillColor: '#ffffff',
     imageSmoothingQuality: 'high',
   })
@@ -126,7 +130,7 @@ const confirm = () => {
       close(false)
     },
     'image/jpeg',
-    0.9
+    0.85
   )
 }
 </script>

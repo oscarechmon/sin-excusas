@@ -7,7 +7,7 @@
   {{-- ============================================================ Hero --}}
   <section class="se-hero">
     <div class="se-hero__media">
-      <img src="{{ $content['home.hero']['image_url'] ?? asset('assets/img/imagen-1.png') }}"
+      <img src="{{ $content['home.hero']['image_url'] ?? asset('assets/img/hero.webp') }}"
            alt="Tratamiento facial en cabina" fetchpriority="high">
     </div>
     <div class="se-hero__veil"></div>
@@ -129,7 +129,7 @@
 
         <div class="col-12 col-lg-6">
           <div class="se-framed">
-            <img src="{{ $content['home.products']['image_url'] ?? asset('assets/img/imagen-1.png') }}"
+            <img src="{{ $content['home.products']['image_url'] ?? asset('assets/img/hero.webp') }}"
                  alt="Espacio y cabina del centro estético"
                  class="se-framed__media se-media se-media--portrait" loading="lazy">
           </div>

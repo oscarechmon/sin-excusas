@@ -22,7 +22,7 @@
     @if ($price > 0)
       <p class="se-price mb-3">S/ {{ number_format($price, 2) }}</p>
       @if ($inStock)
-        <form method="post" action="{{ route('shop.cart.add') }}" class="mt-auto">
+        <form method="post" action="{{ route('shop.cart.add') }}" class="mt-auto" data-cart-add data-turbo="false">
           @csrf
           <input type="hidden" name="type" value="product">
           <input type="hidden" name="id" value="{{ $product->id }}">

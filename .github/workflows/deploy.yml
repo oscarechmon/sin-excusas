@@ -101,3 +101,16 @@ jobs:
             storage/framework/views/[!.]*
             storage/framework/testing/**
             public/storage
+
+      # El FTP no ejecuta comandos: el servidor migra y regenera sus cachés
+      # cuando se le avisa. Sin el secreto DEPLOY_TOKEN este paso se omite.
+      - name: Migrar y cachear en el servidor
+        env:
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
+          DEPLOY_URL: ${{ secrets.DEPLOY_URL }}
+        run: |
+          if [ -z "$DEPLOY_TOKEN" ] || [ -z "$DEPLOY_URL" ]; then
+            echo "DEPLOY_TOKEN o DEPLOY_URL sin configurar: se omite. Ver DEPLOY.md."
+            exit 0
+          fi
+          curl --fail-with-body --silent --show-error --max-time 120 \n            -X POST -H "X-Deploy-Token: $DEPLOY_TOKEN" "$DEPLOY_URL/deploy/optimize"

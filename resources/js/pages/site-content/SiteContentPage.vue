@@ -30,6 +30,7 @@
                 :image-url="slot.image_url"
                 :enabled="true"
                 :aspect-ratio="slot.aspect"
+                :max-size="slot.aspect > 1.5 ? 2000 : 1200"
                 :busy="busyKey === slot.key"
                 @upload="(file: File) => changeImage(slot, file)"
                 @remove="changeImage(slot, null)"

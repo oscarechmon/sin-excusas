@@ -48,6 +48,7 @@
       :file="pendingFile"
       :aspect-ratio="aspectRatio ?? 4 / 3"
       :aspect-label="aspectLabel"
+      :max-size="maxSize"
       @cropped="onCropped"
     />
   </div>
@@ -70,6 +71,7 @@ defineProps<{
   busy?: boolean
   aspectRatio?: number
   aspectLabel?: string
+  maxSize?: number
 }>()
 
 const emit = defineEmits<{ upload: [File]; remove: [] }>()

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Services\Shop\Cart;
 use App\Services\Shop\CartLine;
 use Illuminate\Contracts\View\View;
+use Illuminate\Http\JsonResponse;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
@@ -21,8 +22,16 @@ class CartController extends Controller
         ]);
     }
 
-    public function add(Request $request, Cart $cart): RedirectResponse
+    /**
+     * Agrega al carrito. La web lo llama por fetch (responde JSON y la página
+     * no se recarga); sin JavaScript sigue funcionando como formulario normal.
+     */
+    public function add(Request $request, Cart $cart): RedirectResponse|JsonResponse
     {
+        $reply = fn (bool $ok, string $message) => $request->expectsJson()
+            ? response()->json(['success' => $ok, 'message' => $message, 'count' => $cart->count()], $ok ? 200 : 422)
+            : back()->with($ok ? 'success' : 'error', $message);
+
         $data = $request->validate([
             'type' => ['required', 'in:'.Cart::SERVICE.','.Cart::PRODUCT],
             'id' => ['required', 'integer'],
@@ -32,7 +41,7 @@ class CartController extends Controller
         $model = $cart->find($data['type'], (int) $data['id']);
 
         if (! $model) {
-            return back()->with('error', 'Este artículo no está disponible para compra en línea.');
+            return $reply(false, 'Este artículo no está disponible para compra en línea.');
         }
 
         $key = Cart::key($data['type'], $model->id);
@@ -40,14 +49,14 @@ class CartController extends Controller
         $max = $cart->maxQuantity($model);
 
         if ($quantity > $max) {
-            return back()->with('error', $max > 0
+            return $reply(false, $max > 0
                 ? "Solo hay {$max} unidad(es) disponibles de {$model->name}."
                 : "{$model->name} está agotado por el momento.");
         }
 
         $cart->put($key, $quantity);
 
-        return back()->with('success', "Agregaste {$model->name} al carrito.");
+        return $reply(true, "Agregaste {$model->name} al carrito.");
     }
 
     public function update(Request $request, Cart $cart, string $key): RedirectResponse

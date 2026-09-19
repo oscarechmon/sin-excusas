@@ -11,11 +11,13 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="@yield('title', 'Sin Excusas Centro Estético')">
   <meta property="og:description" content="@yield('description', 'Tu belleza, sin excusas.')">
-  <meta property="og:image" content="{{ asset('assets/img/logo-sin-excusas.png') }}">
+  <meta property="og:image" content="{{ asset('assets/img/logo-300.png') }}">
   <meta property="og:locale" content="es_PE">
 
-  <link rel="icon" href="{{ asset('assets/img/logo-sin-excusas.png') }}" type="image/png">
+  <link rel="icon" href="{{ asset('assets/img/favicon-64.png') }}" type="image/png">
 
+  {{-- Abrir antes las conexiones a los CDN ahorra ~200 ms en la primera visita. --}}
+  <link rel="preconnect" href="https://cdn.jsdelivr.net" crossorigin>
   <link rel="preconnect" href="https://fonts.googleapis.com">
   <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Jost:ital,wght@0,300;0,400;0,500;0,600;1,300;1,400&amp;display=swap" rel="stylesheet">

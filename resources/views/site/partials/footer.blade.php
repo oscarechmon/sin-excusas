@@ -3,7 +3,7 @@
     <div class="row g-4">
 
       <div class="col-12 col-lg-3">
-        <img class="se-footer__logo" src="{{ asset('assets/img/logo-sin-excusas.png') }}"
+        <img class="se-footer__logo" src="{{ asset('assets/img/logo-300.png') }}"
              alt="Sin Excusas, centro estético" width="150" height="150" loading="lazy">
       </div>
 

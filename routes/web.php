@@ -1,5 +1,6 @@
 <?php
 
+use App\Http\Controllers\Web\DeployController;
 use App\Http\Controllers\Web\Shop\AccountController;
 use App\Http\Controllers\Web\Shop\CartController;
 use App\Http\Controllers\Web\Shop\CheckoutController;
@@ -81,6 +82,10 @@ Route::post('/checkout/resultado', [CheckoutController::class, 'return'])->name(
 Route::post('/pagos/izipay/notificacion', IzipayNotificationController::class)
     ->middleware('throttle:60,1')
     ->name('shop.izipay.notification');
+
+// Gancho de despliegue: lo llama GitHub Actions tras subir por FTP. Se valida
+// con el token de DEPLOY_TOKEN, no con sesión ni CSRF.
+Route::post('/deploy/optimize', DeployController::class)->middleware('throttle:6,1')->name('deploy.optimize');
 
 // ERP (SPA en Vue).
 Route::view('/login', 'app');

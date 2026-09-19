@@ -296,4 +296,28 @@ class OnlineStoreTest extends TestCase
         $this->getJson('/api/online-orders')->assertOk();
         $this->putJson('/api/store-settings', ['delivery_enabled' => true, 'delivery_fee' => 1])->assertForbidden();
     }
+    /** La web agrega por fetch: una sola petición, sin recargar la página. */
+    #[Test]
+    public function agregar_al_carrito_por_fetch_responde_json_con_el_contador(): void
+    {
+        $product = $this->product(stock: 5);
+
+        $this->postJson('/carrito', ['type' => 'product', 'id' => $product->id, 'quantity' => 2])
+            ->assertOk()
+            ->assertJson(['success' => true, 'count' => 2]);
+
+        $this->postJson('/carrito', ['type' => 'product', 'id' => $product->id])
+            ->assertOk()
+            ->assertJsonPath('count', 3);
+    }
+
+    #[Test]
+    public function agregar_por_fetch_sin_stock_responde_422_y_no_cambia_el_carrito(): void
+    {
+        $product = $this->product(stock: 1);
+
+        $this->postJson('/carrito', ['type' => 'product', 'id' => $product->id, 'quantity' => 3])
+            ->assertStatus(422)
+            ->assertJson(['success' => false, 'count' => 0]);
+    }
 }

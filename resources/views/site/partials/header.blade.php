@@ -21,7 +21,7 @@
     <div class="se-container d-flex align-items-center gap-3">
 
       <a class="se-brand" href="{{ route('site.home') }}" aria-label="Sin Excusas, inicio">
-        <img class="se-brand__logo" src="{{ asset('assets/img/logo-sin-excusas.png') }}" alt="" width="64" height="64">
+        <img class="se-brand__logo" src="{{ asset('assets/img/logo-128.png') }}" alt="" width="64" height="64">
         <span>
           <span class="se-brand__name d-block">SIN EXCUSAS</span>
           <span class="se-brand__tag d-block">Centro estético</span>
@@ -29,7 +29,7 @@
       </a>
 
       {{-- En móvil el carrito queda visible fuera del menú colapsado. --}}
-      <a class="se-cart-link d-lg-none ms-auto" href="{{ route('shop.cart.show') }}" aria-label="Carrito, {{ $cartCount }} artículos">
+      <a class="se-cart-link d-lg-none ms-auto" data-cart-link href="{{ route('shop.cart.show') }}" aria-label="Carrito, {{ $cartCount }} artículos">
         @include('site.partials.cart-icon')
         @if ($cartCount > 0)<span class="se-cart-badge">{{ $cartCount }}</span>@endif
       </a>
@@ -91,7 +91,7 @@
           @else
             <a class="se-cart-link" href="{{ route('shop.login') }}">Ingresar</a>
           @endif
-          <a class="se-cart-link d-none d-lg-inline-flex" href="{{ route('shop.cart.show') }}" aria-label="Carrito, {{ $cartCount }} artículos">
+          <a class="se-cart-link d-none d-lg-inline-flex" data-cart-link href="{{ route('shop.cart.show') }}" aria-label="Carrito, {{ $cartCount }} artículos">
             @include('site.partials.cart-icon')
             @if ($cartCount > 0)<span class="se-cart-badge">{{ $cartCount }}</span>@endif
           </a>

@@ -31,6 +31,7 @@ return Application::configure(basePath: dirname(__DIR__))
         $middleware->validateCsrfTokens(except: [
             'checkout/resultado',
             'pagos/izipay/notificacion',
+            'deploy/optimize',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

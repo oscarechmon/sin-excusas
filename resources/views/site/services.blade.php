@@ -73,7 +73,7 @@
                       <a class="se-link-mini" href="{{ $ask($service->name) }}" target="_blank" rel="noopener">Consultar →</a>
                     </div>
                     @if ((float) $service->price > 0)
-                      <form method="post" action="{{ route('shop.cart.add') }}" class="mt-3">
+                      <form method="post" action="{{ route('shop.cart.add') }}" class="mt-3" data-cart-add data-turbo="false">
                         @csrf
                         <input type="hidden" name="type" value="service">
                         <input type="hidden" name="id" value="{{ $service->id }}">

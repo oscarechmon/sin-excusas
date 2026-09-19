@@ -1653,3 +1653,48 @@ button:focus-visible,
     height: 24px;
   }
 }
+
+/* ==========================================================================
+   19. Aviso del carrito (agregar sin recargar la página)
+   ========================================================================== */
+
+.se-toast {
+  position: fixed;
+  left: 50%;
+  bottom: calc(24px + env(safe-area-inset-bottom, 0px));
+  z-index: 1050;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  max-width: calc(100vw - 32px);
+  padding: 14px 20px;
+  background: var(--se-ink);
+  color: #fff;
+  font-size: .875rem;
+  box-shadow: 0 12px 32px rgba(20, 17, 12, .28);
+  transform: translate(-50%, 24px);
+  opacity: 0;
+  transition: transform .25s ease, opacity .25s ease;
+  pointer-events: none;
+}
+
+.se-toast.is-visible {
+  transform: translate(-50%, 0);
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.se-toast--error { background: #7A2E1D; }
+
+.se-toast a {
+  flex: none;
+  color: var(--se-gold-light);
+  font-size: .75rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+}
+
+.se-btn.is-busy {
+  opacity: .7;
+  pointer-events: none;
+}
