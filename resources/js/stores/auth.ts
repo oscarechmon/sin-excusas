@@ -50,7 +50,10 @@ export const useAuthStore = defineStore('auth', () => {
         user.value = response.data.data.user
         token.value = response.data.data.token
         roles.value = response.data.data.roles
+        permissions.value = response.data.data.permissions ?? []
         localStorage.setItem('auth_token', token.value)
+        // La sesión ya está completa: ensureSession no debe volver a pedirla.
+        sessionPromise = Promise.resolve()
         return true
       }
       return false
@@ -69,6 +72,7 @@ export const useAuthStore = defineStore('auth', () => {
     token.value = null
     roles.value = []
     permissions.value = []
+    sessionPromise = null
     localStorage.removeItem('auth_token')
   }
 

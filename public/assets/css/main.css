@@ -427,6 +427,17 @@ a:focus-visible {
   inset: 0 0 0 47%;
 }
 
+/* La foto cubre todo el espacio sin deformarse, sea cual sea su tamaño
+   original (la de fábrica o una subida desde Contenido web). Sin esto se
+   mostraba a tamaño natural: recortada si era grande, en recuadro si era chica. */
+.se-hero__media img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center;
+}
+
 /* Velo que funde la imagen con el fondo oscuro */
 .se-hero__veil {
   position: absolute;

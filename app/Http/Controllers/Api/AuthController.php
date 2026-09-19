@@ -37,6 +37,9 @@ class AuthController extends Controller
                 'user' => $user->only(['id', 'name', 'email']),
                 'token' => $token,
                 'roles' => $user->roles->pluck('name'),
+                // Mismos datos que /auth/me: sin los permisos, el panel arma el
+                // menú vacío hasta que se recarga la página.
+                'permissions' => $user->getAllPermissions()->pluck('name'),
             ],
         ]);
     }
