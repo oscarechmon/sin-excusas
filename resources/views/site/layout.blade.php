@@ -5,6 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1">
   <title>@hasSection('title')@yield('title') · @endif Sin Excusas Centro Estético</title>
   <meta name="description" content="@yield('description', 'Centro estético: tratamientos faciales, corporales, post operatorio y podología con evaluación previa.')">
+  @if ($keywords = \App\Support\SiteSettings::keywords())
+    <meta name="keywords" content="{{ $keywords }}">
+  @endif
   <meta name="theme-color" content="#14110C">
   <link rel="canonical" href="{{ url()->current() }}">
 

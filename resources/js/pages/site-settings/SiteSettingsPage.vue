@@ -27,7 +27,7 @@
               v-for="field in group.fields"
               :key="field.key"
               class="form-field"
-              :class="{ 'form-field--full': field.type === 'hours' || field.type === 'code' }"
+              :class="{ 'form-field--full': ['hours', 'code', 'textarea'].includes(field.type) }"
             >
               <label :for="field.key">{{ field.label }}</label>
 
@@ -45,6 +45,15 @@
                 rows="6"
                 spellcheck="false"
                 placeholder="<!-- Pega aquí la etiqueta tal como te la dio Google -->"
+                :invalid="!!errors[field.key]"
+              />
+              <Textarea
+                v-else-if="field.type === 'textarea'"
+                :id="field.key"
+                v-model="store.values[field.key] as string"
+                rows="2"
+                auto-resize
+                :placeholder="field.placeholder ?? ''"
                 :invalid="!!errors[field.key]"
               />
               <InputText

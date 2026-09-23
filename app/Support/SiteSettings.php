@@ -107,6 +107,16 @@ final class SiteSettings
         return new HtmlString(self::get("scripts_{$slot}"));
     }
 
+    /** Palabras clave listas para la etiqueta: sin espacios sueltos ni repetidas. */
+    public static function keywords(): string
+    {
+        return collect(explode(',', self::get('seo_keywords')))
+            ->map(fn (string $word) => trim(preg_replace('/\s+/', ' ', $word)))
+            ->filter()
+            ->unique()
+            ->implode(', ');
+    }
+
     /**
      * Horario completo, con los siete días siempre presentes.
      *

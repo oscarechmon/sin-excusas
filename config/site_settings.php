@@ -78,6 +78,20 @@ return [
         ],
     ],
 
+    'seo' => [
+        'label' => 'Buscadores',
+        'hint' => 'Palabras clave del sitio. Google ya no las usa para posicionar, pero otros buscadores y herramientas sí las leen.',
+        'fields' => [
+            'seo_keywords' => [
+                'label' => 'Palabras clave',
+                'type' => 'textarea',
+                'hint' => 'Separadas por comas. Ejemplo: centro estético Lima, tratamientos faciales, podología, suplementos. Vacío quita la etiqueta.',
+                'placeholder' => 'centro estético, tratamientos faciales, podología',
+                'rules' => ['nullable', 'string', 'max:500'],
+            ],
+        ],
+    ],
+
     'scripts' => [
         'label' => 'Scripts y etiquetas',
         'hint' => 'Se pegan tal cual en la web pública (Google Analytics, Tag Manager, Search Console, Meta Pixel). Nunca se cargan en el panel del ERP.',

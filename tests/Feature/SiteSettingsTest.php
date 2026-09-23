@@ -172,6 +172,22 @@ class SiteSettingsTest extends TestCase
     }
 
     #[Test]
+    public function las_palabras_clave_salen_en_la_etiqueta_meta(): void
+    {
+        $this->actingAsRole(RoleName::ADMINISTRADOR);
+
+        $this->save(['seo_keywords' => ' centro estético Lima ,, tratamientos faciales ,centro estético Lima '])->assertOk();
+
+        // Se limpian espacios y repetidas antes de publicarlas.
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('<meta name="keywords" content="centro estético Lima, tratamientos faciales">', false);
+
+        $this->save(['seo_keywords' => ''])->assertOk();
+        $this->get('/')->assertOk()->assertDontSee('name="keywords"', false);
+    }
+
+    #[Test]
     public function recepcion_no_puede_ver_ni_editar_los_ajustes(): void
     {
         $this->actingAsRole(RoleName::RECEPCION);
