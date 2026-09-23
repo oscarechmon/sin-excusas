@@ -1698,3 +1698,35 @@ button:focus-visible,
   opacity: .7;
   pointer-events: none;
 }
+
+/* ==========================================================================
+   20. Redes sociales del pie (se arman con lo que cargue el administrador)
+   ========================================================================== */
+
+.se-social {
+  display: flex;
+  flex-wrap: wrap;
+  gap: .5rem;
+  margin: 1.25rem 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.se-social a {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 40px;
+  height: 40px;
+  border: 1px solid rgba(255, 255, 255, .22);
+  border-radius: 50%;
+  color: inherit;
+  transition: border-color .2s ease, color .2s ease, background-color .2s ease;
+}
+
+.se-social a:hover,
+.se-social a:focus-visible {
+  border-color: var(--se-gold);
+  background: rgba(255, 255, 255, .06);
+  color: var(--se-gold-light);
+}

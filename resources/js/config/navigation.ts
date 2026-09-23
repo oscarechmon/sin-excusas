@@ -58,6 +58,7 @@ export const navigation: NavSection[] = [
       { label: 'Servicios', icon: 'pi pi-star', route: 'services', permission: 'services.view' },
       { label: 'Categorías', icon: 'pi pi-tags', route: 'service-categories', permission: 'services.manage' },
       { label: 'Contenido web', icon: 'pi pi-images', route: 'site-content', permission: 'settings.manage' },
+      { label: 'Datos de la web', icon: 'pi pi-at', route: 'site-settings', permission: 'settings.manage' },
     ],
   },
   {
@@ -86,6 +87,7 @@ export const routeTitles: Record<string, string> = {
   sales: 'Ventas',
   'online-sales': 'Ventas online',
   'site-content': 'Contenido web',
+  'site-settings': 'Datos de la web',
   cash: 'Caja',
   commissions: 'Comisiones',
   reports: 'Reportes',

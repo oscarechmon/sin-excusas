@@ -87,6 +87,12 @@ const routes: RouteRecordRaw[] = [
     meta: { requiresAuth: true, permission: 'settings.manage' },
   },
   {
+    path: '/admin/site-settings',
+    name: 'site-settings',
+    component: () => import('@/pages/site-settings/SiteSettingsPage.vue'),
+    meta: { requiresAuth: true, permission: 'settings.manage' },
+  },
+  {
     path: '/admin/online-sales',
     name: 'online-sales',
     component: () => import('@/pages/online-sales/OnlineSalesPage.vue'),

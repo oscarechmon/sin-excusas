@@ -36,9 +36,11 @@
   <script src="https://cdn.jsdelivr.net/npm/@hotwired/turbo@8.0.12/dist/turbo.es2017-umd.js" defer></script>
   <script src="{{ asset('assets/js/main.js') }}?v={{ filemtime(public_path('assets/js/main.js')) }}" defer data-turbo-track="reload"></script>
 
+  {!! \App\Support\SiteSettings::script('head') !!}
   @stack('head')
 </head>
 <body>
+  {!! \App\Support\SiteSettings::script('body_start') !!}
 
   <a class="se-skip-link" href="#contenido">Ir al contenido</a>
 
@@ -56,12 +58,15 @@
 
   @include('site.partials.footer')
 
-  <a class="se-whatsapp" href="{{ config('site.whatsapp_url') }}" target="_blank" rel="noopener"
+  @if ($whatsapp = \App\Support\SiteSettings::whatsappUrl())
+  <a class="se-whatsapp" href="{{ $whatsapp }}" target="_blank" rel="noopener"
      aria-label="Escribir por WhatsApp">
     <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
       <path d="M12.04 2C6.58 2 2.13 6.45 2.13 11.91c0 1.75.46 3.45 1.32 4.95L2 22l5.25-1.38a9.9 9.9 0 0 0 4.79 1.22h.01c5.46 0 9.91-4.45 9.91-9.91C21.96 6.45 17.5 2 12.04 2Zm5.8 14.13c-.24.68-1.42 1.32-1.95 1.36-.5.05-.98.24-3.3-.69-2.78-1.1-4.53-3.95-4.67-4.13-.14-.19-1.11-1.48-1.11-2.82s.7-2 .95-2.28c.24-.28.53-.35.71-.35.18 0 .36 0 .51.01.16.01.39-.06.6.47.24.57.8 1.96.87 2.1.07.14.12.31.02.5-.09.19-.14.31-.28.47-.14.16-.3.36-.42.48-.14.14-.29.29-.12.57.16.28.73 1.2 1.56 1.94 1.07.95 1.98 1.25 2.26 1.39.28.14.44.12.6-.07.16-.19.7-.81.88-1.09.19-.28.37-.23.63-.14.26.09 1.65.78 1.93.92.28.14.47.21.54.33.07.11.07.66-.17 1.34Z"/>
     </svg>
   </a>
+  @endif
 
+  {!! \App\Support\SiteSettings::script('body_end') !!}
 </body>
 </html>

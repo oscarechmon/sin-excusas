@@ -23,6 +23,7 @@ use App\Http\Controllers\Api\SaleController;
 use App\Http\Controllers\Api\ServiceCategoryController;
 use App\Http\Controllers\Api\ServiceController;
 use App\Http\Controllers\Api\SiteContentController;
+use App\Http\Controllers\Api\SiteSettingController;
 use App\Http\Controllers\Api\StoreSettingController;
 use App\Http\Controllers\Api\UserController;
 use Illuminate\Support\Facades\Route;
@@ -220,6 +221,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::match(["put", "patch"], "/site-contents/{key}", [SiteContentController::class, "update"]);
         Route::post("/site-contents/{key}/image", [SiteContentController::class, "storeImage"]);
         Route::delete("/site-contents/{key}/image", [SiteContentController::class, "destroyImage"]);
+
+        // Contacto, redes y scripts de medición de la web pública.
+        Route::get('/site-settings', [SiteSettingController::class, 'index']);
+        Route::match(['put', 'patch'], '/site-settings', [SiteSettingController::class, 'update']);
     });
 
     // --------------------------------------------------------- Métodos de pago

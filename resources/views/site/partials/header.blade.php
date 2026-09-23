@@ -2,6 +2,8 @@
     $productCategories = \App\Support\SiteMenu::productCategories();
     $cartCount = app(\App\Services\Shop\Cart::class)->count();
     $customer = auth('customer')->user();
+    $whatsapp = \App\Support\SiteSettings::whatsappUrl();
+    $schedule = \App\Support\SiteSettings::get('contact_schedule');
     $links = [
         'site.home' => 'Inicio',
         'site.about' => 'Nosotros',
@@ -11,8 +13,10 @@
 
 <div class="se-topbar">
   <div class="se-container">
-    <span class="se-topbar__note">Atención con cita previa · Lun a Sáb</span>
-    <a href="{{ config('site.whatsapp_url') }}" target="_blank" rel="noopener">Reservar por WhatsApp</a>
+    <span class="se-topbar__note">{{ $schedule }}</span>
+    @if ($whatsapp)
+      <a href="{{ $whatsapp }}" target="_blank" rel="noopener">Reservar por WhatsApp</a>
+    @endif
   </div>
 </div>
 
@@ -95,8 +99,10 @@
             @include('site.partials.cart-icon')
             @if ($cartCount > 0)<span class="se-cart-badge">{{ $cartCount }}</span>@endif
           </a>
-          <a class="se-btn se-btn--gold se-btn--sm"
-             href="{{ config('site.whatsapp_url') }}" target="_blank" rel="noopener">Agendar cita</a>
+          @if ($whatsapp)
+            <a class="se-btn se-btn--gold se-btn--sm"
+               href="{{ $whatsapp }}" target="_blank" rel="noopener">Agendar cita</a>
+          @endif
         </div>
       </div>
 

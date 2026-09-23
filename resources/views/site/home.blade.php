@@ -29,7 +29,9 @@
 
         <div class="d-flex flex-column flex-sm-row gap-3 mt-5">
           <a class="se-btn se-btn--gold" href="{{ route('site.services') }}">Ver servicios</a>
-          <a class="se-btn se-btn--ghost" href="{{ config('site.whatsapp_url') }}" target="_blank" rel="noopener">Reservar cita</a>
+          @if ($whatsapp = \App\Support\SiteSettings::whatsappUrl())
+            <a class="se-btn se-btn--ghost" href="{{ $whatsapp }}" target="_blank" rel="noopener">Reservar cita</a>
+          @endif
         </div>
 
         <ul class="se-stats">

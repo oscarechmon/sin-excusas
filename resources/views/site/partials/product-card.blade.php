@@ -1,7 +1,7 @@
 @php
   $price = $product->sale_price !== null ? (float) $product->sale_price : 0;
   $inStock = (float) $product->stock >= 1;
-  $ask = config('site.whatsapp_url').'?text='.rawurlencode("Hola, quiero información sobre: {$product->name}");
+  $ask = \App\Support\SiteSettings::whatsappUrl("Hola, quiero información sobre: {$product->name}");
 @endphp
 
 <article class="se-tile">
@@ -29,10 +29,12 @@
           <button type="submit" class="se-btn se-btn--gold se-btn--sm w-100">Agregar al carrito</button>
         </form>
       @else
-        <p class="se-muted-note mt-auto mb-0">Agotado · <a href="{{ $ask }}" target="_blank" rel="noopener">Avísame</a></p>
+        <p class="se-muted-note mt-auto mb-0">Agotado @if ($ask)· <a href="{{ $ask }}" target="_blank" rel="noopener">Avísame</a>@endif</p>
       @endif
     @else
-      <a class="se-link-mini mt-auto" href="{{ $ask }}" target="_blank" rel="noopener">Consultar precio →</a>
+      @if ($ask)
+        <a class="se-link-mini mt-auto" href="{{ $ask }}" target="_blank" rel="noopener">Consultar precio →</a>
+      @endif
     @endif
   </div>
 </article>

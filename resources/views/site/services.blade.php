@@ -5,7 +5,7 @@
 
 @php
   $money = fn ($value) => 'S/ '.number_format((float) $value, 2);
-  $ask = fn (string $name) => config('site.whatsapp_url').'?text='.rawurlencode("Hola, quiero reservar: {$name}");
+  $ask = fn (string $name) => \App\Support\SiteSettings::whatsappUrl("Hola, quiero reservar: {$name}");
 @endphp
 
 @section('content')
@@ -70,7 +70,9 @@
                     @endif
                     <div class="se-tile__meta">
                       <span class="se-tile__duration">{{ $service->duration_minutes }} min</span>
-                      <a class="se-link-mini" href="{{ $ask($service->name) }}" target="_blank" rel="noopener">Consultar →</a>
+                      @if ($link = $ask($service->name))
+                        <a class="se-link-mini" href="{{ $link }}" target="_blank" rel="noopener">Consultar →</a>
+                      @endif
                     </div>
                     @if ((float) $service->price > 0)
                       <form method="post" action="{{ route('shop.cart.add') }}" class="mt-3" data-cart-add data-turbo="false">
@@ -124,7 +126,9 @@
                     <span class="se-tile__duration">
                       {{ $package->validity_days ? "Vigencia {$package->validity_days} días" : 'Sin vencimiento' }}
                     </span>
-                    <a class="se-link-mini" href="{{ $ask($package->name) }}" target="_blank" rel="noopener">Consultar →</a>
+                    @if ($link = $ask($package->name))
+                      <a class="se-link-mini" href="{{ $link }}" target="_blank" rel="noopener">Consultar →</a>
+                    @endif
                   </div>
                 </div>
               </article>

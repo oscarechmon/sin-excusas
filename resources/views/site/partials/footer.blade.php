@@ -31,10 +31,21 @@
       <div class="col-12 col-lg-3">
         <h2 class="se-footer__heading">Contacto</h2>
         <ul class="se-footer__list">
-          <li>Dirección por confirmar</li>
-          <li>Teléfono por confirmar</li>
-          <li>Instagram por confirmar</li>
+          @if ($address = \App\Support\SiteSettings::get('contact_address'))
+            <li>{{ $address }}</li>
+          @endif
+          @if ($phone = \App\Support\SiteSettings::get('contact_phone'))
+            <li><a href="tel:{{ preg_replace('/[^0-9+]/', '', $phone) }}">{{ $phone }}</a></li>
+          @endif
+          @if ($email = \App\Support\SiteSettings::get('contact_email'))
+            <li><a href="mailto:{{ $email }}">{{ $email }}</a></li>
+          @endif
+          @if ($whatsapp = \App\Support\SiteSettings::whatsappUrl())
+            <li><a href="{{ $whatsapp }}" target="_blank" rel="noopener">Escríbenos por WhatsApp</a></li>
+          @endif
         </ul>
+
+        @include('site.partials.social-links')
       </div>
 
     </div>
