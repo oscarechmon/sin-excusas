@@ -27,6 +27,20 @@ class SiteSettingController extends Controller
         $attributes = [];
 
         foreach ($this->fields() as $key => $field) {
+            if ($field['type'] === 'hours') {
+                $rules["values.{$key}"] = ['array'];
+
+                foreach (SiteSettings::DAYS as $day => $names) {
+                    $rules["values.{$key}.{$day}.open"] = ['boolean'];
+                    $rules["values.{$key}.{$day}.from"] = ['required_with:values.'.$key.'.'.$day, 'date_format:H:i'];
+                    $rules["values.{$key}.{$day}.to"] = ['required_with:values.'.$key.'.'.$day, 'date_format:H:i', 'after:values.'.$key.'.'.$day.'.from'];
+                    $attributes["values.{$key}.{$day}.from"] = 'hora de apertura del '.$names['label'];
+                    $attributes["values.{$key}.{$day}.to"] = 'hora de cierre del '.$names['label'];
+                }
+
+                continue;
+            }
+
             $rules["values.{$key}"] = $field['rules'] ?? ['nullable', 'string', 'max:255'];
             $attributes["values.{$key}"] = $field['label'];
         }
@@ -36,10 +50,14 @@ class SiteSettingController extends Controller
         // Solo se tocan los campos que llegaron: un envío parcial no borra el resto.
         $values = (array) $request->input('values', []);
 
-        foreach (array_keys($this->fields()) as $key) {
-            if (array_key_exists($key, $values)) {
-                StoreSetting::put($key, trim((string) $values[$key]));
+        foreach ($this->fields() as $key => $field) {
+            if (! array_key_exists($key, $values)) {
+                continue;
             }
+
+            StoreSetting::put($key, $field['type'] === 'hours'
+                ? json_encode(SiteSettings::normalizeHours((array) $values[$key]))
+                : trim((string) $values[$key]));
         }
 
         request()->attributes->remove('site.settings');
@@ -75,6 +93,10 @@ class SiteSettingController extends Controller
             ])
             ->values();
 
-        return ['groups' => $groups, 'values' => SiteSettings::all()];
+        $days = collect(SiteSettings::DAYS)
+            ->map(fn (array $names, string $key) => ['key' => $key, 'label' => $names['label'], 'short' => $names['short']])
+            ->values();
+
+        return ['groups' => $groups, 'values' => SiteSettings::all(), 'days' => $days];
     }
 }

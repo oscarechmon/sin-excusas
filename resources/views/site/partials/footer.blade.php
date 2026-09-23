@@ -45,6 +45,15 @@
           @endif
         </ul>
 
+        @if ($schedule = \App\Support\SiteSettings::scheduleGroups())
+          <h2 class="se-footer__heading mt-4">Horario</h2>
+          <ul class="se-footer__list">
+            @foreach ($schedule as $group)
+              <li>{{ $group['days'] }} · {{ $group['hours'] }}</li>
+            @endforeach
+          </ul>
+        @endif
+
         @include('site.partials.social-links')
       </div>
 

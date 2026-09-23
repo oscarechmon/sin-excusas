@@ -3,7 +3,8 @@
     $cartCount = app(\App\Services\Shop\Cart::class)->count();
     $customer = auth('customer')->user();
     $whatsapp = \App\Support\SiteSettings::whatsappUrl();
-    $schedule = \App\Support\SiteSettings::get('contact_schedule');
+    $scheduleNote = \App\Support\SiteSettings::get('contact_schedule');
+    $schedule = trim($scheduleNote.' · '.\App\Support\SiteSettings::scheduleSummary(), ' ·');
     $links = [
         'site.home' => 'Inicio',
         'site.about' => 'Nosotros',

@@ -114,6 +114,63 @@ class SiteSettingsTest extends TestCase
         $this->assertNull(StoreSetting::get('contact_whatsapp'));
     }
 
+    /** @param array<string,array<string,mixed>> $days */
+    private function hours(array $days): array
+    {
+        $base = ['open' => false, 'from' => '09:00', 'to' => '20:00'];
+
+        return collect(['mon', 'tue', 'wed', 'thu', 'fri', 'sat', 'sun'])
+            ->mapWithKeys(fn (string $day) => [$day => array_merge($base, $days[$day] ?? [])])
+            ->all();
+    }
+
+    #[Test]
+    public function el_horario_se_guarda_por_dia_y_se_resume_en_la_web(): void
+    {
+        $this->actingAsRole(RoleName::ADMINISTRADOR);
+
+        $this->save([
+            'contact_schedule' => 'Atención con cita previa',
+            'contact_hours' => $this->hours([
+                'mon' => ['open' => true, 'from' => '09:00', 'to' => '20:00'],
+                'tue' => ['open' => true, 'from' => '09:00', 'to' => '20:00'],
+                'wed' => ['open' => true, 'from' => '09:00', 'to' => '20:00'],
+                'thu' => ['open' => true, 'from' => '09:00', 'to' => '20:00'],
+                'fri' => ['open' => true, 'from' => '09:00', 'to' => '20:00'],
+                'sat' => ['open' => true, 'from' => '10:00', 'to' => '14:00'],
+            ]),
+        ])->assertOk()->assertJsonPath('data.values.contact_hours.sun.open', false);
+
+        // Los días seguidos con el mismo horario se juntan; el domingo no sale.
+        $this->get('/')
+            ->assertOk()
+            ->assertSee('Atención con cita previa · Lun a Vie 9:00 a 20:00 · Sábado 10:00 a 14:00')
+            ->assertSee('Lun a Vie')
+            ->assertDontSee('Domingo');
+    }
+
+    #[Test]
+    public function sin_dias_abiertos_no_se_muestra_horario(): void
+    {
+        $this->actingAsRole(RoleName::ADMINISTRADOR);
+
+        $this->save(['contact_schedule' => '', 'contact_hours' => $this->hours([])])->assertOk();
+
+        $this->get('/')->assertOk()->assertDontSee('Horario');
+    }
+
+    #[Test]
+    public function el_cierre_no_puede_ser_anterior_a_la_apertura(): void
+    {
+        $this->actingAsRole(RoleName::ADMINISTRADOR);
+
+        $this->save(['contact_hours' => $this->hours(['mon' => ['open' => true, 'from' => '18:00', 'to' => '09:00']])])
+            ->assertJsonValidationErrors('values.contact_hours.mon.to');
+
+        $this->save(['contact_hours' => $this->hours(['mon' => ['open' => true, 'from' => '9am', 'to' => '20:00']])])
+            ->assertJsonValidationErrors('values.contact_hours.mon.from');
+    }
+
     #[Test]
     public function recepcion_no_puede_ver_ni_editar_los_ajustes(): void
     {

@@ -23,13 +23,24 @@
         <template #subtitle>{{ group.hint }}</template>
         <template #content>
           <div class="fields" :class="{ 'fields--wide': group.key === 'scripts' }">
-            <div v-for="field in group.fields" :key="field.key" class="form-field">
+            <div
+              v-for="field in group.fields"
+              :key="field.key"
+              class="form-field"
+              :class="{ 'form-field--full': field.type === 'hours' || field.type === 'code' }"
+            >
               <label :for="field.key">{{ field.label }}</label>
 
+              <OpeningHoursField
+                v-if="field.type === 'hours'"
+                :model-value="store.values[field.key] as OpeningHours"
+                :days="store.days"
+                @update:model-value="(hours: OpeningHours) => (store.values[field.key] = hours)"
+              />
               <Textarea
-                v-if="field.type === 'code'"
+                v-else-if="field.type === 'code'"
                 :id="field.key"
-                v-model="store.values[field.key]"
+                v-model="store.values[field.key] as string"
                 class="code"
                 rows="6"
                 spellcheck="false"
@@ -39,7 +50,7 @@
               <InputText
                 v-else
                 :id="field.key"
-                v-model="store.values[field.key]"
+                v-model="store.values[field.key] as string"
                 :type="field.type === 'tel' ? 'text' : field.type"
                 :placeholder="field.placeholder ?? ''"
                 :invalid="!!errors[field.key]"
@@ -58,7 +69,8 @@
 <script setup lang="ts">
 import { onMounted, ref } from 'vue'
 import { useToast } from 'primevue/usetoast'
-import { useSiteSettingsStore } from '@/stores/siteSettings'
+import { useSiteSettingsStore, type OpeningHours } from '@/stores/siteSettings'
+import OpeningHoursField from '@/components/common/OpeningHoursField.vue'
 import { extractMessage } from '@/composables/usePaginatedList'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
@@ -85,7 +97,10 @@ const save = async () => {
     // El backend valida bajo `values.<clave>`; aquí se muestra en su campo.
     const validation = err?.response?.data?.errors ?? {}
     errors.value = Object.fromEntries(
-      Object.entries(validation).map(([key, messages]) => [key.replace(/^values\./, ''), (messages as string[])[0]])
+      Object.entries(validation).map(([key, messages]) => [
+        key.replace(/^values\./, '').split('.')[0],
+        (messages as string[])[0],
+      ])
     )
     toast.add({
       severity: 'error',
@@ -122,6 +137,10 @@ onMounted(store.load)
   &--wide {
     grid-template-columns: 1fr;
   }
+}
+
+.form-field--full {
+  grid-column: 1 / -1;
 }
 
 .form-field {
