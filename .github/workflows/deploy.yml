@@ -25,7 +25,7 @@ concurrency:
 jobs:
   deploy:
     runs-on: ubuntu-latest
-    timeout-minutes: 40
+    timeout-minutes: 90
 
     steps:
       - name: Descargar el código
@@ -56,7 +56,7 @@ jobs:
           npm ci
           npm run build
 
-      - name: Subir por FTP a public_html/erp
+      - name: Subir por FTP a public_html
         uses: SamKirkland/FTP-Deploy-Action@v4.3.5
         with:
           server: ${{ secrets.FTP_SERVER }}
@@ -113,4 +113,7 @@ jobs:
             echo "DEPLOY_TOKEN o DEPLOY_URL sin configurar: se omite. Ver DEPLOY.md."
             exit 0
           fi
-          curl --fail-with-body --silent --show-error --max-time 120 \n            -X POST -H "X-Deploy-Token: $DEPLOY_TOKEN" "$DEPLOY_URL/deploy/optimize"
+          curl --fail-with-body --silent --show-error --max-time 120 \
+          -X POST \
+          -H "X-Deploy-Token: $DEPLOY_TOKEN" \
+          "$DEPLOY_URL/deploy/optimize"
