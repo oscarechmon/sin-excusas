@@ -3,7 +3,7 @@
 # Se ejecuta en cada push a `main` (o a mano desde la pestaña Actions):
 #   1. instala las dependencias PHP de producción (vendor/),
 #   2. compila el panel Vue con Vite (public/build/),
-#   3. sube por FTP solo los archivos que cambiaron a public_html/erp/.
+#   3. sube por FTP solo los archivos que cambiaron a public_html/.
 #
 # Lo que NO hace (se corre una vez por SSH, ver README de despliegue):
 #   - crear el .env del servidor,
@@ -31,10 +31,10 @@ jobs:
       - name: Descargar el código
         uses: actions/checkout@v4
 
-      - name: Preparar PHP 8.2
+      - name: Preparar PHP 8.3
         uses: shivammathur/setup-php@v2
         with:
-          php-version: '8.2'
+          php-version: '8.3'
           extensions: mbstring, intl, bcmath, gd, pdo_mysql, zip
           tools: composer:v2
           coverage: none
@@ -65,7 +65,7 @@ jobs:
           protocol: ftp
           port: 21
           local-dir: ./
-          server-dir: erp/
+          server-dir: ./
           # El estado de sincronización vive en el servidor: en cada deploy
           # solo se suben los archivos que cambiaron desde el anterior.
           state-name: .ftp-deploy-sync-state.json
