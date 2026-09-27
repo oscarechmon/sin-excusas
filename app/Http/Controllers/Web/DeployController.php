@@ -2,11 +2,11 @@
 
 namespace App\Http\Controllers\Web;
 
+use App\Http\Controllers\Concerns\VerifiesDeployToken;
 use App\Http\Controllers\Controller;
 use Illuminate\Http\Request;
 use Illuminate\Http\Response;
 use Illuminate\Support\Facades\Artisan;
-use Illuminate\Support\Facades\Log;
 
 /**
  * Tareas que el despliegue por FTP no puede hacer: migrar y cachear.
@@ -17,17 +17,11 @@ use Illuminate\Support\Facades\Log;
  */
 class DeployController extends Controller
 {
+    use VerifiesDeployToken;
+
     public function __invoke(Request $request): Response
     {
-        $token = (string) config('deploy.token');
-
-        // Sin token configurado la ruta no existe para nadie.
-        abort_if($token === '', 404);
-
-        if (! hash_equals($token, (string) $request->header('X-Deploy-Token'))) {
-            Log::warning('Intento de despliegue con token inválido.', ['ip' => $request->ip()]);
-            abort(403);
-        }
+        $this->verifyDeployToken($request);
 
         $output = [];
 

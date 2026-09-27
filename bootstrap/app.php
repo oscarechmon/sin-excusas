@@ -32,6 +32,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'checkout/resultado',
             'pagos/izipay/notificacion',
             'deploy/optimize',
+            'deploy/release',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

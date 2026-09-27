@@ -1,0 +1,54 @@
+# Lo que NO viaja al servidor dentro de release.zip (patrones de rsync).
+# La barra inicial ancla el patrón a la raíz del proyecto.
+
+# Control de versiones y herramientas de desarrollo
+/.git/
+/.github/
+/.claude/
+/.vscode/
+/.idea/
+/node_modules/
+/tests/
+/.editorconfig
+/.deployignore
+/eslint.config.js
+/tsconfig.json
+/tsconfig.node.json
+/vite.config.ts
+/package-lock.json
+/phpunit.xml
+
+# Fuentes que ya están compiladas dentro de public/build
+/resources/js/
+/resources/scss/
+/public/hot
+
+# Documentación interna
+/README.md
+/DEPLOY.md
+/ERP_Sin_Excusas_Especificacion_Claude.md
+
+# Nunca se pisa la configuración del servidor
+/.env
+/.env.*
+
+# Cachés generadas en el runner: las del servidor se rehacen tras publicar.
+# packages.php y services.php sí viajan: los escribe composer install.
+/bootstrap/cache/config.php
+/bootstrap/cache/routes-*.php
+/bootstrap/cache/events.php
+
+# Datos que vive solo en el servidor: fotos subidas, logs y sesiones.
+# Las carpetas se crean igual; lo que se excluye es su contenido.
+/storage/app/public/**
+/storage/app/private/**
+/storage/logs/**
+/storage/framework/cache/data/**
+/storage/framework/sessions/**
+/storage/framework/views/**
+/storage/framework/testing/
+/public/storage
+
+# El propio paquete y el estado del despliegue anterior
+/release.zip
+/.ftp-deploy-sync-state.json

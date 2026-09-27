@@ -1,62 +1,124 @@
-# Despliegue en Hostinger (erp.noaspamassage.com)
+# Despliegue en Hostinger (sinexcusas.org.pe)
 
-Cada `git push origin main` dispara `.github/workflows/deploy.yml`, que compila y
-sube por FTP a `public_html/erp/`. El subdominio apunta a `public_html/erp/public`.
-El `.env` del servidor se crea a mano (Administrador de archivos) y el deploy nunca lo toca.
+Cada `git push origin main` dispara `.github/workflows/deploy.yml`, que compila
+el proyecto, lo empaqueta en **un solo `release.zip`**, lo sube por FTP y le
+pide al servidor que lo descomprima, migre y regenere las cachés.
+
+**Por qué un zip.** Subir el proyecto archivo por archivo son más de doce mil
+transferencias FTP (`vendor/` es casi todo eso) y Hostinger cierra la sesión a
+los 3600 segundos con `421 Session Timeout`, así que la subida no llegaba nunca
+al final. Un único archivo tarda un par de minutos.
+
+**Lo que el zip no toca:** el `.env` del servidor, las fotos subidas
+(`storage/app/public`), los logs y las sesiones. La lista está en
+[`.deployignore`](.deployignore).
+
+**Ojo:** publicar sobrescribe y agrega, pero no borra. Si eliminas un archivo
+del repositorio, sigue existiendo en el servidor hasta que lo borres a mano.
+
+## Estructura en el servidor
+
+```
+/home/u367943235/domains/sinexcusas.org.pe/public_html/   ← aquí se descomprime
+├── app/  config/  routes/  vendor/  storage/ …
+├── .env                                        ← se crea a mano, nunca se pisa
+└── public/                                     ← raíz del dominio
+```
+
+En hPanel → **Sitios web → sinexcusas.org.pe → Avanzado**, la carpeta raíz del
+dominio debe apuntar a `public_html/public`. Si apunta a `public_html` a secas,
+quedan expuestos el `.env`, el código y el propio `release.zip`.
 
 ## Secretos en GitHub (Settings → Secrets and variables → Actions)
 
-| Secreto        | Valor                              |
-|----------------|------------------------------------|
-| `FTP_SERVER`   | `156.67.74.59`                     |
-| `FTP_USERNAME` | `u257283941.spa` (con el `.spa`)   |
-| `FTP_PASSWORD` | la contraseña de esa cuenta FTP    |
+Los cinco son obligatorios; sin alguno, el workflow falla en el primer paso con
+el nombre del que falta.
 
-## Una sola vez, por SSH (hPanel → Avanzado → Acceso SSH)
+| Secreto        | Valor                                             |
+|----------------|---------------------------------------------------|
+| `FTP_SERVER`   | `ftp.sinexcusas.org.pe`                           |
+| `FTP_USERNAME` | `u367943235.sinexcusas`                           |
+| `FTP_PASSWORD` | la contraseña de esa cuenta FTP                   |
+| `DEPLOY_URL`   | `https://sinexcusas.org.pe`                       |
+| `DEPLOY_TOKEN` | una cadena larga al azar, la misma que en el `.env` |
 
-```bash
-cd ~/domains/noaspamassage.com/public_html/erp
+La cuenta FTP debe estar creada apuntando a
+`/home/u367943235/domains/sinexcusas.org.pe/public_html`, porque el workflow
+sube el paquete a la raíz de esa cuenta.
 
-# 1. Variables de entorno (copiar desde .env.example y completar).
-cp .env.example .env && nano .env
-#    APP_ENV=production  APP_DEBUG=false  APP_URL=https://erp.noaspamassage.com
-#    DB_* de la base creada en hPanel, MAIL_*, GOOGLE_*, IZIPAY_*, SITE_WHATSAPP
+## Puesta en marcha (una sola vez)
 
-# 2. Carpetas que el FTP no toca y clave de la app.
-mkdir -p storage/app/public storage/logs storage/framework/{cache/data,sessions,views}
-php artisan key:generate
+La ruta que descomprime vive dentro de la propia aplicación, así que el primer
+despliegue hay que sembrarlo a mano:
 
-# 3. Base de datos y enlace de fotos.
-php artisan migrate --force
-php artisan db:seed --class=RolePermissionSeeder --force
-php artisan storage:link
+1. Lanza el workflow (**Actions → Deploy → Run workflow**). Subirá el
+   `release.zip` y fallará al publicar: todavía no hay código que lo atienda.
+2. hPanel → **Administrador de archivos** → entra a `public_html`, selecciona
+   `release.zip` y usa **Extraer**.
+3. Crea el `.env` en `public_html` (cópialo del local y cambia lo de abajo).
+4. hPanel → **Avanzado → Terminal SSH** (o Acceso SSH):
+
+   ```bash
+   cd ~/domains/sinexcusas.org.pe/public_html
+   php artisan key:generate          # solo si el .env no trae APP_KEY
+   php artisan migrate --force
+   php artisan db:seed --class=RolePermissionSeeder --force
+   php artisan storage:link
+   php artisan optimize
+   ```
+
+5. Borra el `release.zip` que quedó y vuelve a lanzar el workflow: a partir de
+   aquí todo es automático.
+
+### Lo que cambia en el `.env` del servidor
+
+```env
+APP_ENV=production
+APP_DEBUG=false
+APP_URL=https://sinexcusas.org.pe
+SESSION_SECURE_COOKIE=true
+DEPLOY_TOKEN=<la misma cadena que el secreto de GitHub>
 ```
 
-## Después de cada deploy que cambie migraciones o config
+El panel usa tokens Bearer, no cookies entre dominios, así que
+`SANCTUM_STATEFUL_DOMAINS` se deja vacío.
 
-```bash
-php artisan migrate --force && php artisan optimize:clear
+## Servicios externos que apuntan al dominio
+
+Al cambiar de `erp.noaspamassage.com` a `sinexcusas.org.pe` hay que actualizar:
+
+- **Google Cloud → Credenciales → URI de redirección autorizado**:
+  `https://sinexcusas.org.pe/cuenta/google/callback`
+- **Izipay → Reglas de notificaciones → URL de notificación al final del pago**:
+  `https://sinexcusas.org.pe/pagos/izipay/notificacion`
+- **Google Search Console**: verificar el dominio nuevo.
+
+## Cómo funciona la publicación
+
+Terminada la subida, GitHub Actions llama a `POST /deploy/release` con la
+cabecera `X-Deploy-Token`. El servidor descomprime **por tandas** (1200
+entradas por llamada, configurable con `DEPLOY_CHUNK`) para no pasarse del
+tiempo máximo de ejecución de PHP, y responde por dónde va. Cuando termina:
+
+```
+php artisan optimize:clear   → tira las cachés del código viejo
+php artisan migrate --force  → aplica las migraciones nuevas
+php artisan optimize         → cachea config, rutas y vistas
 ```
 
-## Comprobaciones
+Con config en caché Laravel deja de leer el `.env` y todos los archivos de
+`config/` en cada visita, que es buena parte del tiempo de respuesta en un
+hosting compartido. Por lo mismo, **cada cambio del `.env` en el servidor exige
+volver a cachear**: `php artisan optimize` por SSH, o un push nuevo.
 
-- hPanel → Avanzado → Configuración PHP: versión **8.2** o superior.
-- Google Cloud: agregar `https://erp.noaspamassage.com/cuenta/google/callback`.
-- Izipay → Reglas de notificaciones: `https://erp.noaspamassage.com/pagos/izipay/notificacion`.
+## Si algo falla
 
-## Migrar y cachear automáticamente en cada deploy
-
-El FTP no ejecuta comandos, así que al terminar la subida GitHub Actions llama a
-`POST /deploy/optimize`, que corre `optimize:clear`, `migrate --force` y
-`optimize` (config, rutas y vistas en caché: Laravel deja de leer el `.env` y
-todos los archivos de configuración en cada visita).
-
-1. Genera un token largo y aleatorio (por ejemplo, 64 caracteres).
-2. En el `.env` del servidor: `DEPLOY_TOKEN=<ese token>`.
-3. En GitHub → Settings → Secrets → Actions:
-   - `DEPLOY_TOKEN` = el mismo token
-   - `DEPLOY_URL` = `https://erp.noaspamassage.com`
-
-Sin esos secretos el paso se omite y el deploy funciona igual que antes. Con
-config en caché, **cada cambio del `.env` del servidor exige volver a cachear**:
-`php artisan optimize` por SSH (o hacer un nuevo push).
+| Síntoma | Causa y arreglo |
+|---|---|
+| `Faltan estos secretos …` | Crea los que nombra el mensaje en Settings → Secrets. |
+| `curl: (67)` al subir | Usuario o contraseña FTP mal: ojo que el usuario lleva el sufijo `.sinexcusas`. |
+| `404` al publicar | El `DEPLOY_TOKEN` del `.env` está vacío o el servidor tiene la config vieja en caché. |
+| `403` al publicar | El token del `.env` y el secreto de GitHub no coinciden. |
+| `No hay release.zip que publicar` | La subida FTP no llegó a la carpeta de la aplicación: revisa a qué directorio apunta la cuenta FTP. |
+| `Este PHP no tiene la extensión zip` | hPanel → Configuración PHP → activar `zip`. |
+| Se queda extrayendo y no termina | Baja `DEPLOY_CHUNK` en el `.env` (por ejemplo 400) y vuelve a lanzar. |

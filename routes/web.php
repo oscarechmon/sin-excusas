@@ -1,6 +1,7 @@
 <?php
 
 use App\Http\Controllers\Web\DeployController;
+use App\Http\Controllers\Web\ReleaseController;
 use App\Http\Controllers\Web\Shop\AccountController;
 use App\Http\Controllers\Web\Shop\CartController;
 use App\Http\Controllers\Web\Shop\CheckoutController;
@@ -86,6 +87,8 @@ Route::post('/pagos/izipay/notificacion', IzipayNotificationController::class)
 // Gancho de despliegue: lo llama GitHub Actions tras subir por FTP. Se valida
 // con el token de DEPLOY_TOKEN, no con sesión ni CSRF.
 Route::post('/deploy/optimize', DeployController::class)->middleware('throttle:6,1')->name('deploy.optimize');
+// Descomprime el paquete subido por FTP. Va por tandas, de ahí el límite alto.
+Route::post('/deploy/release', ReleaseController::class)->middleware('throttle:120,10')->name('deploy.release');
 
 // ERP (SPA en Vue).
 Route::view('/login', 'app');
