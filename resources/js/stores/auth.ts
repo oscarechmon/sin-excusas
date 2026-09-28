@@ -104,7 +104,6 @@ export const useAuthStore = defineStore('auth', () => {
     ensureSession,
     login,
     loginError,
-    loginError,
     logout,
     hasRole,
     hasPermission,

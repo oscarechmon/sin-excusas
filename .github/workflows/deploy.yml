@@ -100,6 +100,11 @@ jobs:
         run: |
           # El valor de FTP_SERVER sale tapado en el registro por ser secreto,
           # así que los errores de curl se traducen a algo accionable.
+          # Si el secreto se pegó con Enter al final, GitHub guarda el salto de
+          # línea y la URL queda partida (curl 3). Un nombre de servidor no
+          # lleva espacios, así que se limpian sin riesgo.
+          FTP_SERVER=$(printf '%s' "$FTP_SERVER" | tr -d '[:space:]')
+
           # El `|| codigo=$?` es lo que evita que `bash -e` corte el paso antes
           # de poder explicar el error.
           codigo=0
@@ -118,6 +123,8 @@ jobs:
             6) echo "FTP_SERVER no resuelve. Debe ser el nombre del servidor de"
                echo "Hostinger (algo.hstgr.io), no ftp.tudominio: el dominio apunta"
                echo "al CDN, que no habla FTP. Ver DEPLOY.md." ;;
+            3) echo "FTP_SERVER trae caracteres que rompen la URL. Debe ser solo"
+               echo "el nombre del servidor, sin ftp:// ni barras." ;;
             7) echo "FTP_SERVER resuelve pero no acepta la conexión en el puerto 21." ;;
             67) echo "Usuario o contraseña FTP rechazados. El usuario lleva su"
                 echo "sufijo (algo.dominio) y la contraseña distingue mayúsculas." ;;
@@ -135,6 +142,8 @@ jobs:
         # El servidor descomprime por tandas para no pasarse del tiempo máximo
         # de PHP; aquí se le llama hasta que responde done:true.
         run: |
+          DEPLOY_URL=$(printf '%s' "$DEPLOY_URL" | tr -d '[:space:]')
+
           for intento in $(seq 1 60); do
             respuesta=$(curl --fail-with-body --silent --show-error --max-time 300 \
               -X POST -H "X-Deploy-Token: $DEPLOY_TOKEN" \
