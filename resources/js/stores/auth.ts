@@ -29,7 +29,14 @@ export const useAuthStore = defineStore('auth', () => {
         permissions.value = response.data.data.permissions
       }
     } catch (error) {
-      logout()
+      // Un 401 significa que el token ya no sirve y toca salir. Un fallo de
+      // red o un tiempo agotado solo significan que el servidor no contestó
+      // ahora: cerrar la sesión por eso obliga a volver a entrar sin motivo.
+      if ((error as { response?: { status?: number } })?.response?.status === 401) {
+        logout()
+      }
+
+      throw error
     }
   }
 
@@ -41,7 +48,15 @@ export const useAuthStore = defineStore('auth', () => {
   let sessionPromise: Promise<void> | null = null
 
   const ensureSession = () => {
-    if (!sessionPromise) sessionPromise = checkAuth()
+    if (!sessionPromise) {
+      // Si la comprobación falla (servidor que no contesta), se descarta la
+      // promesa: así el siguiente intento vuelve a preguntar en lugar de
+      // quedarse con un resultado fallido para el resto de la sesión.
+      sessionPromise = checkAuth().catch(() => {
+        sessionPromise = null
+      })
+    }
+
     return sessionPromise
   }
 

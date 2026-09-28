@@ -2,6 +2,11 @@ import axios, { AxiosInstance } from 'axios'
 
 const api: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  // Sin este límite, una petición que no contesta deja la pantalla cargando
+  // para siempre: el guard del router la espera antes de dejar navegar.
+  // Veinte segundos son de sobra para un servidor que responde en decenas
+  // de milisegundos, y a la vez suficientes para una conexión mala.
+  timeout: 20000,
   headers: {
     'Accept': 'application/json',
     'Content-Type': 'application/json',

@@ -1,3 +1,13 @@
+# Los archivos de build/ llevan una huella en el nombre (app-BpamjJcW.js): si
+# el contenido cambia, cambia la URL. Se pueden guardar para siempre en el
+# navegador, y así volver al panel no vuelve a descargar el megabyte de
+# siempre. El resto de public/ se queda con la caché corta del servidor,
+# porque esos nombres no cambian al editar una foto.
+<IfModule mod_headers.c>
+    SetEnvIf Request_URI "^/build/" HUELLA_EN_EL_NOMBRE=1
+    Header set Cache-Control "public, max-age=31536000, immutable" env=HUELLA_EN_EL_NOMBRE
+</IfModule>
+
 <IfModule mod_rewrite.c>
     <IfModule mod_negotiation.c>
         Options -MultiViews -Indexes

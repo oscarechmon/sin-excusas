@@ -167,4 +167,31 @@ router.beforeEach(async (to, from, next) => {
   return next()
 })
 
+/**
+ * Recuperación tras un despliegue.
+ *
+ * Cada pantalla se descarga cuando se entra en ella. Si mientras la pestaña
+ * estaba abierta se publicó una versión nueva, los archivos de la anterior ya
+ * no existen y esa descarga falla: la navegación se queda a medias y la
+ * pantalla parece colgada. Recargar trae la versión nueva y continúa donde
+ * el usuario quería ir.
+ *
+ * La marca en sessionStorage evita el bucle si el fallo fuera por otra causa.
+ */
+const MARCA_RECARGA = 'recarga-por-version'
+
+router.onError((error: Error, to) => {
+  // Las formas en que cada navegador cuenta lo mismo: el archivo de la
+  // pantalla (o su hoja de estilos) ya no está donde decía el índice.
+  const esArchivoQueYaNoEsta = /dynamically imported module|Importing a module script failed|Unable to preload CSS|Failed to fetch/i
+    .test(error?.message ?? '')
+
+  if (!esArchivoQueYaNoEsta || sessionStorage.getItem(MARCA_RECARGA)) return
+
+  sessionStorage.setItem(MARCA_RECARGA, '1')
+  window.location.assign(to.fullPath)
+})
+
+router.afterEach(() => sessionStorage.removeItem(MARCA_RECARGA))
+
 export default router
