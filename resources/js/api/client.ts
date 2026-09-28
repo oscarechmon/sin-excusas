@@ -19,10 +19,19 @@ api.interceptors.request.use((config) => {
 api.interceptors.response.use(
   (response) => response,
   (error) => {
-    if (error.response?.status === 401) {
+    // Un 401 al intentar entrar significa "credenciales incorrectas", no
+    // "sesión vencida". Recargar la pantalla ahí borraría el aviso antes de
+    // que el usuario alcance a leerlo: el mensaje lo muestra el formulario.
+    const intentoDeEntrar = (error.config?.url ?? '').includes('/auth/login')
+
+    if (error.response?.status === 401 && !intentoDeEntrar) {
       localStorage.removeItem('auth_token')
-      window.location.href = '/login'
+
+      if (window.location.pathname !== '/login') {
+        window.location.href = '/login'
+      }
     }
+
     return Promise.reject(error)
   }
 )

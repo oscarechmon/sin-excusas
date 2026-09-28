@@ -41,7 +41,7 @@
       </form>
 
       <div v-if="errorMessage" class="error-message">
-        <Message severity="error" :text="errorMessage" />
+        <Message severity="error" :closable="false">{{ errorMessage }}</Message>
       </div>
     </div>
   </div>
@@ -87,7 +87,7 @@ const handleLogin = async () => {
   if (success) {
     router.push({ name: 'dashboard' })
   } else {
-    errorMessage.value = 'Las credenciales son inválidas'
+    errorMessage.value = authStore.loginError ?? 'Las credenciales son inválidas.'
   }
 }
 </script>

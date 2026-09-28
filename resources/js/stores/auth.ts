@@ -1,6 +1,8 @@
 import { defineStore } from 'pinia'
 import { ref, computed } from 'vue'
 import { api } from '@/api/client'
+import { extractMessage } from '@/composables/usePaginatedList'
+import { extractMessage } from '@/composables/usePaginatedList'
 
 interface User {
   id: number
@@ -43,7 +45,12 @@ export const useAuthStore = defineStore('auth', () => {
     return sessionPromise
   }
 
+  /** Motivo del último intento fallido, tal como lo explica el backend. */
+  const loginError = ref<string | null>(null)
+
   const login = async (email: string, password: string) => {
+    loginError.value = null
+
     try {
       const response = await api.post('/auth/login', { email, password })
       if (response.data.success) {
@@ -56,8 +63,14 @@ export const useAuthStore = defineStore('auth', () => {
         sessionPromise = Promise.resolve()
         return true
       }
+      loginError.value = response.data.message ?? null
+
       return false
     } catch (error) {
+      // "El usuario está inactivo" y "Las credenciales son inválidas" llegan
+      // igual: distinguirlas le ahorra al usuario adivinar qué pasó.
+      loginError.value = extractMessage(error, 'Las credenciales son inválidas.')
+
       return false
     }
   }
@@ -90,6 +103,8 @@ export const useAuthStore = defineStore('auth', () => {
     checkAuth,
     ensureSession,
     login,
+    loginError,
+    loginError,
     logout,
     hasRole,
     hasPermission,
