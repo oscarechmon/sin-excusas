@@ -41,16 +41,21 @@ el nombre del que falta.
 
 | Secreto        | Valor                                             |
 |----------------|---------------------------------------------------|
-| `FTP_SERVER`   | `89.116.115.184` (la IP, ver nota)                |
+| `FTP_SERVER`   | `br-asc-web1445.hstgr.io` (ver nota)              |
 | `FTP_USERNAME` | `u367943235.sinexcusas`                           |
 | `FTP_PASSWORD` | la contraseña de esa cuenta FTP                   |
 | `DEPLOY_URL`   | `https://sinexcusas.org.pe`                       |
 | `DEPLOY_TOKEN` | una cadena larga al azar, la misma que en el `.env` |
 
-**La IP, no `ftp.sinexcusas.org.pe`.** El dominio resuelve al CDN de Hostinger,
-que no habla FTP, y el nombre `ftp.` no conecta desde fuera: la subida falla con
-`curl: (6) Could not resolve host` tras reintentar unos treinta segundos. Si
-alguna vez cambia la IP del servidor, se ve con `ping` o en hPanel.
+**El nombre del servidor, no `ftp.sinexcusas.org.pe` ni la IP.** El dominio
+resuelve al CDN de Hostinger, que no habla FTP, y el nombre `ftp.` no conecta
+desde fuera (`curl: (6) Could not resolve host`). Con la IP pelada la conexión
+cifrada tampoco valida, porque el certificado está emitido para `*.hstgr.io`
+(`curl: (60)`). El nombre del servidor cumple las dos cosas: conecta y el
+certificado es válido.
+
+Sale del banner de SSH (`u367943235@br-asc-web1445`) o de hPanel, y se le añade
+`.hstgr.io`. Si algún día cambian de servidor, ese es el valor a actualizar.
 
 La cuenta FTP debe estar creada apuntando a
 `/home/u367943235/domains/sinexcusas.org.pe/public_html`, porque el workflow
@@ -127,7 +132,8 @@ volver a cachear**: `php artisan optimize` por SSH, o un push nuevo.
 |---|---|
 | `Faltan estos secretos …` | Crea los que nombra el mensaje en Settings → Secrets. |
 | `curl: (67)` al subir | Usuario o contraseña FTP mal: el usuario lleva el sufijo `.sinexcusas` y la contraseña distingue mayúsculas. |
-| `curl: (6)` al subir | `FTP_SERVER` tiene un nombre que no resuelve: usa la IP del servidor. |
+| `curl: (6)` al subir | `FTP_SERVER` no resuelve: usa el nombre del servidor, `algo.hstgr.io`. |
+| `curl: (60)` al subir | `FTP_SERVER` tiene una IP; el certificado es para `*.hstgr.io`. |
 | 403 en todo el dominio | Falta el `.htaccess` en `public_html`. |
 | `404` al publicar | El `DEPLOY_TOKEN` del `.env` está vacío o el servidor tiene la config vieja en caché. |
 | `403` al publicar | El token del `.env` y el secreto de GitHub no coinciden. |

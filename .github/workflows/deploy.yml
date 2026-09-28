@@ -115,11 +115,15 @@ jobs:
           fi
 
           case "$codigo" in
-            6) echo "FTP_SERVER no resuelve. Pon la IP del servidor: el dominio"
-               echo "apunta al CDN de Hostinger, que no habla FTP." ;;
+            6) echo "FTP_SERVER no resuelve. Debe ser el nombre del servidor de"
+               echo "Hostinger (algo.hstgr.io), no ftp.tudominio: el dominio apunta"
+               echo "al CDN, que no habla FTP. Ver DEPLOY.md." ;;
             7) echo "FTP_SERVER resuelve pero no acepta la conexión en el puerto 21." ;;
             67) echo "Usuario o contraseña FTP rechazados. El usuario lleva su"
                 echo "sufijo (algo.dominio) y la contraseña distingue mayúsculas." ;;
+            60) echo "El certificado no valida: FTP_SERVER tiene una IP en vez del"
+                echo "nombre del servidor (algo.hstgr.io), que es para quien está"
+                echo "emitido el certificado." ;;
             *) echo "La subida falló. Ver DEPLOY.md, apartado 'Si algo falla'." ;;
           esac
           exit 1
