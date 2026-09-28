@@ -1,0 +1,19 @@
+# Raíz del dominio en Hostinger.
+#
+# El hosting sirve el dominio desde public_html, pero Laravel se arranca desde
+# public/index.php. Esto reenvía cada petición a public/ sin cambiar la URL que
+# ve el visitante, y de paso deja fuera de alcance el .env, storage/ y el
+# código: cualquier ruta termina dentro de public/, donde esos archivos no
+# están.
+#
+# Este archivo tiene que viajar con el despliegue. Si se pierde, el dominio
+# responde 403 porque no encuentra nada que servir en public_html.
+<IfModule mod_rewrite.c>
+    RewriteEngine On
+
+    RewriteCond %{REQUEST_URI} !^/public/
+    RewriteRule ^(.*)$ public/$1 [L]
+</IfModule>
+
+# Sin listados de carpetas, por si mod_rewrite estuviera desactivado.
+Options -Indexes

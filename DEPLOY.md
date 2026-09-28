@@ -13,6 +13,11 @@ al final. Un único archivo tarda un par de minutos.
 (`storage/app/public`), los logs y las sesiones. La lista está en
 [`.deployignore`](.deployignore).
 
+**El `.htaccess` de la raíz viaja en el repositorio** ([`.htaccess`](.htaccess)).
+Es el que manda las peticiones de `public_html` a `public/index.php`. Si falta,
+el dominio responde 403; ya pasó una vez, cuando un despliegue reescribió la
+carpeta y se lo llevó por delante.
+
 **Ojo:** publicar sobrescribe y agrega, pero no borra. Si eliminas un archivo
 del repositorio, sigue existiendo en el servidor hasta que lo borres a mano.
 
@@ -36,11 +41,16 @@ el nombre del que falta.
 
 | Secreto        | Valor                                             |
 |----------------|---------------------------------------------------|
-| `FTP_SERVER`   | `ftp.sinexcusas.org.pe`                           |
+| `FTP_SERVER`   | `89.116.115.184` (la IP, ver nota)                |
 | `FTP_USERNAME` | `u367943235.sinexcusas`                           |
 | `FTP_PASSWORD` | la contraseña de esa cuenta FTP                   |
 | `DEPLOY_URL`   | `https://sinexcusas.org.pe`                       |
 | `DEPLOY_TOKEN` | una cadena larga al azar, la misma que en el `.env` |
+
+**La IP, no `ftp.sinexcusas.org.pe`.** El dominio resuelve al CDN de Hostinger,
+que no habla FTP, y el nombre `ftp.` no conecta desde fuera: la subida falla con
+`curl: (6) Could not resolve host` tras reintentar unos treinta segundos. Si
+alguna vez cambia la IP del servidor, se ve con `ping` o en hPanel.
 
 La cuenta FTP debe estar creada apuntando a
 `/home/u367943235/domains/sinexcusas.org.pe/public_html`, porque el workflow
@@ -116,7 +126,9 @@ volver a cachear**: `php artisan optimize` por SSH, o un push nuevo.
 | Síntoma | Causa y arreglo |
 |---|---|
 | `Faltan estos secretos …` | Crea los que nombra el mensaje en Settings → Secrets. |
-| `curl: (67)` al subir | Usuario o contraseña FTP mal: ojo que el usuario lleva el sufijo `.sinexcusas`. |
+| `curl: (67)` al subir | Usuario o contraseña FTP mal: el usuario lleva el sufijo `.sinexcusas` y la contraseña distingue mayúsculas. |
+| `curl: (6)` al subir | `FTP_SERVER` tiene un nombre que no resuelve: usa la IP del servidor. |
+| 403 en todo el dominio | Falta el `.htaccess` en `public_html`. |
 | `404` al publicar | El `DEPLOY_TOKEN` del `.env` está vacío o el servidor tiene la config vieja en caché. |
 | `403` al publicar | El token del `.env` y el secreto de GitHub no coinciden. |
 | `No hay release.zip que publicar` | La subida FTP no llegó a la carpeta de la aplicación: revisa a qué directorio apunta la cuenta FTP. |
