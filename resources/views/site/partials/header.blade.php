@@ -26,11 +26,9 @@
     <div class="se-container d-flex align-items-center gap-3">
 
       <a class="se-brand" href="{{ route('site.home') }}" aria-label="Sin Excusas, inicio">
+        {{-- El logo ya dice el nombre: repetirlo al lado sobra. El aria-label
+             del enlace es lo que lo anuncia a un lector de pantalla. --}}
         <img class="se-brand__logo" src="{{ asset('assets/img/logo-128.png') }}" alt="" width="64" height="64">
-        <span>
-          <span class="se-brand__name d-block">SIN EXCUSAS</span>
-          <span class="se-brand__tag d-block">Centro estético</span>
-        </span>
       </a>
 
       {{-- En móvil el carrito queda visible fuera del menú colapsado. --}}
