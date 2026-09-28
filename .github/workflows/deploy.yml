@@ -98,6 +98,14 @@ jobs:
         # --ssl cifra la sesión si el servidor lo admite y continúa en claro si
         # no; --ftp-pasv es lo que espera Hostinger detrás de su cortafuegos.
         run: |
+          # Sin esta comprobación, un FTP_SERVER que no resuelve solo deja
+          # cuatro líneas de "Could not resolve host" con el nombre tapado.
+          if ! getent hosts "$FTP_SERVER" > /dev/null; then
+            echo "FTP_SERVER no resuelve a ninguna dirección."
+            echo "Usa la IP del servidor, no ftp.tudominio: el dominio apunta"
+            echo "al CDN de Hostinger, que no habla FTP. Ver DEPLOY.md."
+            exit 1
+          fi
           curl --fail --silent --show-error --ssl --ftp-pasv --retry 3 --retry-delay 10 \
             --max-time 900 \
             --user "$FTP_USERNAME:$FTP_PASSWORD" \
