@@ -2,6 +2,7 @@
 
 use App\Http\Controllers\Web\DeployController;
 use App\Http\Controllers\Web\ErpCatalogController;
+use App\Http\Controllers\Web\ErpOrderStatusController;
 use App\Http\Controllers\Web\ReleaseController;
 use App\Http\Controllers\Web\Shop\AccountController;
 use App\Http\Controllers\Web\Shop\CartController;
@@ -94,6 +95,8 @@ Route::post('/deploy/release', ReleaseController::class)->middleware('throttle:1
 // Aviso del sistema (ERP) cuando cambian productos o su stock. Se valida con
 // el token de ERP_TOKEN, no con sesión ni CSRF.
 Route::post('/erp/catalogo', ErpCatalogController::class)->middleware('throttle:120,1')->name('erp.catalog');
+// Aviso del sistema cuando el personal mueve un pedido online (lo ve el cliente).
+Route::post('/erp/pedidos/{code}/estado', ErpOrderStatusController::class)->middleware('throttle:120,1')->name('erp.order-status');
 
 // ERP (SPA en Vue).
 Route::view('/login', 'app');

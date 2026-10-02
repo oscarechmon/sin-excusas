@@ -62,6 +62,49 @@ class ErpClient
         ]));
     }
 
+    /**
+     * Enlaza un cliente de la tienda con su ficha del sistema (la crea si no existe).
+     *
+     * @return array{id: int|null, code: string|null}
+     */
+    public function syncCustomer(array $payload): array
+    {
+        return $this->send(fn (PendingRequest $http) => $http->post('customers', $payload));
+    }
+
+    /**
+     * Manda el pedido tal como está aquí. Si está pagado, el sistema registra
+     * su venta (una sola vez) y devuelve el stock resultante.
+     *
+     * @return array{order: array<string, mixed>, sale: array<string, mixed>|null, stock: array<int|string, float>}
+     */
+    public function pushOrder(array $payload): array
+    {
+        return $this->send(fn (PendingRequest $http) => $http->post('orders', $payload));
+    }
+
+    /**
+     * Estado y seguimiento hecho en el sistema de unos pedidos.
+     *
+     * @param  list<string>  $codes
+     * @return list<array{code: string, status: string, history: list<array<string, mixed>>}>
+     */
+    public function orderStatuses(array $codes): array
+    {
+        return $this->send(fn (PendingRequest $http) => $http->get('orders/statuses', ['codes' => $codes]));
+    }
+
+    /**
+     * Importa al sistema una tanda del historial de la web.
+     *
+     * @param  list<array<string, mixed>>  $records
+     * @return array{links: array<int|string, int>, created: int, existing: int}
+     */
+    public function import(string $kind, array $records): array
+    {
+        return $this->send(fn (PendingRequest $http) => $http->timeout(120)->post("import/{$kind}", ['records' => $records]));
+    }
+
     /** @param  callable(PendingRequest): Response  $call */
     private function send(callable $call): array
     {

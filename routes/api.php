@@ -54,11 +54,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/clients', [ClientController::class, 'index']);
         Route::get('/clients/{client}', [ClientController::class, 'show']);
     });
-    Route::post('/clients', [ClientController::class, 'store'])->middleware('permission:clients.create');
+    Route::post('/clients', [ClientController::class, 'store'])->middleware(['permission:clients.create', 'erp.local:clients']);
     Route::match(['put', 'patch'], '/clients/{client}', [ClientController::class, 'update'])
-        ->middleware('permission:clients.update');
+        ->middleware(['permission:clients.update', 'erp.local:clients']);
     Route::delete('/clients/{client}', [ClientController::class, 'destroy'])
-        ->middleware('permission:clients.delete');
+        ->middleware(['permission:clients.delete', 'erp.local:clients']);
 
     // ------------------------------------------------------------------ Agenda
     Route::middleware('permission:appointments.view')->group(function () {
@@ -66,11 +66,11 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/appointments/{appointment}', [AppointmentController::class, 'show']);
     });
     Route::post('/appointments', [AppointmentController::class, 'store'])
-        ->middleware('permission:appointments.create');
+        ->middleware(['permission:appointments.create', 'erp.local:agenda']);
     Route::match(['put', 'patch'], '/appointments/{appointment}', [AppointmentController::class, 'update'])
-        ->middleware('permission:appointments.update');
+        ->middleware(['permission:appointments.update', 'erp.local:agenda']);
     Route::delete('/appointments/{appointment}', [AppointmentController::class, 'destroy'])
-        ->middleware('permission:appointments.delete');
+        ->middleware(['permission:appointments.delete', 'erp.local:agenda']);
 
     // --------------------------------------------------- Servicios y categorías
     Route::middleware('permission:services.view')->group(function () {
@@ -98,7 +98,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/employees', [EmployeeController::class, 'index']);
         Route::get('/employees/{employee}', [EmployeeController::class, 'show']);
     });
-    Route::middleware('permission:employees.manage')->group(function () {
+    Route::middleware(['permission:employees.manage', 'erp.local:staff'])->group(function () {
         Route::post('/employees', [EmployeeController::class, 'store']);
         Route::match(['put', 'patch'], '/employees/{employee}', [EmployeeController::class, 'update']);
         Route::delete('/employees/{employee}', [EmployeeController::class, 'destroy']);
@@ -143,12 +143,12 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/client-packages/{client_package}', [ClientPackageController::class, 'show']);
     });
     Route::middleware('permission:packages.manage')->group(function () {
-        Route::post('/packages', [PackageController::class, 'store']);
+        Route::post('/packages', [PackageController::class, 'store'])->middleware('erp.local:packages');
         Route::match(['put', 'patch'], '/packages/{package}', [PackageController::class, 'update']);
-        Route::delete('/packages/{package}', [PackageController::class, 'destroy']);
+        Route::delete('/packages/{package}', [PackageController::class, 'destroy'])->middleware('erp.local:packages');
         Route::patch('/packages/{package}/publish', [PublicationController::class, 'package']);
     });
-    Route::post('/packages/sell', [PackageController::class, 'sell'])->middleware('permission:packages.sell');
+    Route::post('/packages/sell', [PackageController::class, 'sell'])->middleware(['permission:packages.sell', 'erp.local:packages']);
 
     // -------------------------------------------------------------- Atenciones
     Route::middleware('permission:attendances.view')->group(function () {
@@ -156,18 +156,18 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/attendances/{attendance}', [AttendanceController::class, 'show']);
     });
     Route::post('/attendances', [AttendanceController::class, 'store'])
-        ->middleware('permission:attendances.create');
+        ->middleware(['permission:attendances.create', 'erp.local:attendances']);
 
     // ------------------------------------------------------------------ Ventas
     Route::middleware('permission:sales.view')->group(function () {
         Route::get('/sales', [SaleController::class, 'index']);
         Route::get('/sales/{sale}', [SaleController::class, 'show']);
     });
-    Route::middleware('permission:sales.create')->group(function () {
+    Route::middleware(['permission:sales.create', 'erp.local:sales'])->group(function () {
         Route::post('/sales', [SaleController::class, 'store']);
         Route::post('/sales/{sale}/payments', [SaleController::class, 'addPayment']);
     });
-    Route::post('/sales/{sale}/cancel', [SaleController::class, 'cancel'])->middleware('permission:sales.cancel');
+    Route::post('/sales/{sale}/cancel', [SaleController::class, 'cancel'])->middleware(['permission:sales.cancel', 'erp.local:sales']);
 
     // ----------------------------------------------------------- Ventas online
     Route::middleware('permission:online_sales.view')->group(function () {
@@ -176,7 +176,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/store-settings', [StoreSettingController::class, 'show']);
     });
     Route::post('/online-orders/{online_order}/status', [OnlineOrderController::class, 'updateStatus'])
-        ->middleware('permission:online_sales.manage');
+        ->middleware(['permission:online_sales.manage', 'erp.local:orders']);
     // El costo de delivery cambia lo que se cobra: es configuración, no operación.
     Route::put('/store-settings', [StoreSettingController::class, 'update'])->middleware('permission:settings.manage');
 
@@ -186,22 +186,22 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/cash-sessions/current', [CashSessionController::class, 'current']);
         Route::get('/cash-sessions/{cash_session}', [CashSessionController::class, 'show']);
     });
-    Route::post('/cash-sessions/open', [CashSessionController::class, 'open'])->middleware('permission:cash.open');
-    Route::post('/cash-sessions/close', [CashSessionController::class, 'close'])->middleware('permission:cash.close');
+    Route::post('/cash-sessions/open', [CashSessionController::class, 'open'])->middleware(['permission:cash.open', 'erp.local:cash']);
+    Route::post('/cash-sessions/close', [CashSessionController::class, 'close'])->middleware(['permission:cash.close', 'erp.local:cash']);
     Route::post('/cash-sessions/expenses', [CashSessionController::class, 'registerExpense'])
-        ->middleware('permission:cash.expense');
+        ->middleware(['permission:cash.expense', 'erp.local:cash']);
 
     // -------------------------------------------------------------- Comisiones
     Route::middleware('permission:commissions.view')->group(function () {
         Route::get('/commissions', [CommissionController::class, 'index']);
         Route::get('/commission-rules', [CommissionRuleController::class, 'index']);
     });
-    Route::middleware('permission:commissions.manage')->group(function () {
+    Route::middleware(['permission:commissions.manage', 'erp.local:commissions'])->group(function () {
         Route::post('/commission-rules', [CommissionRuleController::class, 'store']);
         Route::match(['put', 'patch'], '/commission-rules/{commission_rule}', [CommissionRuleController::class, 'update']);
         Route::delete('/commission-rules/{commission_rule}', [CommissionRuleController::class, 'destroy']);
     });
-    Route::post('/commissions/pay', [CommissionController::class, 'pay'])->middleware('permission:commissions.pay');
+    Route::post('/commissions/pay', [CommissionController::class, 'pay'])->middleware(['permission:commissions.pay', 'erp.local:commissions']);
 
     // ---------------------------------------------------------------- Reportes
     Route::middleware('permission:reports.view')->prefix('reports')->group(function () {

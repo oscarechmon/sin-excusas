@@ -1,5 +1,34 @@
 <template>
   <div class="dashboard-page">
+    <!-- Con el sistema conectado, la operación y sus números están allá; aquí queda la web. -->
+    <template v-if="erp.enabled">
+      <div class="page-header">
+        <div>
+          <h1 class="page-header__title">Panel de la web</h1>
+          <p class="page-header__subtitle">Contenido, catálogo publicado y datos del sitio</p>
+        </div>
+        <div class="page-header__actions">
+          <a :href="erp.url ?? '#'" target="_blank" rel="noopener">
+            <Button icon="pi pi-external-link" label="Ir al sistema" />
+          </a>
+        </div>
+      </div>
+
+      <Message severity="info" :closable="false">
+        Clientes, agenda, atenciones, ventas, caja, paquetes, personal, comisiones y el seguimiento de los pedidos
+        se gestionan en el sistema. Aquí decides qué muestra la web: textos, fotos, descripciones y qué se publica.
+      </Message>
+
+      <div class="web-shortcuts">
+        <router-link v-for="s in shortcuts" :key="s.route" :to="{ name: s.route }" class="web-shortcut">
+          <i :class="s.icon" />
+          <span class="web-shortcut__label">{{ s.label }}</span>
+          <span class="web-shortcut__hint">{{ s.hint }}</span>
+        </router-link>
+      </div>
+    </template>
+
+    <template v-else>
     <div class="page-header">
       <div>
         <h1 class="page-header__title">Dashboard</h1>
@@ -72,6 +101,7 @@
         </template>
       </Card>
     </div>
+    </template>
   </div>
 </template>
 
@@ -81,6 +111,7 @@ import { useRouter } from 'vue-router'
 import { dashboardApi } from '@/api/reports.api'
 import { useAuthStore } from '@/stores/auth'
 import { useFormat } from '@/composables/useFormat'
+import { ensureErpStatus, useErp } from '@/composables/useErp'
 import { extractMessage } from '@/composables/usePaginatedList'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
@@ -191,5 +222,19 @@ const load = async () => {
   }
 }
 
-onMounted(load)
+const { erp } = useErp()
+
+const shortcuts = computed(() => [
+  { route: 'site-content', icon: 'pi pi-images', label: 'Contenido web', hint: 'Textos y fotos de la página', permission: 'settings.manage' },
+  { route: 'services', icon: 'pi pi-star', label: 'Servicios', hint: 'Descripción, duración y qué se publica', permission: 'services.view' },
+  { route: 'inventory', icon: 'pi pi-database', label: 'Productos', hint: 'Fotos, descripción y qué se vende en la tienda', permission: 'inventory.view' },
+  { route: 'packages', icon: 'pi pi-box', label: 'Paquetes', hint: 'Qué paquetes se publican', permission: 'packages.view' },
+  { route: 'online-sales', icon: 'pi pi-globe', label: 'Tienda online', hint: 'Delivery y pedidos (consulta)', permission: 'online_sales.view' },
+  { route: 'site-settings', icon: 'pi pi-at', label: 'Datos de la web', hint: 'Contacto, redes y medición', permission: 'settings.manage' },
+].filter((s) => authStore.hasPermission(s.permission)))
+
+// Los indicadores leen la operación de este panel: con el sistema conectado ya no se piden.
+onMounted(async () => {
+  if (!(await ensureErpStatus()).enabled) load()
+})
 </script>

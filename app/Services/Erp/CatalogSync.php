@@ -4,6 +4,7 @@ namespace App\Services\Erp;
 
 use App\Models\InventoryCategory;
 use App\Models\InventoryItem;
+use App\Models\Package;
 use App\Models\Service;
 use App\Models\ServiceCategory;
 use Illuminate\Support\Facades\DB;
@@ -32,7 +33,11 @@ class CatalogSync
     {
         DB::transaction(function () use ($items) {
             foreach ($items as $item) {
-                $item['type'] === 'service' ? $this->applyService($item) : $this->applyProduct($item);
+                match ($item['type']) {
+                    'service' => $this->applyService($item),
+                    'package' => $this->applyPackage($item),
+                    default => $this->applyProduct($item),
+                };
             }
         });
 
@@ -53,7 +58,8 @@ class CatalogSync
 
         $ids = array_column($items, 'id');
         $deactivated = InventoryItem::whereNotNull('erp_id')->whereNotIn('erp_id', $ids)->where('active', true)->update(['active' => false])
-            + Service::whereNotNull('erp_id')->whereNotIn('erp_id', $ids)->where('active', true)->update(['active' => false]);
+            + Service::whereNotNull('erp_id')->whereNotIn('erp_id', $ids)->where('active', true)->update(['active' => false])
+            + Package::whereNotNull('erp_id')->whereNotIn('erp_id', $ids)->where('active', true)->update(['active' => false]);
 
         return ['actualizados' => $updated, 'desactivados' => $deactivated];
     }
@@ -144,6 +150,39 @@ class CatalogSync
             'active' => (bool) $item['active'],
         ]);
         $local->forceFill(['erp_id' => $item['id']])->save();
+    }
+
+    /**
+     * Paquete del sistema: sesiones, vigencia, precio y servicios incluidos son
+     * de allá; si se publica (y su descripción, una vez creado) es de aquí.
+     *
+     * @param  array<string, mixed>  $item
+     */
+    private function applyPackage(array $item): void
+    {
+        // Un paquete que nació aquí llega con código WEB-K-{id}: es esa fila.
+        $code = (string) ($item['code'] ?? '');
+        $local = Package::where('erp_id', $item['id'])->first()
+            ?? (str_starts_with($code, 'WEB-K-') ? Package::whereKey((int) substr($code, 6))->whereNull('erp_id')->first() : null)
+            ?? new Package;
+        $details = (array) ($item['package'] ?? []);
+
+        if (! $local->exists) {
+            $local->fill(['description' => $item['description'] ?? null, 'is_published' => false]);
+        }
+
+        $local->fill([
+            'name' => $item['name'],
+            'price' => $item['price'] ?? 0,
+            'total_sessions' => max(1, (int) ($details['total_sessions'] ?? $local->total_sessions ?? 1)),
+            'validity_days' => $details['validity_days'] ?? null,
+            'active' => (bool) $item['active'],
+        ]);
+        $local->forceFill(['erp_id' => $item['id']])->save();
+
+        if (array_key_exists('service_ids', $details)) {
+            $local->services()->sync(Service::whereIn('erp_id', (array) $details['service_ids'])->pluck('id')->all());
+        }
     }
 
     /** Las categorías se enlazan por nombre: es lo que comparten las dos bases. */

@@ -5,6 +5,7 @@ namespace App\Actions\Shop;
 use App\Actions\Clients\CreateClientAction;
 use App\Models\Client;
 use App\Models\ClientUser;
+use App\Services\Erp\ClientLinker;
 use Illuminate\Support\Facades\DB;
 
 /**
@@ -13,14 +14,17 @@ use Illuminate\Support\Facades\DB;
  */
 class RegisterClientUserAction
 {
-    public function __construct(private readonly CreateClientAction $createClient) {}
+    public function __construct(
+        private readonly CreateClientAction $createClient,
+        private readonly ClientLinker $clients,
+    ) {}
 
     /**
      * @param  array{name:string,email:string,phone?:?string,document_number?:?string,password?:?string}  $data
      */
     public function execute(array $data, bool $emailVerified = false, ?string $googleId = null, ?string $avatarUrl = null): ClientUser
     {
-        return DB::transaction(function () use ($data, $emailVerified, $googleId, $avatarUrl) {
+        $user = DB::transaction(function () use ($data, $emailVerified, $googleId, $avatarUrl) {
             $user = new ClientUser([
                 'client_id' => $this->resolveClient($data)->id,
                 'name' => $data['name'],
@@ -38,6 +42,12 @@ class RegisterClientUserAction
 
             return $user;
         });
+
+        // Con el sistema conectado, el cliente se administra allá. Se enlaza
+        // ya respondida la página: si el sistema tarda, el cliente no espera.
+        defer(fn () => $user->client && $this->clients->link($user->client));
+
+        return $user;
     }
 
     /**

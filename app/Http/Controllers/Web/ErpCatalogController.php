@@ -29,7 +29,7 @@ class ErpCatalogController extends Controller
         $request->validate([
             'items' => ['required', 'array'],
             'items.*.id' => ['required', 'integer'],
-            'items.*.type' => ['required', 'in:product,service'],
+            'items.*.type' => ['required', 'in:product,service,package'],
             'items.*.name' => ['required', 'string', 'max:255'],
             'items.*.price' => ['required', 'numeric'],
             'items.*.active' => ['required', 'boolean'],

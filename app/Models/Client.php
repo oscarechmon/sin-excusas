@@ -59,6 +59,12 @@ class Client extends Model
         return $this->hasMany(ClientPackage::class);
     }
 
+    /** Cuentas de la tienda online de este cliente. */
+    public function users(): HasMany
+    {
+        return $this->hasMany(ClientUser::class);
+    }
+
     public static function generateCode(): string
     {
         // max(id) y no count(): si se elimina un cliente, count() reutilizaría

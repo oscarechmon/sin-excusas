@@ -1,11 +1,12 @@
 import { api as client } from './client';
 
 export const servicesApi = {
-  async list(page = 1, categoryId?: number, active?: boolean) {
+  async list(page = 1, categoryId?: number, active?: boolean | null) {
     const params = new URLSearchParams();
     if (page) params.append('page', page.toString());
     if (categoryId) params.append('category_id', categoryId.toString());
-    if (active !== undefined) params.append('active', active ? '1' : '0');
+    // Sin filtro de estado (null) se piden todos: antes se pedían solo los inactivos.
+    if (active !== undefined && active !== null) params.append('active', active ? '1' : '0');
 
     const { data } = await client.get(`/services?${params.toString()}`);
     return data;

@@ -85,7 +85,11 @@
         </ul>
       </section>
 
-      <section v-if="canManage && order.next_statuses.length" class="order-detail__box status-form">
+      <Message v-if="erp.enabled && order.next_statuses.length" severity="info" :closable="false">
+        El seguimiento del pedido (preparación, envío, entrega o anulación) se mueve en el
+        <a :href="erp.url ?? '#'" target="_blank" rel="noopener">sistema</a>; aquí se ve lo mismo que el cliente.
+      </Message>
+      <section v-else-if="canManage && order.next_statuses.length" class="order-detail__box status-form">
         <h3>Actualizar estado</h3>
         <Select
           v-model="nextStatus"
@@ -113,6 +117,7 @@ import { useOnlineSalesStore } from '@/stores/onlineSales'
 import { useAuthStore } from '@/stores/auth'
 import { useFormat } from '@/composables/useFormat'
 import { extractMessage } from '@/composables/usePaginatedList'
+import { useErp } from '@/composables/useErp'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
 import DataTable from 'primevue/datatable'
@@ -124,6 +129,7 @@ import Tag from 'primevue/tag'
 import Textarea from 'primevue/textarea'
 
 const props = defineProps<{ visible: boolean; orderId: number | null }>()
+const { erp } = useErp()
 defineEmits<{ 'update:visible': [boolean] }>()
 
 const store = useOnlineSalesStore()

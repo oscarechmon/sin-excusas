@@ -36,6 +36,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'deploy/release',
             // El sistema (ERP) avisa cambios del catálogo con su token compartido.
             'erp/catalogo',
+            'erp/pedidos/*',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

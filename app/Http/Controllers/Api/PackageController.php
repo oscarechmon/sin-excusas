@@ -11,6 +11,7 @@ use App\Http\Resources\ClientPackageResource;
 use App\Http\Resources\PackageResource;
 use App\Models\ClientPackage;
 use App\Models\Package;
+use App\Services\Erp\ErpClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -48,6 +49,14 @@ class PackageController extends Controller
 
     public function update(StorePackageRequest $request, Package $package): JsonResponse
     {
+        // Con el sistema conectado, sesiones, precio, servicios y estado llegan
+        // de allá; aquí queda lo de la web.
+        if (app(ErpClient::class)->enabled()) {
+            $package->update($request->safe()->only(['description']));
+
+            return $this->ok(new PackageResource($package->load('services')), 'Paquete actualizado correctamente.');
+        }
+
         $package->update($request->safe()->except('service_ids'));
 
         if ($request->has('service_ids')) {

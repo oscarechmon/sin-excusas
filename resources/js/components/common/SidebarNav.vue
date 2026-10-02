@@ -9,6 +9,19 @@
     </div>
 
     <div class="app-nav__scroll">
+      <!-- Con el sistema conectado, la operación diaria está allá. -->
+      <template v-if="erp.enabled && erp.url">
+        <p v-if="!collapsed" class="app-nav__section">Sistema</p>
+        <ul class="app-nav__list">
+          <li>
+            <a :href="erp.url" target="_blank" rel="noopener" class="app-nav__item">
+              <i class="pi pi-external-link app-nav__icon" />
+              <span v-if="!collapsed" class="app-nav__label">Ir al sistema</span>
+            </a>
+          </li>
+        </ul>
+      </template>
+
       <template v-for="section in visibleSections" :key="section.label">
         <p v-if="!collapsed" class="app-nav__section">{{ section.label }}</p>
         <ul class="app-nav__list">
@@ -42,7 +55,8 @@
 import { computed } from 'vue'
 import { useRoute } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
-import { navigation } from '@/config/navigation'
+import { navigation, type NavItem } from '@/config/navigation'
+import { useErp } from '@/composables/useErp'
 import Tag from 'primevue/tag'
 
 withDefaults(defineProps<{ collapsed?: boolean }>(), { collapsed: false })
@@ -50,13 +64,16 @@ const emit = defineEmits<{ navigate: [] }>()
 
 const route = useRoute()
 const authStore = useAuthStore()
+const { erp } = useErp()
 
 // Un item sin permiso declarado es visible para cualquier usuario autenticado.
-const canSee = (permission?: string) => !permission || authStore.hasPermission(permission)
+// Lo que se opera en el sistema no se muestra mientras esté conectado.
+const canSee = (item: NavItem) =>
+  (!item.permission || authStore.hasPermission(item.permission)) && !(item.erpManaged && erp.value.enabled)
 
 const visibleSections = computed(() =>
   navigation
-    .map((section) => ({ ...section, items: section.items.filter((i) => canSee(i.permission)) }))
+    .map((section) => ({ ...section, items: section.items.filter(canSee) }))
     .filter((section) => section.items.length > 0)
 )
 

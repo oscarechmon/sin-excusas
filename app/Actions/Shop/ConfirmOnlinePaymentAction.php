@@ -59,6 +59,7 @@ class ConfirmOnlinePaymentAction
                         OnlineOrderStatus::PAYMENT_FAILED,
                         $result->paid ? 'El monto cobrado no coincide con el total del pedido.' : 'La pasarela no aprobó el pago.'
                     );
+                    defer(fn () => $this->registrar->push($order->fresh()));
                 }
 
                 return $order;

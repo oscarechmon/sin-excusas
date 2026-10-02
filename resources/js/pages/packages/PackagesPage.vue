@@ -6,8 +6,10 @@
         <p class="page-header__subtitle">Catálogo de paquetes y sesiones contratadas por cliente.</p>
       </div>
       <div class="page-header__actions">
-        <Button label="Asignar a cliente" icon="pi pi-user-plus" outlined severity="secondary" @click="sellVisible = true" />
-        <Button label="Nuevo paquete" icon="pi pi-plus" @click="openCreate" />
+        <template v-if="!erp.enabled">
+          <Button label="Asignar a cliente" icon="pi pi-user-plus" outlined severity="secondary" @click="sellVisible = true" />
+          <Button label="Nuevo paquete" icon="pi pi-plus" @click="openCreate" />
+        </template>
       </div>
     </div>
 
@@ -19,6 +21,7 @@
 
       <TabPanels>
         <TabPanel value="catalog">
+          <ErpNotice what="Los paquetes (sesiones, precio, servicios y quién los compra)" detail="Aquí decides cuáles se publican en la web y su descripción." @synced="store.load({ page: 1 })" />
           <Message v-if="store.error" severity="error" :closable="false">{{ store.error }}</Message>
 
           <DataTable
@@ -86,7 +89,7 @@
               <template #body="{ data }">
                 <div class="row-actions">
                   <Button icon="pi pi-pencil" text rounded severity="secondary" @click="openEdit(data)" />
-                  <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(data)" />
+                  <Button v-if="!erp.enabled" icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(data)" />
                 </div>
               </template>
             </Column>
@@ -167,6 +170,8 @@ import { usePackagesStore } from '@/stores/packages'
 import { useFormat } from '@/composables/useFormat'
 import { extractMessage } from '@/composables/usePaginatedList'
 import PackageFormDialog from './PackageFormDialog.vue'
+import ErpNotice from '@/components/common/ErpNotice.vue'
+import { useErp } from '@/composables/useErp'
 import SellPackageDialog from './SellPackageDialog.vue'
 import Button from 'primevue/button'
 import Column from 'primevue/column'
@@ -183,6 +188,7 @@ import Tag from 'primevue/tag'
 import ToggleSwitch from 'primevue/toggleswitch'
 
 const store = usePackagesStore()
+const { erp } = useErp()
 const toast = useToast()
 const confirm = useConfirm()
 const format = useFormat()

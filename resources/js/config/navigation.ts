@@ -10,6 +10,8 @@
  * - `permission`: mismo nombre que protege el endpoint en el backend. El menú
  *   solo oculta lo que el usuario no podría usar; la seguridad real está en la
  *   API (§29).
+ * - `erpManaged`: con el sistema (ERP) conectado esto se opera allá, así que
+ *   el menú lo oculta (y la API lo rechaza).
  */
 
 export interface NavItem {
@@ -17,6 +19,7 @@ export interface NavItem {
   icon: string
   route?: string
   permission?: string
+  erpManaged?: boolean
 }
 
 export interface NavSection {
@@ -32,16 +35,16 @@ export const navigation: NavSection[] = [
   {
     label: 'Gestión',
     items: [
-      { label: 'Clientes', icon: 'pi pi-users', route: 'clients', permission: 'clients.view' },
-      { label: 'Agenda', icon: 'pi pi-calendar', route: 'appointments', permission: 'appointments.view' },
-      { label: 'Atenciones', icon: 'pi pi-check-square', route: 'attendances', permission: 'attendances.view' },
+      { label: 'Clientes', icon: 'pi pi-users', route: 'clients', permission: 'clients.view', erpManaged: true },
+      { label: 'Agenda', icon: 'pi pi-calendar', route: 'appointments', permission: 'appointments.view', erpManaged: true },
+      { label: 'Atenciones', icon: 'pi pi-check-square', route: 'attendances', permission: 'attendances.view', erpManaged: true },
     ],
   },
   {
     label: 'Operaciones',
     items: [
-      { label: 'Ventas', icon: 'pi pi-shopping-cart', route: 'sales', permission: 'sales.view' },
-      { label: 'Caja', icon: 'pi pi-wallet', route: 'cash', permission: 'cash.view' },
+      { label: 'Ventas', icon: 'pi pi-shopping-cart', route: 'sales', permission: 'sales.view', erpManaged: true },
+      { label: 'Caja', icon: 'pi pi-wallet', route: 'cash', permission: 'cash.view', erpManaged: true },
       { label: 'Paquetes', icon: 'pi pi-box', route: 'packages', permission: 'packages.view' },
       { label: 'Inventario', icon: 'pi pi-database', route: 'inventory', permission: 'inventory.view' },
     ],
@@ -64,9 +67,9 @@ export const navigation: NavSection[] = [
   {
     label: 'Administración',
     items: [
-      { label: 'Personal', icon: 'pi pi-id-card', route: 'staff', permission: 'employees.view' },
-      { label: 'Comisiones', icon: 'pi pi-percentage', route: 'commissions', permission: 'commissions.view' },
-      { label: 'Reportes', icon: 'pi pi-chart-bar', route: 'reports', permission: 'reports.view' },
+      { label: 'Personal', icon: 'pi pi-id-card', route: 'staff', permission: 'employees.view', erpManaged: true },
+      { label: 'Comisiones', icon: 'pi pi-percentage', route: 'commissions', permission: 'commissions.view', erpManaged: true },
+      { label: 'Reportes', icon: 'pi pi-chart-bar', route: 'reports', permission: 'reports.view', erpManaged: true },
       { label: 'Usuarios', icon: 'pi pi-lock', route: 'users', permission: 'users.view' },
     ],
   },

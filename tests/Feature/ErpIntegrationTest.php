@@ -210,10 +210,10 @@ class ErpIntegrationTest extends TestCase
     // ---------------------------------------------------------- Tienda web
 
     #[Test]
-    public function un_pedido_pagado_se_registra_como_venta_en_el_sistema(): void
+    public function un_pedido_pagado_se_manda_al_sistema_que_registra_su_venta(): void
     {
         $crema = $this->linkedProduct(7, stock: 10, price: 40);
-        Http::fake([self::ERP.'/sales' => Http::response(['data' => ['sale' => ['id' => 1], 'stock' => ['7' => 8]]])]);
+        Http::fake([self::ERP.'/orders' => Http::response(['data' => ['order' => ['id' => 1], 'sale' => ['id' => 1], 'stock' => ['7' => 8]]])]);
 
         $order = $this->paidOrder($crema, 2);
 
@@ -221,22 +221,30 @@ class ErpIntegrationTest extends TestCase
         $this->assertSame(OnlineOrder::ERP_REGISTERED, $order->erp_sale_status);
         $this->assertEquals(8, $crema->fresh()->stock, 'El stock lo devuelve el sistema.');
         $this->assertDatabaseCount('inventory_movements', 0);
-        Http::assertSent(fn (HttpRequest $r) => $r->url() === self::ERP.'/sales'
-            && $r['reference'] === $order->code
+        Http::assertSent(fn (HttpRequest $r) => $r->url() === self::ERP.'/orders'
+            && $r['code'] === $order->code
+            && $r['status'] === 'paid'
+            && $r['historical'] === false
             && $r['items'][0]['product_id'] === 7
-            && $r['items'][0]['quantity'] === 2
-            && $r['payments'][0]['method'] === 'izipay'
+            && $r['items'][0]['quantity'] == 2
+            && $r['customer']['email'] !== null
             && $r->header('X-Integration-Token')[0] === 'secreto-de-prueba');
+        // También se mandó al crearse, todavía sin cobrar (para que el sistema lo vea).
+        Http::assertSent(fn (HttpRequest $r) => $r->url() === self::ERP.'/orders' && $r['status'] === 'pending_payment');
     }
 
     #[Test]
     public function si_el_sistema_no_contesta_el_pedido_queda_pagado_y_se_reintenta(): void
     {
         $crema = $this->linkedProduct(7);
-        Http::fakeSequence(self::ERP.'/sales')
-            ->pushStatus(500)
-            ->push(['data' => ['sale' => ['id' => 1], 'stock' => ['7' => 8]]]);
-        Http::fake([self::ERP.'/catalog*' => Http::response(['data' => [$this->remote(7, ['stock' => 8])]])]);
+        $ok = ['data' => ['order' => ['id' => 1], 'sale' => ['id' => 1], 'stock' => ['7' => 8]]];
+        Http::fake([
+            // 1) aviso al crearse, 2) cobro (falla), 3) reintento al sincronizar.
+            self::ERP.'/orders' => Http::sequence()->push($ok)->pushStatus(500)->push($ok),
+            self::ERP.'/orders/statuses*' => Http::response(['data' => []]),
+            self::ERP.'/customers' => Http::response(['data' => ['id' => 50, 'code' => 'CLI-000050']]),
+            self::ERP.'/catalog*' => Http::response(['data' => [$this->remote(7, ['stock' => 8])]]),
+        ]);
 
         $order = $this->paidOrder($crema, 2);
 
@@ -250,43 +258,52 @@ class ErpIntegrationTest extends TestCase
     }
 
     #[Test]
-    public function anular_un_pedido_anula_su_venta_en_el_sistema(): void
+    public function el_seguimiento_de_los_pedidos_se_mueve_en_el_sistema(): void
     {
         $crema = $this->linkedProduct(7);
-        Http::fake([
-            self::ERP.'/sales' => Http::response(['data' => ['sale' => ['id' => 1], 'stock' => ['7' => 8]]]),
-            self::ERP.'/sales/*/cancel' => Http::response(['data' => ['sale' => ['id' => 1], 'stock' => ['7' => 10]]]),
-        ]);
+        Http::fake([self::ERP.'/orders' => Http::response(['data' => ['order' => ['id' => 1], 'sale' => ['id' => 1], 'stock' => ['7' => 8]]])]);
         $order = $this->paidOrder($crema, 2);
 
         $this->actingAsAdmin();
-        $this->postJson("/api/online-orders/{$order->id}/status", ['status' => 'cancelled'])->assertOk();
+        $this->postJson("/api/online-orders/{$order->id}/status", ['status' => 'preparing'])->assertStatus(409);
 
-        $this->assertEquals(10, $crema->fresh()->stock);
-        Http::assertSent(fn (HttpRequest $r) => $r->url() === self::ERP."/sales/{$order->code}/cancel");
+        // El sistema avisa cada paso; el cliente lo ve en su seguimiento.
+        $this->withHeader('X-Integration-Token', 'secreto-de-prueba')
+            ->postJson("/erp/pedidos/{$order->code}/estado", ['status' => 'preparing', 'note' => 'Empacando', 'user_name' => 'Rosa', 'happened_at' => now()->toIso8601String()])
+            ->assertOk();
+        $this->withHeader('X-Integration-Token', 'secreto-de-prueba')
+            ->postJson("/erp/pedidos/{$order->code}/estado", ['status' => 'cancelled', 'note' => 'Sin stock'])
+            ->assertOk();
+
+        $order->refresh();
+        $this->assertSame(OnlineOrderStatus::CANCELLED, $order->status);
+        $this->assertTrue($order->histories()->where('from_erp', true)->where('note', 'Empacando')->where('actor_name', 'Rosa')->exists());
+        $this->assertEquals(8, $crema->fresh()->stock, 'Anulado allá: el stock no se devuelve aquí, llega con el aviso de catálogo del sistema.');
+        Http::assertNotSent(fn (HttpRequest $r) => str_contains($r->url(), '/cancel'));
     }
 
     #[Test]
-    public function si_el_sistema_no_contesta_la_anulacion_no_se_guarda(): void
+    public function el_aviso_de_estado_exige_el_token(): void
     {
         $crema = $this->linkedProduct(7);
-        Http::fake([
-            self::ERP.'/sales' => Http::response(['data' => ['sale' => ['id' => 1], 'stock' => ['7' => 8]]]),
-            self::ERP.'/sales/*/cancel' => Http::response(['message' => 'Caído'], 500),
-        ]);
-        $order = $this->paidOrder($crema, 2);
+        Http::fake([self::ERP.'/orders' => Http::response(['data' => ['order' => ['id' => 1], 'sale' => null, 'stock' => []]])]);
+        $order = $this->paidOrder($crema, 1);
 
-        $this->actingAsAdmin();
-        $this->postJson("/api/online-orders/{$order->id}/status", ['status' => 'cancelled'])->assertStatus(502);
+        $this->postJson("/erp/pedidos/{$order->code}/estado", ['status' => 'preparing'])->assertForbidden();
 
-        $this->assertSame(OnlineOrderStatus::PAID, $order->fresh()->status);
+        config(['erp.token' => null]);
+        $this->postJson("/erp/pedidos/{$order->code}/estado", ['status' => 'preparing'])->assertNotFound();
     }
 
     #[Test]
-    public function un_pedido_anterior_a_la_integracion_no_se_manda_al_sistema(): void
+    public function un_pedido_anterior_a_la_integracion_no_se_registra_al_sincronizar(): void
     {
         $this->linkedProduct(7);
-        Http::fake([self::ERP.'/catalog*' => Http::response(['data' => [$this->remote(7)]])]);
+        Http::fake([
+            self::ERP.'/catalog*' => Http::response(['data' => [$this->remote(7)]]),
+            self::ERP.'/orders/statuses*' => Http::response(['data' => []]),
+            self::ERP.'/customers' => Http::response(['data' => ['id' => 50, 'code' => 'CLI-000050']]),
+        ]);
         // Pagado antes de conectar el sistema: su stock ya se descontó aquí.
         $order = OnlineOrder::create([
             'code' => 'W-000001', 'client_user_id' => ClientUser::factory()->create()->id,
@@ -296,8 +313,8 @@ class ErpIntegrationTest extends TestCase
 
         $this->artisan('erp:sincronizar')->assertSuccessful();
 
-        $this->assertNull($order->fresh()->erp_sale_status);
-        Http::assertNotSent(fn (HttpRequest $r) => str_ends_with($r->url(), '/sales'));
+        $this->assertNull($order->fresh()->erp_sale_status, 'Lo trae erp:migrar como histórico, sin mover stock.');
+        Http::assertNotSent(fn (HttpRequest $r) => $r->method() === 'POST' && str_ends_with($r->url(), '/orders'));
     }
 
     // ---------------------------------------------------------- Atenciones
@@ -394,17 +411,14 @@ class ErpIntegrationTest extends TestCase
     }
 
     #[Test]
-    public function las_ventas_del_panel_no_aceptan_productos(): void
+    public function las_ventas_y_los_cobros_se_hacen_en_el_sistema(): void
     {
         $this->actingAsAdmin();
-        $item = $this->linkedProduct(7);
         $service = Service::factory()->create(['price' => 120]);
 
-        $this->postJson('/api/sales', ['items' => [['type' => 'product', 'id' => $item->id, 'quantity' => 1]]])
-            ->assertStatus(422)
-            ->assertJsonValidationErrors('items');
         $this->postJson('/api/sales', ['items' => [['type' => 'service', 'id' => $service->id, 'quantity' => 1]]])
-            ->assertCreated();
+            ->assertStatus(409)
+            ->assertJsonPath('message', 'Las ventas y sus cobros se registran en el sistema: https://sistema.test');
     }
 
     #[Test]

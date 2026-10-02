@@ -7,6 +7,7 @@ use App\Enums\OnlineOrderStatus;
 use App\Models\ClientUser;
 use App\Models\OnlineOrder;
 use App\Models\StoreSetting;
+use App\Services\Erp\OnlineOrderRegistrar;
 use App\Services\Shop\CartLine;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
@@ -20,6 +21,8 @@ use Illuminate\Validation\ValidationException;
  */
 class PlaceOnlineOrderAction
 {
+    public function __construct(private readonly OnlineOrderRegistrar $registrar) {}
+
     /**
      * @param  Collection<int,CartLine>  $lines
      * @param  array<string,mixed>  $data
@@ -48,7 +51,7 @@ class PlaceOnlineOrderAction
             }
         }
 
-        return DB::transaction(function () use ($customer, $lines, $data, $fulfillment) {
+        $order = DB::transaction(function () use ($customer, $lines, $data, $fulfillment) {
             $isDelivery = $fulfillment === FulfillmentType::DELIVERY;
             $subtotal = round($lines->sum(fn (CartLine $line) => $line->subtotal()), 2);
             $deliveryFee = $isDelivery ? StoreSetting::deliveryFee() : 0.0;
@@ -86,5 +89,11 @@ class PlaceOnlineOrderAction
 
             return $order;
         });
+
+        // Con el sistema conectado, el pedido se gestiona allá: se le manda ya
+        // respondida la página, para no hacer esperar al cliente.
+        defer(fn () => $this->registrar->push($order));
+
+        return $order;
     }
 }

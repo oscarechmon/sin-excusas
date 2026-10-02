@@ -9,13 +9,14 @@
     <form class="form-grid" @submit.prevent="submit">
       <div class="form-field">
         <label for="name">Nombre <span class="required">*</span></label>
-        <InputText id="name" v-model="form.name" :invalid="!!errors.name" autofocus />
+        <InputText id="name" v-model="form.name" :invalid="!!errors.name" :disabled="erp.enabled" autofocus />
         <small v-if="errors.name" class="form-error">{{ errors.name }}</small>
       </div>
 
       <div class="form-field">
         <label for="services">Servicios incluidos <span class="required">*</span></label>
         <MultiSelect
+          :disabled="erp.enabled"
           id="services"
           v-model="form.service_ids"
           :options="servicesStore.services"
@@ -32,18 +33,18 @@
       <div class="form-row">
         <div class="form-field">
           <label for="sessions">Cantidad de sesiones <span class="required">*</span></label>
-          <InputNumber id="sessions" v-model="form.total_sessions" :min="1" :invalid="!!errors.total_sessions" />
+          <InputNumber id="sessions" v-model="form.total_sessions" :min="1" :invalid="!!errors.total_sessions" :disabled="erp.enabled" />
           <small v-if="errors.total_sessions" class="form-error">{{ errors.total_sessions }}</small>
         </div>
         <div class="form-field">
           <label for="price">Precio <span class="required">*</span></label>
-          <InputNumber id="price" v-model="form.price" mode="currency" currency="PEN" locale="es-PE" :min="0" />
+          <InputNumber id="price" v-model="form.price" mode="currency" currency="PEN" locale="es-PE" :min="0" :disabled="erp.enabled" />
         </div>
       </div>
 
       <div class="form-field">
         <label for="validity">Vigencia en días</label>
-        <InputNumber id="validity" v-model="form.validity_days" :min="1" placeholder="Sin vencimiento" />
+        <InputNumber id="validity" v-model="form.validity_days" :min="1" placeholder="Sin vencimiento" :disabled="erp.enabled" />
         <small class="form-hint">
           Déjelo vacío si el paquete no vence. {{ perSessionHint }}
         </small>
@@ -55,7 +56,7 @@
       </div>
 
       <div class="form-field form-field--inline">
-        <ToggleSwitch v-model="form.active" input-id="active" />
+        <ToggleSwitch v-model="form.active" input-id="active" :disabled="erp.enabled" />
         <label for="active">Paquete disponible para la venta</label>
       </div>
 
@@ -83,8 +84,11 @@ import Message from 'primevue/message'
 import MultiSelect from 'primevue/multiselect'
 import Textarea from 'primevue/textarea'
 import ToggleSwitch from 'primevue/toggleswitch'
+import { useErp } from '@/composables/useErp'
 
 const props = defineProps<{ visible: boolean; packageItem: any | null }>()
+// Con el sistema conectado, aquí solo se edita la descripción (lo de la web).
+const { erp } = useErp()
 const emit = defineEmits<{ 'update:visible': [boolean]; saved: [string] }>()
 
 const store = usePackagesStore()

@@ -4,10 +4,10 @@
       <span>
         {{ what }} se administran en el
         <a :href="erp.url ?? '#'" target="_blank" rel="noopener">sistema</a>.
-        Aquí editas lo de la web: imagen, descripción y qué se publica.
+        {{ detail ?? 'Aquí editas lo de la web: imagen, descripción y qué se publica.' }}
       </span>
       <Button
-        v-if="canSync"
+        v-if="canSync && props.syncable !== false"
         label="Sincronizar ahora"
         icon="pi pi-sync"
         size="small"
@@ -33,7 +33,7 @@ import { useAuthStore } from '@/stores/auth'
  * Aviso de que el catálogo vive en el sistema, con el botón para traerlo de
  * nuevo si algún cambio no llegó solo.
  */
-defineProps<{ what: string }>()
+const props = defineProps<{ what: string; detail?: string; syncable?: boolean }>()
 const emit = defineEmits<{ synced: [] }>()
 
 const { erp } = useErp()

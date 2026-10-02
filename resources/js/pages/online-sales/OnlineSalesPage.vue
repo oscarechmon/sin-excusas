@@ -17,6 +17,7 @@
 
       <TabPanels>
         <TabPanel value="orders">
+          <ErpNotice what="Los pedidos online" detail="Su preparación, envío y entrega se mueven allá; aquí se consultan y se configura el delivery." :syncable="false" />
           <Card class="filter-card">
             <template #content>
               <div class="filters">
@@ -153,6 +154,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useFormat } from '@/composables/useFormat'
 import { extractMessage } from '@/composables/usePaginatedList'
 import OnlineOrderDetailDialog from './OnlineOrderDetailDialog.vue'
+import ErpNotice from '@/components/common/ErpNotice.vue'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Column from 'primevue/column'

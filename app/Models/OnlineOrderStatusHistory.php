@@ -8,13 +8,14 @@ use Illuminate\Database\Eloquent\Relations\BelongsTo;
 
 class OnlineOrderStatusHistory extends Model
 {
-    protected $fillable = ['online_order_id', 'status', 'note', 'internal', 'user_id'];
+    protected $fillable = ['online_order_id', 'status', 'note', 'internal', 'from_erp', 'user_id', 'actor_name', 'created_at'];
 
     protected function casts(): array
     {
         return [
             'status' => OnlineOrderStatus::class,
             'internal' => 'boolean',
+            'from_erp' => 'boolean',
         ];
     }
 

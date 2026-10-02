@@ -31,7 +31,13 @@ class ErpException extends BusinessException
     /** Lo que antes se hacía en este panel ahora se hace en el sistema. */
     public static function managedInErp(string $what): self
     {
-        $exception = new self("{$what} se administra en el sistema: ".config('erp.url'));
+        return self::movedToErp("{$what} se administra");
+    }
+
+    /** @param  string  $sentence  Sujeto y verbo, p. ej. "Los clientes se administran". */
+    public static function movedToErp(string $sentence): self
+    {
+        $exception = new self("{$sentence} en el sistema: ".config('erp.url'));
         $exception->status = 409;
 
         return $exception;

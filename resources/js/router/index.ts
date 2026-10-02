@@ -1,5 +1,6 @@
 import { createRouter, createWebHistory, RouteRecordRaw } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
+import { ensureErpStatus } from '@/composables/useErp'
 
 /**
  * Cada ruta declara en `meta.permission` el permiso que exige. Es el mismo
@@ -24,19 +25,19 @@ const routes: RouteRecordRaw[] = [
     path: '/admin/clients',
     name: 'clients',
     component: () => import('@/pages/clients/ClientsPage.vue'),
-    meta: { requiresAuth: true, permission: 'clients.view' },
+    meta: { requiresAuth: true, permission: 'clients.view', erpManaged: true },
   },
   {
     path: '/admin/clients/:id',
     name: 'client-detail',
     component: () => import('@/pages/clients/ClientsPage.vue'),
-    meta: { requiresAuth: true, permission: 'clients.view' },
+    meta: { requiresAuth: true, permission: 'clients.view', erpManaged: true },
   },
   {
     path: '/admin/appointments',
     name: 'appointments',
     component: () => import('@/pages/appointments/AppointmentsPage.vue'),
-    meta: { requiresAuth: true, permission: 'appointments.view' },
+    meta: { requiresAuth: true, permission: 'appointments.view', erpManaged: true },
   },
   {
     path: '/admin/services',
@@ -54,7 +55,7 @@ const routes: RouteRecordRaw[] = [
     path: '/admin/staff',
     name: 'staff',
     component: () => import('@/pages/staff/StaffPage.vue'),
-    meta: { requiresAuth: true, permission: 'employees.view' },
+    meta: { requiresAuth: true, permission: 'employees.view', erpManaged: true },
   },
   {
     path: '/admin/inventory',
@@ -72,13 +73,13 @@ const routes: RouteRecordRaw[] = [
     path: '/admin/attendances',
     name: 'attendances',
     component: () => import('@/pages/attendances/AttendancesPage.vue'),
-    meta: { requiresAuth: true, permission: 'attendances.view' },
+    meta: { requiresAuth: true, permission: 'attendances.view', erpManaged: true },
   },
   {
     path: '/admin/sales',
     name: 'sales',
     component: () => import('@/pages/sales/SalesPage.vue'),
-    meta: { requiresAuth: true, permission: 'sales.view' },
+    meta: { requiresAuth: true, permission: 'sales.view', erpManaged: true },
   },
   {
     path: '/admin/site-content',
@@ -102,19 +103,19 @@ const routes: RouteRecordRaw[] = [
     path: '/admin/cash',
     name: 'cash',
     component: () => import('@/pages/cash/CashPage.vue'),
-    meta: { requiresAuth: true, permission: 'cash.view' },
+    meta: { requiresAuth: true, permission: 'cash.view', erpManaged: true },
   },
   {
     path: '/admin/commissions',
     name: 'commissions',
     component: () => import('@/pages/commissions/CommissionsPage.vue'),
-    meta: { requiresAuth: true, permission: 'commissions.view' },
+    meta: { requiresAuth: true, permission: 'commissions.view', erpManaged: true },
   },
   {
     path: '/admin/reports',
     name: 'reports',
     component: () => import('@/pages/reports/ReportsPage.vue'),
-    meta: { requiresAuth: true, permission: 'reports.view' },
+    meta: { requiresAuth: true, permission: 'reports.view', erpManaged: true },
   },
   {
     path: '/admin/users',
@@ -162,6 +163,11 @@ router.beforeEach(async (to, from, next) => {
 
   if (permission && !authStore.hasPermission(permission)) {
     return next({ name: 'forbidden' })
+  }
+
+  // Con el sistema (ERP) conectado, la operación diaria se hace allá.
+  if (to.meta.erpManaged && (await ensureErpStatus()).enabled) {
+    return next({ name: 'dashboard' })
   }
 
   return next()
