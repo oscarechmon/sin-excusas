@@ -8,13 +8,19 @@ use App\Exceptions\InvalidOrderTransitionException;
 use App\Models\InventoryItem;
 use App\Models\OnlineOrder;
 use App\Models\OnlineOrderItem;
+use App\Services\Erp\ErpClient;
+use App\Services\Erp\OnlineOrderRegistrar;
 use App\Services\InventoryService;
 use Illuminate\Support\Facades\DB;
 
 /** El personal avanza el pedido en su seguimiento (preparación, envío, entrega) o lo anula. */
 class ChangeOnlineOrderStatusAction
 {
-    public function __construct(private readonly InventoryService $inventory) {}
+    public function __construct(
+        private readonly InventoryService $inventory,
+        private readonly ErpClient $erp,
+        private readonly OnlineOrderRegistrar $registrar,
+    ) {}
 
     public function execute(OnlineOrder $order, OnlineOrderStatus $to, ?string $note, int $userId): OnlineOrder
     {
@@ -30,10 +36,14 @@ class ChangeOnlineOrderStatusAction
             $locked->update(['status' => $to]);
             $locked->recordStatus($to, $note, $userId);
 
-            // Anular un pedido cobrado devuelve las unidades al inventario. El
+            // Anular un pedido cobrado devuelve las unidades al inventario: con
+            // el sistema conectado, anulando allá su venta. Si el sistema no
+            // contesta, la anulación no se guarda y el personal reintenta. El
             // reembolso del dinero se hace desde el panel de Izipay.
             if ($to === OnlineOrderStatus::CANCELLED && $wasPaid) {
-                $this->restock($locked, $userId);
+                $this->erp->enabled()
+                    ? $this->registrar->cancel($locked, $note ?: "Pedido {$locked->code} anulado en la web", $userId)
+                    : $this->restock($locked, $userId);
             }
 
             return $locked;

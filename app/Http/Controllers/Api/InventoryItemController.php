@@ -11,12 +11,24 @@ use App\Http\Requests\StoreInventoryItemRequest;
 use App\Http\Resources\InventoryItemResource;
 use App\Http\Resources\InventoryMovementResource;
 use App\Models\InventoryItem;
+use App\Services\Erp\ErpClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
+/**
+ * Productos e insumos.
+ *
+ * Con el sistema (ERP) conectado, nombre, precio, categoría y stock se
+ * administran allá y llegan por sincronización: aquí solo se edita lo de la
+ * web (descripción y si se vende en la tienda; la imagen y publicar van por
+ * sus propios controladores). Crear, borrar y mover stock los corta la ruta
+ * (middleware erp.local).
+ */
 class InventoryItemController extends Controller
 {
     use ApiResponses;
+
+    public function __construct(private readonly ErpClient $erp) {}
 
     public function index(Request $request): JsonResponse
     {
@@ -63,7 +75,9 @@ class InventoryItemController extends Controller
 
     public function update(StoreInventoryItemRequest $request, InventoryItem $inventoryItem): JsonResponse
     {
-        $inventoryItem->update($request->safe()->except('stock'));
+        $inventoryItem->update($this->erp->enabled()
+            ? $request->safe()->only(['description', 'is_sellable'])
+            : $request->safe()->except('stock'));
 
         return $this->ok(
             new InventoryItemResource($inventoryItem->load('category')),

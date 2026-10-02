@@ -18,6 +18,7 @@ return Application::configure(basePath: dirname(__DIR__))
             'permission' => \Spatie\Permission\Middleware\PermissionMiddleware::class,
             'role_or_permission' => \Spatie\Permission\Middleware\RoleOrPermissionMiddleware::class,
             'customer.verified' => \App\Http\Middleware\EnsureCustomerEmailIsVerified::class,
+            'erp.local' => \App\Http\Middleware\ManagedLocally::class,
         ]);
 
         // Tienda web (guard `customer`). El ERP usa tokens de Sanctum y recibe
@@ -33,6 +34,8 @@ return Application::configure(basePath: dirname(__DIR__))
             'pagos/izipay/notificacion',
             'deploy/optimize',
             'deploy/release',
+            // El sistema (ERP) avisa cambios del catálogo con su token compartido.
+            'erp/catalogo',
         ]);
     })
     ->withExceptions(function (Exceptions $exceptions) {

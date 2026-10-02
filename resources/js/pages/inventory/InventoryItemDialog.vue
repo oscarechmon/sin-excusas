@@ -9,8 +9,11 @@
     <form class="form-grid" @submit.prevent="submit">
       <div class="form-field">
         <label for="name">Nombre <span class="required">*</span></label>
-        <InputText id="name" v-model="form.name" :invalid="!!errors.name" autofocus />
+        <InputText id="name" v-model="form.name" :invalid="!!errors.name" :disabled="fromErp" autofocus />
         <small v-if="errors.name" class="form-error">{{ errors.name }}</small>
+        <small v-else-if="fromErp" class="form-hint">
+          Nombre, categoría, precios y stock se cambian en el sistema y llegan solos.
+        </small>
       </div>
 
       <div class="form-field">
@@ -30,6 +33,7 @@
             option-value="id"
             placeholder="Sin categoría"
             show-clear
+            :disabled="fromErp"
           />
         </div>
         <div class="form-field">
@@ -41,6 +45,7 @@
             editable
             placeholder="unidad"
             :invalid="!!errors.unit"
+            :disabled="fromErp"
           />
         </div>
       </div>
@@ -65,7 +70,7 @@
         </div>
         <div class="form-field">
           <label for="min_stock">Stock mínimo <span class="required">*</span></label>
-          <InputNumber id="min_stock" v-model="form.min_stock" :min="0" :max-fraction-digits="2" />
+          <InputNumber id="min_stock" v-model="form.min_stock" :min="0" :max-fraction-digits="2" :disabled="fromErp" />
           <small class="form-hint">Por debajo de este valor aparece la alerta.</small>
         </div>
       </div>
@@ -73,7 +78,7 @@
       <div class="form-row">
         <div class="form-field">
           <label for="cost">Costo <span class="required">*</span></label>
-          <InputNumber id="cost" v-model="form.cost" mode="currency" currency="PEN" locale="es-PE" :min="0" />
+          <InputNumber id="cost" v-model="form.cost" mode="currency" currency="PEN" locale="es-PE" :min="0" :disabled="fromErp" />
         </div>
         <div class="form-field">
           <label for="sale_price">Precio de venta</label>
@@ -84,14 +89,14 @@
             currency="PEN"
             locale="es-PE"
             :min="0"
-            :disabled="!form.is_sellable"
+            :disabled="fromErp || !form.is_sellable"
           />
         </div>
       </div>
 
       <div class="form-field">
         <label for="supplier">Proveedor</label>
-        <InputText id="supplier" v-model="form.supplier" />
+        <InputText id="supplier" v-model="form.supplier" :disabled="fromErp" />
       </div>
 
       <CatalogImageField
@@ -111,7 +116,7 @@
       </div>
 
       <div class="form-field form-field--inline">
-        <ToggleSwitch v-model="form.active" input-id="active" />
+        <ToggleSwitch v-model="form.active" input-id="active" :disabled="fromErp" />
         <label for="active">Producto activo</label>
       </div>
 
@@ -145,6 +150,7 @@ import Message from 'primevue/message'
 import Select from 'primevue/select'
 import Textarea from 'primevue/textarea'
 import ToggleSwitch from 'primevue/toggleswitch'
+import { useErp } from '@/composables/useErp'
 
 const props = defineProps<{ visible: boolean; item: any | null }>()
 const emit = defineEmits<{ 'update:visible': [boolean]; saved: [string] }>()
@@ -180,6 +186,9 @@ const errors = ref<Record<string, string>>({})
 const generalError = ref<string | null>(null)
 
 const isEdit = computed(() => props.item !== null)
+// Con el sistema conectado, aquí solo se edita lo de la web.
+const { erp } = useErp()
+const fromErp = computed(() => erp.value.enabled)
 const units = ['unidad', 'par', 'caja', 'ml', 'gr', 'litro']
 
 const emptyForm = () => ({

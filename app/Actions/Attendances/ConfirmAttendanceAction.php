@@ -5,12 +5,15 @@ namespace App\Actions\Attendances;
 use App\DTOs\AttendanceData;
 use App\Enums\AppointmentStatus;
 use App\Enums\InventoryMovementType;
+use App\Exceptions\ErpException;
 use App\Models\Appointment;
 use App\Models\Attendance;
 use App\Models\ClientPackage;
 use App\Models\InventoryItem;
 use App\Models\Service;
 use App\Services\CommissionService;
+use App\Services\Erp\CatalogSync;
+use App\Services\Erp\ErpClient;
 use App\Services\InventoryService;
 use App\Services\PackageSessionService;
 use Illuminate\Support\Facades\DB;
@@ -32,6 +35,8 @@ class ConfirmAttendanceAction
         private readonly InventoryService $inventory,
         private readonly PackageSessionService $packageSessions,
         private readonly CommissionService $commissions,
+        private readonly ErpClient $erp,
+        private readonly CatalogSync $catalog,
     ) {}
 
     public function execute(AttendanceData $data): Attendance
@@ -52,7 +57,7 @@ class ConfirmAttendanceAction
             ]);
 
             $this->consumePackageSession($attendance, $data);
-            $this->discountSupplies($attendance, $data);
+            $erpSupplies = $this->discountSupplies($attendance, $data);
             $this->closeAppointment($data);
 
             // La comisión se calcula sobre el precio del servicio. Si la
@@ -62,6 +67,18 @@ class ConfirmAttendanceAction
                 $attendance,
                 $this->commissionBase($attendance, $service)
             );
+
+            // Con el sistema conectado, el stock de los insumos es suyo. Se le
+            // avisa al final: si algo de lo anterior falla, el sistema no llega
+            // a descontar nada; si el sistema no tiene stock, todo se revierte.
+            if ($erpSupplies !== []) {
+                $result = $this->erp->registerConsumption(
+                    "atencion-{$attendance->id}",
+                    $erpSupplies,
+                    "Atención #{$attendance->id}: {$service->name}",
+                );
+                $this->catalog->applyStock($result['stock'] ?? []);
+            }
 
             return $attendance->load('client', 'service', 'employee', 'supplies.item', 'commission');
         });
@@ -84,11 +101,19 @@ class ConfirmAttendanceAction
         $attendance->forceFill(['session_number' => $session->session_number])->save();
     }
 
-    private function discountSupplies(Attendance $attendance, AttendanceData $data): void
+    /**
+     * Registra los insumos usados. Sin sistema conectado, los descuenta aquí;
+     * con él, devuelve lo que hay que descontar allá (id del sistema y cantidad).
+     *
+     * @return list<array{product_id:int, quantity:float}>
+     */
+    private function discountSupplies(Attendance $attendance, AttendanceData $data): array
     {
         if ($data->supplies === []) {
-            return;
+            return [];
         }
+
+        $erpSupplies = [];
 
         $items = InventoryItem::whereIn('id', array_column($data->supplies, 'inventory_item_id'))
             ->get()
@@ -106,6 +131,15 @@ class ConfirmAttendanceAction
                 'quantity' => $supply['quantity'],
             ]);
 
+            if ($this->erp->enabled()) {
+                $erpSupplies[] = [
+                    'product_id' => $item->erp_id ?? throw ErpException::notLinked($item->name),
+                    'quantity' => (float) $supply['quantity'],
+                ];
+
+                continue;
+            }
+
             // Lanza InsufficientStockException si no alcanza, revirtiendo
             // toda la transacción.
             $this->inventory->registerMovement(
@@ -116,6 +150,8 @@ class ConfirmAttendanceAction
                 $data->createdBy,
             );
         }
+
+        return $erpSupplies;
     }
 
     /** Una cita atendida pasa a estado "atendida" al confirmar la atención. */

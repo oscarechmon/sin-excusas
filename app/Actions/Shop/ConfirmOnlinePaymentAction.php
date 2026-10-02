@@ -4,10 +4,13 @@ namespace App\Actions\Shop;
 
 use App\Enums\InventoryMovementType;
 use App\Enums\OnlineOrderStatus;
+use App\Exceptions\ErpException;
 use App\Exceptions\InsufficientStockException;
 use App\Models\InventoryItem;
 use App\Models\OnlineOrder;
 use App\Models\OnlineOrderItem;
+use App\Services\Erp\ErpClient;
+use App\Services\Erp\OnlineOrderRegistrar;
 use App\Services\InventoryService;
 use App\Services\Payments\PaymentResult;
 use Illuminate\Support\Facades\DB;
@@ -18,10 +21,17 @@ use Illuminate\Support\Facades\DB;
  * Idempotente: Izipay avisa dos veces (retorno del navegador e IPN), y el
  * cliente puede recargar la página. Solo la primera confirmación marca el
  * pedido como pagado y descuenta stock.
+ *
+ * Con el sistema (ERP) conectado, el stock es suyo: el pedido pagado se
+ * registra allá como venta y es esa venta la que lo descuenta.
  */
 class ConfirmOnlinePaymentAction
 {
-    public function __construct(private readonly InventoryService $inventory) {}
+    public function __construct(
+        private readonly InventoryService $inventory,
+        private readonly ErpClient $erp,
+        private readonly OnlineOrderRegistrar $registrar,
+    ) {}
 
     public function execute(PaymentResult $result, string $gateway): ?OnlineOrder
     {
@@ -61,7 +71,7 @@ class ConfirmOnlinePaymentAction
             ]);
             $order->recordStatus(OnlineOrderStatus::PAID, 'Pago confirmado.');
 
-            $this->discountStock($order);
+            $this->erp->enabled() ? $this->registerInErp($order) : $this->discountStock($order);
 
             return $order;
         });
@@ -80,6 +90,25 @@ class ConfirmOnlinePaymentAction
             'transaction_id' => $result->transactionId,
             'payload' => $result->payload,
         ]);
+    }
+
+    /**
+     * El cobro ya ocurrió: si el sistema no contesta, el pedido sigue pagado,
+     * queda como pendiente y la sincronización lo vuelve a intentar.
+     */
+    private function registerInErp(OnlineOrder $order): void
+    {
+        $order->forceFill(['erp_sale_status' => OnlineOrder::ERP_PENDING])->save();
+
+        try {
+            $this->registrar->register($order);
+        } catch (ErpException $e) {
+            $order->recordStatus(
+                OnlineOrderStatus::PAID,
+                'No se pudo registrar la venta en el sistema ('.$e->getMessage().'). Se reintentará al sincronizar.',
+                internal: true,
+            );
+        }
     }
 
     /**

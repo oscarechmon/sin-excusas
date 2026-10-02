@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Http\Requests\StoreServiceRequest;
 use App\Http\Resources\ServiceResource;
 use App\Models\Service;
+use App\Services\Erp\ErpClient;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -55,7 +56,11 @@ class ServiceController extends Controller
 
     public function update(StoreServiceRequest $request, Service $service): JsonResponse
     {
-        $service->update($request->validated());
+        // Con el sistema conectado, nombre, categoría, precio y estado llegan
+        // de allá; aquí queda lo de la web y la agenda.
+        $service->update(app(ErpClient::class)->enabled()
+            ? $request->safe()->only(['duration_minutes', 'description'])
+            : $request->validated());
 
         if ($request->has('employee_ids')) {
             $service->employees()->sync($request->input('employee_ids'));

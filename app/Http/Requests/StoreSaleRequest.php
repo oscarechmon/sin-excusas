@@ -2,6 +2,7 @@
 
 namespace App\Http\Requests;
 
+use App\Services\Erp\ErpClient;
 use Illuminate\Foundation\Http\FormRequest;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\Validator;
@@ -51,6 +52,15 @@ class StoreSaleRequest extends FormRequest
                     'client_id',
                     'Para vender un paquete debe indicar el cliente al que pertenece.'
                 );
+            }
+
+            // Con el sistema conectado, el stock es suyo: los productos se
+            // cobran en su POS y aquí quedan servicios y paquetes.
+            $hasProduct = collect($this->input('items', []))
+                ->contains(fn ($item) => ($item['type'] ?? null) === 'product');
+
+            if ($hasProduct && app(ErpClient::class)->enabled()) {
+                $validator->errors()->add('items', 'Los productos se venden desde el sistema: '.config('erp.url'));
             }
         });
     }

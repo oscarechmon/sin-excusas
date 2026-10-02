@@ -174,6 +174,7 @@ import InputNumber from 'primevue/inputnumber'
 import InputText from 'primevue/inputtext'
 import Message from 'primevue/message'
 import Select from 'primevue/select'
+import { useErp } from '@/composables/useErp'
 
 const props = defineProps<{ visible: boolean }>()
 const emit = defineEmits<{ 'update:visible': [boolean]; saved: [string] }>()
@@ -191,11 +192,15 @@ const errors = ref<Record<string, string>>({})
 const generalError = ref<string | null>(null)
 const newItemType = ref('service')
 
-const itemTypes = [
-  { label: 'Servicio', value: 'service' },
-  { label: 'Producto', value: 'product' },
-  { label: 'Paquete', value: 'package' },
-]
+// Con el sistema conectado, los productos se cobran en su POS.
+const { erp } = useErp()
+const itemTypes = computed(() =>
+  [
+    { label: 'Servicio', value: 'service' },
+    { label: 'Producto', value: 'product' },
+    { label: 'Paquete', value: 'package' },
+  ].filter((type) => !(erp.value.enabled && type.value === 'product')),
+)
 
 interface SaleLine {
   type: string

@@ -3,12 +3,15 @@
     <div class="page-header">
       <h1>Servicios</h1>
       <Button
+        v-if="!erp.enabled"
         label="Nuevo Servicio"
         icon="pi pi-plus"
         @click="openNewServiceDialog"
         class="p-button-primary"
       />
     </div>
+
+    <ErpNotice what="Servicios y precios" @synced="loadServices(1)" />
 
     <div class="filters">
       <div class="filter-group">
@@ -84,6 +87,7 @@
             text
           />
           <Button
+            v-if="!erp.enabled"
             icon="pi pi-trash"
             class="p-button-sm p-button-danger"
             @click="confirmDeleteService(slotProps.data.id)"
@@ -110,6 +114,8 @@ import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import { useServicesStore } from '@/stores/services';
 import ServiceFormDialog from './ServiceFormDialog.vue';
+import ErpNotice from '@/components/common/ErpNotice.vue';
+import { useErp } from '@/composables/useErp';
 import Button from 'primevue/button';
 import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
@@ -118,6 +124,7 @@ import Tag from 'primevue/tag';
 import ToggleSwitch from 'primevue/toggleswitch';
 
 const servicesStore = useServicesStore();
+const { erp } = useErp();
 const confirm = useConfirm();
 const toast = useToast();
 

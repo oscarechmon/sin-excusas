@@ -10,6 +10,12 @@ use Illuminate\Database\Eloquent\Relations\HasMany;
 
 class OnlineOrder extends Model
 {
+    /** Pagado, pero el sistema no contestó: la sincronización lo reintenta. */
+    public const ERP_PENDING = 'pending';
+
+    /** Ya es una venta del sistema, que descontó el stock. */
+    public const ERP_REGISTERED = 'registered';
+
     protected $fillable = [
         'code',
         'client_user_id',

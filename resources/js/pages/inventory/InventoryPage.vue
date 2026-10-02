@@ -7,7 +7,7 @@
           El stock nunca se edita a mano: cada cambio queda registrado como movimiento.
         </p>
       </div>
-      <div class="page-header__actions">
+      <div v-if="!erp.enabled" class="page-header__actions">
         <Button
           label="Categorías"
           icon="pi pi-tags"
@@ -18,6 +18,8 @@
         <Button label="Nuevo producto" icon="pi pi-plus" @click="openCreate" />
       </div>
     </div>
+
+    <ErpNotice what="Productos, precios y stock" @synced="reload" />
 
     <Message v-if="lowStockCount > 0" severity="warn" :closable="false" class="stock-alert">
       {{ lowStockCount }} producto(s) están en el stock mínimo o por debajo.
@@ -128,6 +130,7 @@
             <template #body="{ data }">
               <div class="row-actions">
                 <Button
+                  v-if="!erp.enabled"
                   icon="pi pi-arrow-right-arrow-left"
                   text
                   rounded
@@ -144,7 +147,7 @@
                   @click="openMovements(data)"
                 />
                 <Button icon="pi pi-pencil" text rounded severity="secondary" @click="openEdit(data)" />
-                <Button icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(data)" />
+                <Button v-if="!erp.enabled" icon="pi pi-trash" text rounded severity="danger" @click="confirmDelete(data)" />
               </div>
             </template>
           </Column>
@@ -166,6 +169,8 @@ import { useToast } from 'primevue/usetoast'
 import { useInventoryStore } from '@/stores/inventory'
 import { useFormat } from '@/composables/useFormat'
 import { extractMessage } from '@/composables/usePaginatedList'
+import { useErp } from '@/composables/useErp'
+import ErpNotice from '@/components/common/ErpNotice.vue'
 import InventoryItemDialog from './InventoryItemDialog.vue'
 import InventoryCategoriesDialog from './InventoryCategoriesDialog.vue'
 import StockHistoryDialog from './StockHistoryDialog.vue'
@@ -184,6 +189,7 @@ import ToggleButton from 'primevue/togglebutton'
 import ToggleSwitch from 'primevue/toggleswitch'
 
 const store = useInventoryStore()
+const { erp } = useErp()
 const toast = useToast()
 const confirm = useConfirm()
 const format = useFormat()

@@ -3,6 +3,7 @@
     <div class="page-header">
       <h1>Categorías de Servicios</h1>
       <Button
+        v-if="!erp.enabled"
         label="Nueva Categoría"
         icon="pi pi-plus"
         @click="openNewCategoryDialog"
@@ -31,12 +32,14 @@
       <Column header="Acciones" :style="{ width: '150px' }">
         <template #body="slotProps">
           <Button
+            v-if="!erp.enabled"
             icon="pi pi-pencil"
             class="p-button-sm p-button-warning"
             @click="editCategory(slotProps.data)"
             text
           />
           <Button
+            v-if="!erp.enabled"
             icon="pi pi-trash"
             class="p-button-sm p-button-danger"
             @click="confirmDeleteCategory(slotProps.data.id)"
@@ -63,12 +66,15 @@ import { useConfirm } from 'primevue/useconfirm';
 import { useToast } from 'primevue/usetoast';
 import { useServicesStore } from '@/stores/services';
 import CategoryFormDialog from './CategoryFormDialog.vue';
+import { useErp } from '@/composables/useErp';
 import Button from 'primevue/button';
 import Column from 'primevue/column';
 import DataTable from 'primevue/datatable';
 import Tag from 'primevue/tag';
 
 const servicesStore = useServicesStore();
+// Con el sistema conectado, las categorías llegan de allá con el catálogo.
+const { erp } = useErp();
 const confirm = useConfirm();
 const toast = useToast();
 

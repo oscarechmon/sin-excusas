@@ -14,8 +14,12 @@
           v-model="form.name"
           class="w-full"
           placeholder="Nombre del servicio"
+          :disabled="fromErp"
         />
         <small v-if="errors.name" class="error-text">{{ errors.name }}</small>
+        <small v-else-if="fromErp" class="hint-text">
+          Nombre, categoría, precio y estado se cambian en el sistema y llegan solos.
+        </small>
       </div>
 
       <div class="form-group">
@@ -28,6 +32,7 @@
           option-value="id"
           placeholder="Selecciona una categoría"
           class="w-full"
+          :disabled="fromErp"
         />
         <small v-if="errors.category_id" class="error-text">{{ errors.category_id }}</small>
       </div>
@@ -43,6 +48,7 @@
             :min="0"
             :max-fraction-digits="2"
             class="w-full"
+            :disabled="fromErp"
           />
           <small v-if="errors.price" class="error-text">{{ errors.price }}</small>
         </div>
@@ -82,7 +88,7 @@
 
       <div class="form-group">
         <label for="active">
-          <Checkbox v-model="form.active" binary input-id="active" />
+          <Checkbox v-model="form.active" binary input-id="active" :disabled="fromErp" />
           <span class="ml-2">Activo</span>
         </label>
       </div>
@@ -117,6 +123,7 @@ import InputNumber from 'primevue/inputnumber';
 import InputText from 'primevue/inputtext';
 import Select from 'primevue/select';
 import Textarea from 'primevue/textarea';
+import { useErp } from '@/composables/useErp';
 
 interface Props {
   visible: boolean;
@@ -125,6 +132,10 @@ interface Props {
 
 const emit = defineEmits(['close', 'submit']);
 const props = withDefaults(defineProps<Props>(), { service: null });
+
+// Con el sistema conectado, aquí solo se edita lo de la web y la agenda.
+const { erp } = useErp();
+const fromErp = computed(() => erp.value.enabled);
 const servicesStore = useServicesStore();
 
 const isOpen = computed({
@@ -263,6 +274,11 @@ const handleSubmit = async () => {
 
 .error-text {
   color: #ef4444;
+  font-size: 0.875rem;
+}
+
+.hint-text {
+  color: #64748b;
   font-size: 0.875rem;
 }
 
