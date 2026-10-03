@@ -139,26 +139,29 @@ volver a cachear**: `php artisan optimize` por SSH, o un push nuevo.
 
 ## Conexión con el sistema (ERP)
 
-Con el sistema conectado (`sistema.sinexcusas.org.pe`), **toda la operación se
-hace allá** y este panel queda para la web:
+Con el sistema conectado (`sistema.sinexcusas.org.pe`), **todo se hace allá**
+y la web es un cascarón que muestra lo que dice el sistema:
 
 | Se hace en el sistema | Se sigue haciendo aquí |
 |---|---|
-| Clientes (ficha completa), agenda, atenciones, paquetes y el saldo de sesiones de cada cliente | Contenido web y Datos de la web |
-| Ventas (también de servicios y paquetes), cobros de saldos, caja | Imagen y descripción de productos, servicios y paquetes |
-| Catálogo y stock: productos, insumos, servicios, paquetes, precios, compras, kardex | Qué se publica en la web y qué se vende en la tienda |
-| Personal, comisiones, reportes | Delivery de la tienda (Ventas online → Delivery) |
-| Seguimiento de los pedidos online (preparación, envío, entrega, anulación) | Usuarios de este panel |
+| Catálogo completo: productos, insumos, servicios, paquetes, precios, stock, compras, kardex | Contenido web (textos y fotos de las páginas) |
+| Lo que la web muestra de cada uno: **foto, descripción, "Publicar en la web"** y la duración de los servicios | Datos de la web (contacto, redes, medición) |
+| Clientes (ficha completa), agenda, atenciones y el saldo de sesiones de cada cliente | Delivery de la tienda (Ventas online → Delivery) |
+| Ventas (también de servicios y paquetes), cobros de saldos, caja, personal, comisiones, reportes | Usuarios de este panel |
+| Seguimiento de los pedidos online (preparación, envío, entrega, anulación) | |
 
 - El menú oculta lo que se hace allá y muestra **Ir al sistema**; la API lo
   rechaza (409) con un mensaje que dice dónde hacerlo.
-- La web **no guarda copia del catálogo**: nombre, precio, stock, categoría,
-  si sigue activo y lo de cada paquete (sesiones, vigencia, servicios) se leen
-  en vivo de la API del sistema, en la tienda y en este panel. Lo leído se
-  reutiliza hasta 60 segundos (`ERP_CATALOG_TTL`) y cada cambio en el sistema
-  lo invalida al instante. Aquí solo queda la ficha web de cada ítem (imagen,
-  descripción, si se publica), enlazada por `erp_id`; lo nuevo aparece **sin
-  publicar**.
+- La web **no guarda copia del catálogo**: qué se publica, nombre, precio,
+  stock, categoría (con su descripción), foto, descripción, duración y lo de
+  cada paquete (sesiones, vigencia, servicios) se leen en vivo de la API del
+  sistema. La foto se muestra directo desde el sistema. Lo leído se reutiliza
+  hasta 60 segundos (`ERP_CATALOG_TTL`) y cada cambio en el sistema lo
+  invalida al instante. Aquí solo queda una fila por ítem (`erp_id`) que usan
+  el carrito y los pedidos; si falta, se crea sola.
+- Para mostrar algo en la web: en el sistema, **Productos y servicios** (o
+  **Paquetes**) → editar → **Publicar en la web**. Al eliminarlo o desactivarlo
+  allá, desaparece de la web.
 - Al confirmar el pedido y otra vez justo antes de mostrar el cobro, la tienda
   le pregunta al sistema el stock de ese momento. Si ya no alcanza, o si el
   sistema no contesta, **no se cobra** y el cliente ve por qué.
@@ -173,7 +176,7 @@ hace allá** y este panel queda para la web:
   anular) llega aquí al instante y el cliente lo ve en su seguimiento.
 - Quien crea una cuenta en la tienda queda enlazado con su ficha del sistema
   (la crea si no existe).
-- **Sincronizar ahora** (en Inventario y Servicios) y `php artisan
+- **Sincronizar ahora** (en el Dashboard de este panel) y `php artisan
   erp:sincronizar` traen el catálogo (enlazan lo nuevo y renuevan lo que lee
   la web), reintentan los pedidos pendientes, enlazan los clientes pendientes
   y traen el seguimiento de los pedidos.
@@ -231,6 +234,27 @@ el enlace `erp_id`).
    corta, la siguiente corrida sigue donde quedó. Desde aquí la operación diaria
    se hace en el sistema.
 
+### Pasar las fotos y descripciones de la web al sistema (una vez)
+
+Antes, la foto, la descripción y qué se publicaba se editaban en este panel.
+Para que desde ahora todo se edite en el sistema, primero despliega el
+**sistema** y después esta web, y entonces, por SSH:
+
+```bash
+cd ~/domains/sinexcusas.org.pe/public_html
+php artisan erp:fichas
+```
+
+Manda al sistema la foto, la descripción, si se publicaba y la duración de cada
+producto, servicio y paquete enlazado, y las descripciones de las categorías
+(solo a las que allá no tienen una). Se puede repetir: lo que en el sistema ya
+tiene decidido "Publicar en la web" no se toca. Mientras no lo ejecutes, la web
+sigue mostrando lo que tenía, así que no queda vacía en ningún momento.
+
+Revisa después en el sistema **Productos y servicios**: tienen que verse las
+fotos y la etiqueta **En la web** en lo publicado. Si las fotos salen rotas,
+en el sistema falta `php artisan storage:link` o su `APP_URL` está mal.
+
 **Recomendado: sincronización periódica.** Los avisos llegan solos, pero si una
 de las dos estuvo caída alguno se pierde (un pedido, un cliente, un paso del
 seguimiento). hPanel → **Avanzado → Cron jobs**, cada 15
@@ -267,7 +291,8 @@ volver a vender.
 | Un pedido no muestra en la web el estado que tiene en el sistema | **Sincronizar ahora** (o el cron). Si se repite, revisa `INTEGRATION_WEB_URL` en el sistema. |
 | `No se pudo conectar con el sistema` | `ERP_URL` mal escrita o el sistema caído. Al volver, **Sincronizar ahora**. |
 | `403` al sincronizar o en el log del sistema | `ERP_TOKEN` (aquí) e `INTEGRATION_TOKEN` (allá) no coinciden; tras corregir, `php artisan optimize` en ambos. |
-| Un cambio del sistema no aparece en la web | Aunque se pierda el aviso, se ve a más tardar en 60 segundos. Si tarda más, o un producto nuevo no aparece en el panel, pulsa **Sincronizar ahora** en Inventario y revisa `INTEGRATION_WEB_URL` en el sistema. |
+| Un cambio del sistema no aparece en la web | Aunque se pierda el aviso, se ve a más tardar en 60 segundos. Revisa que en el sistema tenga **Publicar en la web** y esté activo. Si tarda más, pulsa **Sincronizar ahora** en el Dashboard y revisa `INTEGRATION_WEB_URL` en el sistema. |
+| Fotos rotas en la web | Las fotos se muestran desde el sistema: ahí falta `php artisan storage:link` o su `APP_URL` está mal. |
 | "No pudimos confirmar el stock con nuestro sistema" al comprar | La web no logró hablar con el sistema al confirmar el pedido o el pago, y por eso no cobró. Revisa que el sistema esté arriba y `ERP_URL`. |
 | Nota interna "No se pudo registrar la venta en el sistema" en un pedido | El sistema no contestó al pagar. **Sincronizar ahora** (o el cron) lo registra. |
 | Se queda extrayendo y no termina | Baja `DEPLOY_CHUNK` en el `.env` (por ejemplo 400) y vuelve a lanzar. |

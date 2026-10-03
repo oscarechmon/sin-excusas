@@ -9,8 +9,10 @@ use App\Models\OnlineOrderItem;
 use App\Models\Package;
 use App\Models\Service;
 use App\Models\ServiceCategory;
+use App\Services\Erp\CatalogSync;
 use App\Services\Erp\ErpClient;
 use App\Services\Erp\LiveCatalog;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Support\Collection;
 
@@ -18,15 +20,16 @@ use Illuminate\Support\Collection;
  * Lo que la tienda muestra y vende.
  *
  * Sin el sistema conectado se lee de esta base, como siempre. Con el sistema,
- * de aquí sale solo lo de la web (qué se publica, foto, descripción) y lo
- * demás (nombre, precio, stock, categoría, si sigue activo) se lee en vivo
- * del sistema (LiveCatalog).
+ * la web es un cascarón: qué se publica, nombre, precio, stock, categoría,
+ * imagen y descripción se leen en vivo del sistema (LiveCatalog), y aquí solo
+ * queda el enlace de cada ítem para el carrito y los pedidos.
  */
 class StoreCatalog
 {
     public function __construct(
         private readonly ErpClient $erp,
         private readonly LiveCatalog $live,
+        private readonly CatalogSync $sync,
     ) {}
 
     /**
@@ -74,9 +77,7 @@ class StoreCatalog
                 ->get();
         }
 
-        $services = $this->live->hydrate(Service::where('is_published', true)->get())
-            ->where('active', true)
-            ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE);
+        $services = $this->published(Service::query(), 'service')->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE);
 
         return $this->grouped($services, 'services');
     }
@@ -90,8 +91,7 @@ class StoreCatalog
             return $packages->published()->orderBy('price')->get();
         }
 
-        return $this->live->hydrate($packages->where('is_published', true)->get())
-            ->where('active', true)
+        return $this->published($packages, 'package')
             ->sortBy(fn (Package $package) => (float) $package->price)
             ->values();
     }
@@ -111,8 +111,8 @@ class StoreCatalog
             return InventoryItem::published()->where('sale_price', '>', 0)->whereIn('id', $ids)->get()->keyBy('id');
         }
 
-        return $this->live(InventoryItem::where('is_published', true)->where('is_sellable', true)->whereIn('id', $ids)->get(), $fresh)
-            ->filter(fn (InventoryItem $item) => $item->active && (float) $item->sale_price > 0)
+        return $this->live(InventoryItem::whereIn('id', $ids)->get(), $fresh)
+            ->filter(fn (InventoryItem $item) => $item->active && $item->is_published && (float) $item->sale_price > 0)
             ->keyBy('id');
     }
 
@@ -128,8 +128,8 @@ class StoreCatalog
             return Service::published()->where('price', '>', 0)->whereIn('id', $ids)->get()->keyBy('id');
         }
 
-        return $this->live(Service::where('is_published', true)->whereIn('id', $ids)->get(), $fresh)
-            ->filter(fn (Service $service) => $service->active && (float) $service->price > 0)
+        return $this->live(Service::whereIn('id', $ids)->get(), $fresh)
+            ->filter(fn (Service $service) => $service->active && $service->is_published && (float) $service->price > 0)
             ->keyBy('id');
     }
 
@@ -165,13 +165,33 @@ class StoreCatalog
         return null;
     }
 
-    /** @return Collection<int, InventoryItem> Productos publicados que el sistema tiene activos, por nombre. */
+    /** @return Collection<int, InventoryItem> Productos publicados, por nombre. */
     private function publishedProducts(): Collection
     {
-        return $this->live->hydrate(InventoryItem::where('is_published', true)->where('is_sellable', true)->get())
-            ->where('active', true)
+        return $this->published(InventoryItem::query(), 'product')
             ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
             ->values();
+    }
+
+    /**
+     * Lo que el sistema tiene activo y publicado en la web, de un tipo. Si
+     * algo publicado allá todavía no tiene su enlace aquí (se perdió el
+     * aviso), se enlaza en el momento: la web muestra lo que dice el sistema.
+     *
+     * @template TModel of Model
+     *
+     * @param  Builder<TModel>  $query
+     * @return Collection<int, TModel>
+     */
+    private function published(Builder $query, string $type): Collection
+    {
+        $this->sync->ensureLinked(array_values(array_filter(
+            $this->live->snapshot(),
+            fn (array $item) => ($item['type'] ?? 'product') === $type && $item['active'] && ($item['web_published'] ?? false),
+        )));
+
+        return $this->live->hydrate($query->whereNotNull('erp_id')->get())
+            ->filter(fn (Model $model) => $model->active && $model->is_published);
     }
 
     /**

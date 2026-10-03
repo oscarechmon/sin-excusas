@@ -14,12 +14,15 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * El catálogo del sistema leído en vivo por su API: nombre, categoría, precio,
- * stock, si sigue activo y, en un paquete, sus sesiones, vigencia y servicios.
+ * stock, si sigue activo, si se publica en la web, imagen, descripción, la
+ * duración de un servicio y, en un paquete, sus sesiones, vigencia y servicios.
  *
- * La web no guarda nada de eso. Sus filas de productos, servicios y paquetes
- * son la ficha web de cada ítem (imagen, descripción, si se publica), enlazada
- * por `erp_id`, y al mostrarlas se completan con lo que dice el sistema
- * (`hydrate`) sin escribir en la base.
+ * La web no administra nada de eso: es un cascarón que muestra lo que dice el
+ * sistema. Sus filas de productos, servicios y paquetes solo enlazan cada ítem
+ * (`erp_id`) para el carrito y los pedidos, y al mostrarlas se completan con lo
+ * del sistema (`hydrate`) sin escribir en la base. Lo que el sistema todavía no
+ * tiene (si se publica, imagen, duración de lo que venía de la web) se toma de
+ * lo que la fila tenía de antes.
  *
  * Para no consultar al sistema en cada página, lo leído se reutiliza unos
  * segundos (`erp.catalog_ttl`) y cada aviso de cambio del sistema lo invalida.
@@ -134,7 +137,7 @@ class LiveCatalog
             return;
         }
 
-        $category = $this->category(InventoryCategory::class, $item['category'] ?? null);
+        $category = $this->category(InventoryCategory::class, $item);
 
         $this->overlay($model, [
             'name' => $item['name'],
@@ -145,8 +148,8 @@ class LiveCatalog
             'stock' => (float) ($item['stock'] ?? 0),
             'min_stock' => $item['stock_min'] ?? 0,
             'active' => (bool) $item['active'],
-        ]);
-        $model->setRelation('category', $category);
+        ] + $this->webFields($model, $item));
+        $model->setRelation('category', $category)->useErpImage($item['image_url'] ?? null);
     }
 
     private function service(Service $model, ?array $item): void
@@ -158,16 +161,17 @@ class LiveCatalog
         }
 
         // La web agrupa los servicios por categoría: sin una, van a "Otros".
-        $category = $this->category(ServiceCategory::class, $item['category'] ?? null)
-            ?? $this->category(ServiceCategory::class, 'Otros');
+        $category = $this->category(ServiceCategory::class, $item)
+            ?? $this->category(ServiceCategory::class, ['category' => 'Otros']);
 
         $this->overlay($model, [
             'name' => $item['name'],
             'category_id' => $category->getKey(),
             'price' => $item['price'] ?? 0,
             'active' => (bool) $item['active'],
-        ]);
-        $model->setRelation('category', $category);
+            'duration_minutes' => $item['duration_minutes'] ?? $model->duration_minutes,
+        ] + $this->webFields($model, $item));
+        $model->setRelation('category', $category)->useErpImage($item['image_url'] ?? null);
     }
 
     /** @param  array<int, Service>  $includedServices  Servicios de aquí por id del sistema. */
@@ -187,7 +191,7 @@ class LiveCatalog
             'total_sessions' => max(1, (int) ($details['total_sessions'] ?? $model->total_sessions ?? 1)),
             'validity_days' => $details['validity_days'] ?? null,
             'active' => (bool) $item['active'],
-        ]);
+        ] + $this->webFields($model, $item));
 
         if (array_key_exists('service_ids', $details)) {
             $model->setRelation('services', $model->newCollection(array_values(array_filter(array_map(
@@ -224,6 +228,21 @@ class LiveCatalog
     }
 
     /**
+     * Lo que se muestra en la web. Si se publica, lo decide el sistema; lo que
+     * venía de la web y allá nunca se decidió sigue como estaba aquí.
+     *
+     * @param  array<string, mixed>  $item
+     * @return array<string, mixed>
+     */
+    private function webFields(Model $model, array $item): array
+    {
+        return [
+            'is_published' => $item['web_published'] ?? (bool) $model->is_published,
+            'description' => filled($item['description'] ?? null) ? $item['description'] : $model->description,
+        ];
+    }
+
+    /**
      * Pone los datos del sistema en la ficha sin marcarlos como cambios: si
      * algo guarda después la ficha, no los escribe en la base.
      *
@@ -235,22 +254,29 @@ class LiveCatalog
     }
 
     /**
-     * La categoría de aquí con ese nombre (las categorías se enlazan por
-     * nombre). Si todavía no existe, una sin guardar, solo para agrupar.
+     * La categoría del ítem: la de aquí con ese nombre (las categorías se
+     * enlazan por nombre) o, si todavía no existe, una sin guardar, solo para
+     * agrupar. Su descripción, si el sistema tiene una, es la del sistema.
      *
      * @param  class-string<InventoryCategory|ServiceCategory>  $class
+     * @param  array<string, mixed>  $item
      */
-    private function category(string $class, ?string $name): ?Model
+    private function category(string $class, array $item): ?Model
     {
-        $name = trim((string) $name);
+        $name = trim((string) ($item['category'] ?? ''));
 
         if ($name === '') {
             return null;
         }
 
         $this->categories[$class] ??= $class::all()->keyBy(fn (Model $category) => mb_strtolower($category->name))->all();
+        $category = $this->categories[$class][mb_strtolower($name)] ??= new $class(['name' => $name, 'active' => true]);
 
-        return $this->categories[$class][mb_strtolower($name)] ??= new $class(['name' => $name, 'active' => true]);
+        if (filled($item['category_description'] ?? null)) {
+            $this->overlay($category, ['description' => $item['category_description']]);
+        }
+
+        return $category;
     }
 
     /** @return array<int, array<string, mixed>> */

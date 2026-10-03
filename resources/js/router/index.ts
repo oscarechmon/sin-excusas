@@ -43,13 +43,13 @@ const routes: RouteRecordRaw[] = [
     path: '/admin/services',
     name: 'services',
     component: () => import('@/pages/services/ServicesPage.vue'),
-    meta: { requiresAuth: true, permission: 'services.view' },
+    meta: { requiresAuth: true, permission: 'services.view', erpManaged: true },
   },
   {
     path: '/admin/services/categories',
     name: 'service-categories',
     component: () => import('@/pages/services/CategoriesPage.vue'),
-    meta: { requiresAuth: true, permission: 'services.manage' },
+    meta: { requiresAuth: true, permission: 'services.manage', erpManaged: true },
   },
   {
     path: '/admin/staff',
@@ -61,13 +61,13 @@ const routes: RouteRecordRaw[] = [
     path: '/admin/inventory',
     name: 'inventory',
     component: () => import('@/pages/inventory/InventoryPage.vue'),
-    meta: { requiresAuth: true, permission: 'inventory.view' },
+    meta: { requiresAuth: true, permission: 'inventory.view', erpManaged: true },
   },
   {
     path: '/admin/packages',
     name: 'packages',
     component: () => import('@/pages/packages/PackagesPage.vue'),
-    meta: { requiresAuth: true, permission: 'packages.view' },
+    meta: { requiresAuth: true, permission: 'packages.view', erpManaged: true },
   },
   {
     path: '/admin/attendances',

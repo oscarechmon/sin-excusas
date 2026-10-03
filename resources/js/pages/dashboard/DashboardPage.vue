@@ -5,7 +5,7 @@
       <div class="page-header">
         <div>
           <h1 class="page-header__title">Panel de la web</h1>
-          <p class="page-header__subtitle">Contenido, catálogo publicado y datos del sitio</p>
+          <p class="page-header__subtitle">Contenido y datos del sitio</p>
         </div>
         <div class="page-header__actions">
           <a :href="erp.url ?? '#'" target="_blank" rel="noopener">
@@ -14,10 +14,11 @@
         </div>
       </div>
 
-      <Message severity="info" :closable="false">
-        Clientes, agenda, atenciones, ventas, caja, paquetes, personal, comisiones y el seguimiento de los pedidos
-        se gestionan en el sistema. Aquí decides qué muestra la web: textos, fotos, descripciones y qué se publica.
-      </Message>
+      <!-- El botón de sincronizar recupera cualquier aviso del sistema que no llegó. -->
+      <ErpNotice
+        what="Productos, servicios y paquetes (con su foto, descripción, precio, stock y si se publican en la web), clientes, ventas y toda la operación"
+        detail="La web los muestra tal como están allá. Aquí quedan los textos y fotos de la página y los datos del sitio."
+      />
 
       <div class="web-shortcuts">
         <router-link v-for="s in shortcuts" :key="s.route" :to="{ name: s.route }" class="web-shortcut">
@@ -113,6 +114,7 @@ import { useAuthStore } from '@/stores/auth'
 import { useFormat } from '@/composables/useFormat'
 import { ensureErpStatus, useErp } from '@/composables/useErp'
 import { extractMessage } from '@/composables/usePaginatedList'
+import ErpNotice from '@/components/common/ErpNotice.vue'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Message from 'primevue/message'
@@ -226,9 +228,6 @@ const { erp } = useErp()
 
 const shortcuts = computed(() => [
   { route: 'site-content', icon: 'pi pi-images', label: 'Contenido web', hint: 'Textos y fotos de la página', permission: 'settings.manage' },
-  { route: 'services', icon: 'pi pi-star', label: 'Servicios', hint: 'Descripción, duración y qué se publica', permission: 'services.view' },
-  { route: 'inventory', icon: 'pi pi-database', label: 'Productos', hint: 'Fotos, descripción y qué se vende en la tienda', permission: 'inventory.view' },
-  { route: 'packages', icon: 'pi pi-box', label: 'Paquetes', hint: 'Qué paquetes se publican', permission: 'packages.view' },
   { route: 'online-sales', icon: 'pi pi-globe', label: 'Tienda online', hint: 'Delivery y pedidos (consulta)', permission: 'online_sales.view' },
   { route: 'site-settings', icon: 'pi pi-at', label: 'Datos de la web', hint: 'Contacto, redes y medición', permission: 'settings.manage' },
 ].filter((s) => authStore.hasPermission(s.permission)))

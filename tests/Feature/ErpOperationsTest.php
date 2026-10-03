@@ -90,6 +90,9 @@ class ErpOperationsTest extends TestCase
             ['POST', '/api/cash-sessions/expenses', ['amount' => 5, 'description' => 'x']],
             ['POST', '/api/commission-rules', ['type' => 'fixed', 'value' => 5]],
             ['POST', '/api/commissions/pay', ['ids' => [1]]],
+            // También lo que antes era de la web: qué se publica y la descripción.
+            ['PATCH', "/api/packages/{$package->id}/publish", ['is_published' => true]],
+            ['PUT', "/api/packages/{$package->id}", ['name' => 'Otro', 'price' => 1, 'total_sessions' => 99, 'description' => 'Web', 'service_ids' => [$service->id]]],
         ];
 
         foreach ($blocked as [$method, $uri, $data]) {
@@ -99,17 +102,7 @@ class ErpOperationsTest extends TestCase
         $this->assertSame('Los clientes se administran en el sistema: https://sistema.test',
             $this->postJson('/api/clients', [])->json('message'));
 
-        // Lo de la web sigue aquí: qué se publica y la descripción del paquete.
-        $this->patchJson("/api/packages/{$package->id}/publish", ['is_published' => true])->assertOk();
-        $this->putJson("/api/packages/{$package->id}", [
-            'name' => 'Otro nombre', 'price' => 1, 'total_sessions' => 99, 'description' => 'Para la web', 'service_ids' => [$service->id],
-        ])->assertOk();
-
-        $package->refresh();
-        $this->assertTrue($package->is_published);
-        $this->assertSame('Para la web', $package->description);
-        $this->assertNotSame('Otro nombre', $package->name);
-        $this->assertSame(10, $package->total_sessions);
+        $this->assertSame(10, $package->fresh()->total_sessions);
     }
 
     #[Test]

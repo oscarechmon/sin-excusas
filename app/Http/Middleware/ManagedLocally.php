@@ -12,17 +12,17 @@ use Symfony\Component\HttpFoundation\Response;
  * Corta lo que, con el sistema (ERP) conectado, se administra allá. Sin el
  * sistema, deja pasar todo como antes.
  *
- * Al conectarlo, este panel queda para la web: contenido, datos del sitio,
- * imágenes y descripciones del catálogo, y qué se publica. La operación
- * (clientes, agenda, atenciones, ventas, caja, paquetes, personal,
- * comisiones y pedidos online) se hace en el sistema.
+ * Al conectarlo, este panel queda para el contenido y los datos del sitio. El
+ * catálogo entero (también fotos, descripciones y qué se publica) y la
+ * operación (clientes, agenda, atenciones, ventas, caja, paquetes, personal,
+ * comisiones y pedidos online) se hacen en el sistema.
  *
  * Uso: `erp.local` (catálogo y stock) o `erp.local:clients`, etc.
  */
 class ManagedLocally
 {
     private const WHAT = [
-        'catalog' => 'El catálogo de productos y servicios, con su stock, se administra',
+        'catalog' => 'El catálogo de productos y servicios (con su foto, descripción, stock y si se publica en la web) se administra',
         'clients' => 'Los clientes se administran',
         'agenda' => 'La agenda se administra',
         'attendances' => 'Las atenciones se registran',

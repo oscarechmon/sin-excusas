@@ -78,19 +78,19 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/service-categories', [ServiceCategoryController::class, 'index']);
         Route::get('/services/{service}/supplies', [AttendanceController::class, 'suppliesForService']);
     });
-    Route::middleware('permission:services.manage')->group(function () {
-        Route::post('/services', [ServiceController::class, 'store'])->middleware('erp.local');
+    // Con el sistema conectado, todo el catálogo (también foto, descripción y
+    // qué se publica) se administra allá: erp.local corta cada cambio.
+    Route::middleware(['permission:services.manage', 'erp.local'])->group(function () {
+        Route::post('/services', [ServiceController::class, 'store']);
         Route::match(['put', 'patch'], '/services/{service}', [ServiceController::class, 'update']);
-        Route::delete('/services/{service}', [ServiceController::class, 'destroy'])->middleware('erp.local');
+        Route::delete('/services/{service}', [ServiceController::class, 'destroy']);
         Route::patch('/services/{service}/publish', [PublicationController::class, 'service']);
         Route::post('/services/{service}/image', [CatalogImageController::class, 'storeService']);
         Route::delete('/services/{service}/image', [CatalogImageController::class, 'destroyService']);
 
-        Route::middleware('erp.local')->group(function () {
-            Route::post('/service-categories', [ServiceCategoryController::class, 'store']);
-            Route::match(['put', 'patch'], '/service-categories/{service_category}', [ServiceCategoryController::class, 'update']);
-            Route::delete('/service-categories/{service_category}', [ServiceCategoryController::class, 'destroy']);
-        });
+        Route::post('/service-categories', [ServiceCategoryController::class, 'store']);
+        Route::match(['put', 'patch'], '/service-categories/{service_category}', [ServiceCategoryController::class, 'update']);
+        Route::delete('/service-categories/{service_category}', [ServiceCategoryController::class, 'destroy']);
     });
 
     // ---------------------------------------------------------------- Personal
@@ -111,27 +111,25 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/inventory-items/{inventory_item}/movements', [InventoryItemController::class, 'movements']);
         Route::get('/inventory-categories', [InventoryCategoryController::class, 'index']);
     });
-    Route::middleware('permission:inventory.manage')->group(function () {
-        Route::post('/inventory-items', [InventoryItemController::class, 'store'])->middleware('erp.local');
+    Route::middleware(['permission:inventory.manage', 'erp.local'])->group(function () {
+        Route::post('/inventory-items', [InventoryItemController::class, 'store']);
         Route::match(['put', 'patch'], '/inventory-items/{inventory_item}', [InventoryItemController::class, 'update']);
-        Route::delete('/inventory-items/{inventory_item}', [InventoryItemController::class, 'destroy'])->middleware('erp.local');
+        Route::delete('/inventory-items/{inventory_item}', [InventoryItemController::class, 'destroy']);
         Route::patch('/inventory-items/{inventory_item}/publish', [PublicationController::class, 'inventoryItem']);
         Route::post('/inventory-items/{inventory_item}/image', [CatalogImageController::class, 'storeInventoryItem']);
         Route::delete('/inventory-items/{inventory_item}/image', [CatalogImageController::class, 'destroyInventoryItem']);
 
-        Route::middleware('erp.local')->group(function () {
-            Route::post('/inventory-categories', [InventoryCategoryController::class, 'store']);
-            Route::match(['put', 'patch'], '/inventory-categories/{inventory_category}', [InventoryCategoryController::class, 'update']);
-            Route::delete('/inventory-categories/{inventory_category}', [InventoryCategoryController::class, 'destroy']);
-        });
+        Route::post('/inventory-categories', [InventoryCategoryController::class, 'store']);
+        Route::match(['put', 'patch'], '/inventory-categories/{inventory_category}', [InventoryCategoryController::class, 'update']);
+        Route::delete('/inventory-categories/{inventory_category}', [InventoryCategoryController::class, 'destroy']);
     });
     // El ajuste de stock lleva su propio permiso: puede encubrir un faltante.
     Route::post('/inventory-items/{inventory_item}/adjust', [InventoryItemController::class, 'adjust'])
         ->middleware(['permission:inventory.adjust', 'erp.local']);
 
     // ------------------------------------------------------- Sistema (ERP)
-    // Con el sistema conectado, el catálogo y el stock se administran allá
-    // (middleware erp.local en las rutas de arriba) y aquí se sincronizan.
+    // Con el sistema conectado, el catálogo se administra allá (middleware
+    // erp.local en las rutas de arriba) y la web lo lee en vivo.
     Route::get('/erp/status', [ErpController::class, 'status']);
     Route::post('/erp/sync', [ErpController::class, 'sync'])->middleware('permission:inventory.manage');
 
@@ -142,10 +140,10 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/client-packages', [ClientPackageController::class, 'index']);
         Route::get('/client-packages/{client_package}', [ClientPackageController::class, 'show']);
     });
-    Route::middleware('permission:packages.manage')->group(function () {
-        Route::post('/packages', [PackageController::class, 'store'])->middleware('erp.local:packages');
+    Route::middleware(['permission:packages.manage', 'erp.local:packages'])->group(function () {
+        Route::post('/packages', [PackageController::class, 'store']);
         Route::match(['put', 'patch'], '/packages/{package}', [PackageController::class, 'update']);
-        Route::delete('/packages/{package}', [PackageController::class, 'destroy'])->middleware('erp.local:packages');
+        Route::delete('/packages/{package}', [PackageController::class, 'destroy']);
         Route::patch('/packages/{package}/publish', [PublicationController::class, 'package']);
     });
     Route::post('/packages/sell', [PackageController::class, 'sell'])->middleware(['permission:packages.sell', 'erp.local:packages']);
@@ -227,11 +225,11 @@ Route::middleware('auth:sanctum')->group(function () {
 
     // ------------------------------------------------------- Contenido web
     // Fotos y textos de la web pública: es configuración del sitio.
-    Route::middleware("permission:settings.manage")->group(function () {
-        Route::get("/site-contents", [SiteContentController::class, "index"]);
-        Route::match(["put", "patch"], "/site-contents/{key}", [SiteContentController::class, "update"]);
-        Route::post("/site-contents/{key}/image", [SiteContentController::class, "storeImage"]);
-        Route::delete("/site-contents/{key}/image", [SiteContentController::class, "destroyImage"]);
+    Route::middleware('permission:settings.manage')->group(function () {
+        Route::get('/site-contents', [SiteContentController::class, 'index']);
+        Route::match(['put', 'patch'], '/site-contents/{key}', [SiteContentController::class, 'update']);
+        Route::post('/site-contents/{key}/image', [SiteContentController::class, 'storeImage']);
+        Route::delete('/site-contents/{key}/image', [SiteContentController::class, 'destroyImage']);
 
         // Contacto, redes y scripts de medición de la web pública.
         Route::get('/site-settings', [SiteSettingController::class, 'index']);

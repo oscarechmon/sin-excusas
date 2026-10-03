@@ -4,11 +4,11 @@
 |--------------------------------------------------------------------------
 | Sistema (ERP) dueño del catálogo y del stock
 |--------------------------------------------------------------------------
-| Con ERP_URL y ERP_TOKEN configurados, productos, servicios, paquetes,
-| precios y stock se administran en el sistema (sistema.sinexcusas.org.pe) y
-| la web los lee en vivo por su API, sin guardar copia. Imágenes,
-| descripciones y qué se publica siguen siendo de esta aplicación. Sin ellos,
-| todo funciona como antes: el inventario se administra aquí.
+| Con ERP_URL y ERP_TOKEN configurados, productos, servicios y paquetes (con
+| precio, stock, foto, descripción y si se publican) se administran en el
+| sistema (sistema.sinexcusas.org.pe) y la web los lee en vivo por su API, sin
+| guardar copia: es un cascarón. Sin ellos, todo funciona como antes: el
+| inventario se administra aquí.
 */
 
 return [

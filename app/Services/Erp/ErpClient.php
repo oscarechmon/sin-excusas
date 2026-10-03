@@ -96,6 +96,35 @@ class ErpClient
     }
 
     /**
+     * Manda al sistema lo que la web mostraba de un ítem (descripción, si se
+     * publicaba, duración y la foto) para que desde allá se administre.
+     *
+     * @param  array{description?: string, web_published?: bool, duration_minutes?: int}  $fields
+     * @return array<string, mixed> El ítem tal como queda en el catálogo.
+     */
+    public function sendWebDetails(int $erpId, array $fields, ?string $imagePath = null): array
+    {
+        return $this->send(function (PendingRequest $http) use ($erpId, $fields, $imagePath) {
+            $url = "products/{$erpId}/web";
+
+            if ($imagePath === null) {
+                return $http->post($url, $fields);
+            }
+
+            // Con archivo va como formulario: los valores, como texto.
+            $form = array_map(fn ($value) => is_bool($value) ? ($value ? '1' : '0') : (string) $value, $fields);
+
+            return $http->timeout(60)->attach('image', (string) file_get_contents($imagePath), basename($imagePath))->post($url, $form);
+        });
+    }
+
+    /** Descripción de una categoría que la web tenía (el sistema la toma solo si no tiene una). */
+    public function describeCategory(string $name, string $description): array
+    {
+        return $this->send(fn (PendingRequest $http) => $http->post('categories/describe', ['name' => $name, 'description' => $description]));
+    }
+
+    /**
      * Importa al sistema una tanda del historial de la web.
      *
      * @param  list<array<string, mixed>>  $records

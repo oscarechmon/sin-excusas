@@ -19,6 +19,7 @@ use App\Services\Payments\FakeGateway;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Http\Client\Request as HttpRequest;
 use Illuminate\Support\Facades\Http;
+use Illuminate\Support\Facades\Storage;
 use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -524,35 +525,110 @@ class ErpIntegrationTest extends TestCase
     }
 
     #[Test]
-    public function editar_en_el_panel_solo_cambia_lo_de_la_web(): void
+    public function el_panel_ya_no_edita_ni_publica_nada_del_catalogo(): void
     {
         $this->actingAsAdmin();
-        $item = $this->linkedProduct(7, price: 40);
-        $service = Service::factory()->create(['price' => 120, 'duration_minutes' => 60]);
+        $item = $this->linkedProduct(7);
+        $item->update(['description' => 'Texto viejo']);
+        $service = Service::factory()->create(['duration_minutes' => 60]);
         $service->forceFill(['erp_id' => 8])->save();
+
+        $blocked = [
+            ['PUT', "/api/inventory-items/{$item->id}", ['name' => 'Otro', 'unit' => 'caja', 'min_stock' => 0, 'cost' => 1, 'description' => 'Nueva']],
+            ['PATCH', "/api/inventory-items/{$item->id}/publish", ['is_published' => false]],
+            ['DELETE', "/api/inventory-items/{$item->id}/image", []],
+            ['PUT', "/api/services/{$service->id}", ['name' => 'Otro', 'category_id' => ServiceCategory::factory()->create()->id, 'price' => 1, 'duration_minutes' => 90]],
+            ['PATCH', "/api/services/{$service->id}/publish", ['is_published' => true]],
+        ];
+
+        foreach ($blocked as [$method, $uri, $data]) {
+            $this->assertSame(409, $this->json($method, $uri, $data)->status(), "{$method} {$uri} debió quedar en el sistema.");
+        }
+
+        $this->assertSame('Texto viejo', $item->fresh()->description);
+        $this->assertTrue($item->fresh()->is_published);
+        $this->assertSame(60, $service->fresh()->duration_minutes);
+    }
+
+    // ------------------------------------------------- La web, un cascarón
+
+    #[Test]
+    public function la_web_muestra_lo_que_el_sistema_publica_con_su_foto_y_descripcion(): void
+    {
+        // Nuevo en el sistema y publicado allá: aunque el aviso se haya perdido, se muestra.
         Http::fake([self::ERP.'/catalog*' => Http::response($this->catalog([
-            $this->remote(7, ['price' => 40]),
-            $this->remote(8, ['type' => 'service', 'price' => 120, 'stock' => null]),
+            $this->remote(21, [
+                'name' => 'Sérum vitamina C', 'description' => 'Ilumina la piel', 'price' => 89,
+                'web_published' => true, 'image_url' => 'https://sistema.test/storage/products/21/serum.webp',
+                'category_description' => 'Lo mejor para tu rutina',
+            ]),
+            $this->remote(22, ['type' => 'service', 'name' => 'Facial profundo', 'category' => 'Faciales', 'price' => 150,
+                'stock' => null, 'web_published' => true, 'duration_minutes' => 75]),
+            $this->remote(23, ['name' => 'Insumo interno', 'web_published' => false]),
         ]))]);
 
-        $this->putJson("/api/inventory-items/{$item->id}", [
-            'name' => 'Otro nombre', 'unit' => 'caja', 'min_stock' => 9, 'cost' => 99, 'sale_price' => 1,
-            'description' => 'Descripción web', 'is_sellable' => true,
-        ])->assertOk()->assertJsonPath('data.sale_price', 40);
-        $this->putJson("/api/services/{$service->id}", [
-            'name' => 'Otro', 'category_id' => ServiceCategory::factory()->create()->id, 'price' => 1,
-            'duration_minutes' => 90, 'description' => 'Para la web',
-        ])->assertOk();
+        $this->get('/productos')
+            ->assertOk()
+            ->assertSee('Sérum vitamina C')
+            ->assertSee('Ilumina la piel')
+            ->assertSee('Lo mejor para tu rutina')
+            ->assertSee('https://sistema.test/storage/products/21/serum.webp', false)
+            ->assertSee('S/ 89.00')
+            ->assertDontSee('Insumo interno');
 
-        $item->refresh();
-        $this->assertNotSame('Otro nombre', $item->name);
-        $this->assertEquals(40, $item->sale_price);
-        $this->assertSame('Descripción web', $item->description);
+        $this->get('/servicios')->assertOk()->assertSee('Facial profundo')->assertSee('75 min');
 
-        $service->refresh();
-        $this->assertEquals(120, $service->price);
-        $this->assertSame(90, $service->duration_minutes);
-        $this->assertSame('Para la web', $service->description);
+        $this->assertSame(21, InventoryItem::where('erp_id', 21)->sole()->erp_id, 'Se enlazó en el momento para el carrito.');
+        $this->assertDatabaseMissing('inventory_items', ['erp_id' => 23]);
+    }
+
+    #[Test]
+    public function si_el_sistema_lo_retira_o_lo_elimina_deja_de_verse(): void
+    {
+        $this->linkedProduct(7, name: 'Retirada');   // publicada aquí desde antes
+        $this->linkedProduct(9, name: 'Eliminada');
+        Http::fake([self::ERP.'/catalog*' => Http::response($this->catalog([
+            $this->remote(7, ['name' => 'Retirada', 'web_published' => false]),
+            $this->remote(9, ['name' => 'Eliminada', 'web_published' => true, 'active' => false]),
+        ]))]);
+
+        $this->get('/productos')->assertOk()->assertDontSee('Retirada')->assertDontSee('Eliminada');
+    }
+
+    #[Test]
+    public function fichas_pasa_al_sistema_lo_que_la_web_mostraba_una_sola_vez(): void
+    {
+        Storage::fake('public');
+        $crema = $this->linkedProduct(7, name: 'Crema');
+        $crema->update(['description' => 'Crema de la web', 'image_path' => 'catalog/products/crema.jpg']);
+        Storage::disk('public')->put('catalog/products/crema.jpg', 'imagen');
+        $yaPasado = $this->linkedProduct(9, name: 'Ya pasado');
+        $facial = Service::factory()->create(['duration_minutes' => 45, 'is_published' => true, 'description' => 'Facial web']);
+        $facial->forceFill(['erp_id' => 8])->save();
+        ServiceCategory::query()->update(['description' => null]);
+        $facial->category->update(['description' => 'Para el rostro']);
+
+        Http::fake([
+            self::ERP.'/catalog*' => Http::response($this->catalog([
+                $this->remote(7, ['web_published' => null]),
+                $this->remote(9, ['web_published' => false]),
+                $this->remote(8, ['type' => 'service', 'stock' => null, 'web_published' => null]),
+            ])),
+            self::ERP.'/products/*/web' => Http::response(['data' => []]),
+            self::ERP.'/categories/describe' => Http::response(['data' => ['updated' => true]]),
+        ]);
+
+        $this->artisan('erp:fichas')->assertSuccessful();
+
+        Http::assertSent(fn (HttpRequest $r) => $r->url() === self::ERP.'/products/7/web'
+            && $r->isMultipart()
+            && collect($r->data())->contains(fn ($part) => $part['name'] === 'image' && $part['filename'] === 'crema.jpg')
+            && collect($r->data())->contains(fn ($part) => $part['name'] === 'web_published' && $part['contents'] === '1')
+            && collect($r->data())->contains(fn ($part) => $part['name'] === 'description' && $part['contents'] === 'Crema de la web'));
+        Http::assertSent(fn (HttpRequest $r) => $r->url() === self::ERP.'/products/8/web'
+            && $r['duration_minutes'] === 45 && $r['web_published'] === true && $r['description'] === 'Facial web');
+        Http::assertNotSent(fn (HttpRequest $r) => $r->url() === self::ERP."/products/{$yaPasado->erp_id}/web");
+        Http::assertSent(fn (HttpRequest $r) => str_ends_with($r->url(), '/categories/describe') && $r['description'] === 'Para el rostro');
     }
 
     #[Test]

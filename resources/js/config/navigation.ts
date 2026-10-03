@@ -45,8 +45,8 @@ export const navigation: NavSection[] = [
     items: [
       { label: 'Ventas', icon: 'pi pi-shopping-cart', route: 'sales', permission: 'sales.view', erpManaged: true },
       { label: 'Caja', icon: 'pi pi-wallet', route: 'cash', permission: 'cash.view', erpManaged: true },
-      { label: 'Paquetes', icon: 'pi pi-box', route: 'packages', permission: 'packages.view' },
-      { label: 'Inventario', icon: 'pi pi-database', route: 'inventory', permission: 'inventory.view' },
+      { label: 'Paquetes', icon: 'pi pi-box', route: 'packages', permission: 'packages.view', erpManaged: true },
+      { label: 'Inventario', icon: 'pi pi-database', route: 'inventory', permission: 'inventory.view', erpManaged: true },
     ],
   },
   {
@@ -58,8 +58,8 @@ export const navigation: NavSection[] = [
   {
     label: 'Catálogo',
     items: [
-      { label: 'Servicios', icon: 'pi pi-star', route: 'services', permission: 'services.view' },
-      { label: 'Categorías', icon: 'pi pi-tags', route: 'service-categories', permission: 'services.manage' },
+      { label: 'Servicios', icon: 'pi pi-star', route: 'services', permission: 'services.view', erpManaged: true },
+      { label: 'Categorías', icon: 'pi pi-tags', route: 'service-categories', permission: 'services.manage', erpManaged: true },
       { label: 'Contenido web', icon: 'pi pi-images', route: 'site-content', permission: 'settings.manage' },
       { label: 'Datos de la web', icon: 'pi pi-at', route: 'site-settings', permission: 'settings.manage' },
     ],

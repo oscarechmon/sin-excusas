@@ -7,23 +7,23 @@ use App\Models\InventoryItem;
 use App\Models\Package;
 use App\Models\Service;
 use App\Models\ServiceCategory;
+use Illuminate\Database\UniqueConstraintViolationException;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
- * Enlaza cada ítem del sistema con su ficha web: la fila de aquí que guarda lo
- * que es de la web (imagen, descripción, si se publica, la duración y quién
- * atiende un servicio). Un ítem nuevo llega sin publicar; el personal decide
- * qué mostrar.
+ * Enlaza cada ítem del sistema con una fila de aquí, que el carrito y los
+ * pedidos usan para referirse a él.
  *
- * Nombre, categoría, precio, stock, si sigue activo y lo de cada paquete no se
- * copian: la web los lee en vivo del sistema (LiveCatalog). Aquí solo se
- * actualiza el nombre, como etiqueta para buscar en el panel; los demás campos
- * que la tabla trae de antes quedan sin uso mientras el sistema esté
- * conectado. Una ficha nueva nace con los valores que la tabla exige.
+ * No se copia nada más: nombre, categoría, precio, stock, si sigue activo, si
+ * se publica, imagen, descripción y lo de cada paquete la web los lee en vivo
+ * del sistema (LiveCatalog). Aquí solo se actualiza el nombre, como etiqueta;
+ * los demás campos que la tabla trae de antes quedan sin uso mientras el
+ * sistema esté conectado. Una fila nueva nace sin publicar y con los valores
+ * que la tabla exige.
  *
- * Las categorías se crean aquí por nombre porque son de las dos partes: el
- * sistema decide a cuál va cada ítem y la web guarda su descripción.
+ * Las categorías se crean aquí por nombre para que el agrupado de la web use
+ * siempre la misma.
  */
 class CatalogSync
 {
@@ -40,6 +40,47 @@ class CatalogSync
      */
     public function apply(array $items): int
     {
+        $this->link($items);
+        $this->live->forget();
+
+        return count($items);
+    }
+
+    /**
+     * Enlaza los ítems que todavía no tienen su fila aquí (p. ej. si se perdió
+     * el aviso del sistema): la tienda lo usa antes de mostrar lo publicado.
+     *
+     * @param  list<array<string, mixed>>  $items
+     */
+    public function ensureLinked(array $items): void
+    {
+        $missing = [];
+
+        foreach (['product' => InventoryItem::class, 'service' => Service::class, 'package' => Package::class] as $type => $model) {
+            $ofType = array_filter($items, fn (array $item) => ($item['type'] ?? 'product') === $type);
+            $linked = $ofType === [] ? [] : $model::whereIn('erp_id', array_column($ofType, 'id'))->pluck('erp_id')->all();
+
+            foreach ($ofType as $item) {
+                if (! in_array($item['id'], $linked)) {
+                    $missing[] = $item;
+                }
+            }
+        }
+
+        try {
+            $this->link($missing);
+        } catch (UniqueConstraintViolationException) {
+            // Otra petición lo enlazó a la vez: ya está.
+        }
+    }
+
+    /** @param  list<array<string, mixed>>  $items */
+    private function link(array $items): void
+    {
+        if ($items === []) {
+            return;
+        }
+
         DB::transaction(function () use ($items) {
             foreach ($items as $item) {
                 match ($item['type']) {
@@ -49,10 +90,6 @@ class CatalogSync
                 };
             }
         });
-
-        $this->live->forget();
-
-        return count($items);
     }
 
     /**
@@ -120,8 +157,7 @@ class CatalogSync
             ]);
         }
 
-        // El producto no guarda su categoría, pero la categoría sí debe existir
-        // aquí: la web guarda su descripción.
+        // El producto no guarda su categoría, pero la categoría sí existe aquí.
         $this->categoryId(InventoryCategory::class, $item['category'] ?? null);
         $local->fill(['name' => $item['name']]);
         $local->forceFill(['erp_id' => $item['id']])->save();
