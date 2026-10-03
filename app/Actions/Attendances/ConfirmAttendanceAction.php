@@ -12,8 +12,8 @@ use App\Models\ClientPackage;
 use App\Models\InventoryItem;
 use App\Models\Service;
 use App\Services\CommissionService;
-use App\Services\Erp\CatalogSync;
 use App\Services\Erp\ErpClient;
+use App\Services\Erp\LiveCatalog;
 use App\Services\InventoryService;
 use App\Services\PackageSessionService;
 use Illuminate\Support\Facades\DB;
@@ -36,7 +36,7 @@ class ConfirmAttendanceAction
         private readonly PackageSessionService $packageSessions,
         private readonly CommissionService $commissions,
         private readonly ErpClient $erp,
-        private readonly CatalogSync $catalog,
+        private readonly LiveCatalog $live,
     ) {}
 
     public function execute(AttendanceData $data): Attendance
@@ -72,12 +72,12 @@ class ConfirmAttendanceAction
             // avisa al final: si algo de lo anterior falla, el sistema no llega
             // a descontar nada; si el sistema no tiene stock, todo se revierte.
             if ($erpSupplies !== []) {
-                $result = $this->erp->registerConsumption(
+                $this->erp->registerConsumption(
                     "atencion-{$attendance->id}",
                     $erpSupplies,
                     "Atención #{$attendance->id}: {$service->name}",
                 );
-                $this->catalog->applyStock($result['stock'] ?? []);
+                $this->live->forget();
             }
 
             return $attendance->load('client', 'service', 'employee', 'supplies.item', 'commission');

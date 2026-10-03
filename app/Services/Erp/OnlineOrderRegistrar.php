@@ -19,16 +19,16 @@ class OnlineOrderRegistrar
 {
     public function __construct(
         private readonly ErpClient $erp,
-        private readonly CatalogSync $catalog,
+        private readonly LiveCatalog $live,
         private readonly OrderStatusApplier $statuses,
     ) {}
 
-    /** Pedido pagado: el sistema registra su venta y devuelve el stock. */
+    /** Pedido pagado: el sistema registra su venta, que descuenta el stock. */
     public function register(OnlineOrder $order): void
     {
-        $result = $this->erp->pushOrder($this->snapshot($order));
+        $this->erp->pushOrder($this->snapshot($order));
 
-        $this->catalog->applyStock($result['stock'] ?? []);
+        $this->live->forget();
         $order->forceFill(['erp_sale_status' => OnlineOrder::ERP_REGISTERED])->save();
     }
 
@@ -59,9 +59,7 @@ class OnlineOrderRegistrar
     public function cancel(OnlineOrder $order, ?string $reason, int $userId): void
     {
         match ($order->erp_sale_status) {
-            OnlineOrder::ERP_REGISTERED => $this->catalog->applyStock(
-                $this->erp->cancelSale($order->code, $reason)['stock'] ?? []
-            ),
+            OnlineOrder::ERP_REGISTERED => $this->cancelInErp($order, $reason),
             OnlineOrder::ERP_PENDING => $order->forceFill(['erp_sale_status' => null])->save(),
             default => $order->recordStatus(
                 OnlineOrderStatus::CANCELLED,
@@ -70,6 +68,12 @@ class OnlineOrderRegistrar
                 internal: true,
             ),
         };
+    }
+
+    private function cancelInErp(OnlineOrder $order, ?string $reason): void
+    {
+        $this->erp->cancelSale($order->code, $reason);
+        $this->live->forget();
     }
 
     /**

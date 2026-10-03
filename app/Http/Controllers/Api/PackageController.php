@@ -12,6 +12,7 @@ use App\Http\Resources\PackageResource;
 use App\Models\ClientPackage;
 use App\Models\Package;
 use App\Services\Erp\ErpClient;
+use App\Services\Erp\LiveCatalog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -19,13 +20,23 @@ class PackageController extends Controller
 {
     use ApiResponses;
 
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, ErpClient $erp, LiveCatalog $live): JsonResponse
     {
-        $packages = Package::query()
+        $query = Package::query()
             ->with('services')
             ->when($request->filled('search'), fn ($q) => $q->where('name', 'like', '%'.$request->string('search').'%'))
+            ->orderBy('name');
+
+        // Si sigue activo lo dice el sistema: se filtra sobre lo que dice allá.
+        if ($erp->enabled()) {
+            $packages = $live->hydrate($query->get())
+                ->when($request->filled('active'), fn ($packages) => $packages->where('active', $request->boolean('active')));
+
+            return $this->paginatedCollection($packages, $request->integer('per_page', 15), PackageResource::class);
+        }
+
+        $packages = $query
             ->when($request->filled('active'), fn ($q) => $q->where('active', $request->boolean('active')))
-            ->orderBy('name')
             ->paginate($request->integer('per_page', 15));
 
         return $this->paginated($packages, PackageResource::class);

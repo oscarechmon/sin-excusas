@@ -43,6 +43,8 @@ class ErpOperationsTest extends TestCase
             'erp.url' => 'https://sistema.test',
             'erp.token' => 'secreto-de-prueba',
         ]);
+        // Cada prueba dice qué contesta el sistema; nada sale a la red.
+        Http::preventStrayRequests();
     }
 
     private function actingAsAdmin(): User
@@ -180,8 +182,19 @@ class ErpOperationsTest extends TestCase
 
         $nuevo = Package::where('erp_id', 30)->sole();
         $this->assertFalse($nuevo->is_published, 'Lo nuevo llega sin publicar.');
-        $this->assertSame(6, $nuevo->total_sessions);
-        $this->assertSame([$facial->id], $nuevo->services()->pluck('services.id')->all());
+
+        // Sesiones, vigencia y servicios no se copian: se leen del sistema.
+        Http::fake([self::ERP.'/catalog*' => Http::response(['data' => [
+            $item(30, 'PKG-000001'),
+            ['id' => 8, 'type' => 'service', 'code' => 'SRV-8', 'name' => 'Facial', 'category' => 'Faciales', 'price' => 150, 'active' => true],
+        ]])]);
+        $this->actingAsAdmin();
+        $this->getJson("/api/packages/{$nuevo->id}")
+            ->assertOk()
+            ->assertJsonPath('data.total_sessions', 6)
+            ->assertJsonPath('data.validity_days', 90)
+            ->assertJsonPath('data.price', 500)
+            ->assertJsonPath('data.services.0.id', $facial->id);
 
         $original->refresh();
         $this->assertSame(31, $original->erp_id);

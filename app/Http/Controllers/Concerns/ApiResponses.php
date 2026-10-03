@@ -4,6 +4,8 @@ namespace App\Http\Controllers\Concerns;
 
 use Illuminate\Contracts\Pagination\LengthAwarePaginator;
 use Illuminate\Http\JsonResponse;
+use Illuminate\Pagination\LengthAwarePaginator as Paginator;
+use Illuminate\Support\Collection;
 
 /**
  * Formato único de respuesta de la API (§10).
@@ -41,6 +43,20 @@ trait ApiResponses
                 'total' => $paginator->total(),
             ],
         ]);
+    }
+
+    /**
+     * Pagina algo que ya se filtró en memoria (p. ej. con datos leídos del
+     * sistema), con la misma forma que `paginated`.
+     */
+    protected function paginatedCollection(Collection $items, int $perPage, string $resourceClass): JsonResponse
+    {
+        $page = max(1, request()->integer('page', 1));
+
+        return $this->paginated(
+            new Paginator($items->forPage($page, $perPage)->values(), $items->count(), $perPage, $page),
+            $resourceClass,
+        );
     }
 
     protected function failed(string $message, int $status = 422, array $errors = []): JsonResponse

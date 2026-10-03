@@ -20,7 +20,7 @@
           </li>
           @foreach ($categories as $category)
             <li class="nav-item">
-              <a @class(['nav-link', 'active' => $current?->is($category)])
+              <a @class(['nav-link', 'active' => $current?->name === $category->name])
                  href="{{ route('site.products', Str::slug($category->name)) }}">{{ $category->name }}</a>
             </li>
           @endforeach

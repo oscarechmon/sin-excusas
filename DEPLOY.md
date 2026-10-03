@@ -152,20 +152,31 @@ hace allá** y este panel queda para la web:
 
 - El menú oculta lo que se hace allá y muestra **Ir al sistema**; la API lo
   rechaza (409) con un mensaje que dice dónde hacerlo.
-- Cada cambio del catálogo en el sistema llega aquí solo, al instante (también
-  los paquetes, con sus sesiones y servicios). Lo nuevo llega **sin publicar**.
+- La web **no guarda copia del catálogo**: nombre, precio, stock, categoría,
+  si sigue activo y lo de cada paquete (sesiones, vigencia, servicios) se leen
+  en vivo de la API del sistema, en la tienda y en este panel. Lo leído se
+  reutiliza hasta 60 segundos (`ERP_CATALOG_TTL`) y cada cambio en el sistema
+  lo invalida al instante. Aquí solo queda la ficha web de cada ítem (imagen,
+  descripción, si se publica), enlazada por `erp_id`; lo nuevo aparece **sin
+  publicar**.
+- Al confirmar el pedido y otra vez justo antes de mostrar el cobro, la tienda
+  le pregunta al sistema el stock de ese momento. Si ya no alcanza, o si el
+  sistema no contesta, **no se cobra** y el cliente ve por qué.
+- Si el sistema no contesta, la web sigue mostrando lo último que respondió,
+  pero no deja comprar hasta poder confirmar el stock.
 - La tienda sigue aquí: el carrito, el cobro con Izipay y "Mis pedidos". Cada
   pedido se manda al sistema al crearse y al cobrarse; el cobrado se registra
   allá como venta (canal web), que descuenta el stock. Si el sistema no
-  contesta, el pedido sigue pagado, queda una nota interna y se reintenta al
-  sincronizar.
+  contesta en ese momento, el pedido sigue pagado, queda una nota interna y se
+  reintenta al sincronizar.
 - Lo que el personal hace allá con un pedido (preparar, enviar, entregar,
   anular) llega aquí al instante y el cliente lo ve en su seguimiento.
 - Quien crea una cuenta en la tienda queda enlazado con su ficha del sistema
   (la crea si no existe).
 - **Sincronizar ahora** (en Inventario y Servicios) y `php artisan
-  erp:sincronizar` traen el catálogo, reintentan los pedidos pendientes,
-  enlazan los clientes pendientes y traen el seguimiento de los pedidos.
+  erp:sincronizar` traen el catálogo (enlazan lo nuevo y renuevan lo que lee
+  la web), reintentan los pedidos pendientes, enlazan los clientes pendientes
+  y traen el seguimiento de los pedidos.
 
 Sin `ERP_URL` ni `ERP_TOKEN` en el `.env`, todo funciona como antes.
 
@@ -232,8 +243,10 @@ cd /home/u367943235/domains/sinexcusas.org.pe/public_html && php artisan erp:sin
 (Usa la ruta de PHP que proponga hPanel si `php` a secas no la encuentra.)
 
 **Para desconectar**, vacía `ERP_URL` y `ERP_TOKEN` y ejecuta
-`php artisan optimize`: el panel vuelve a administrar el inventario con la
-última copia que llegó del sistema.
+`php artisan optimize`: el panel vuelve a administrar el inventario con los
+datos que quedaron en esta base de antes de conectarlo (mientras está
+conectado, precio y stock no se copian aquí). Revisa precios y stock antes de
+volver a vender.
 
 ## Si algo falla
 
@@ -254,6 +267,7 @@ cd /home/u367943235/domains/sinexcusas.org.pe/public_html && php artisan erp:sin
 | Un pedido no muestra en la web el estado que tiene en el sistema | **Sincronizar ahora** (o el cron). Si se repite, revisa `INTEGRATION_WEB_URL` en el sistema. |
 | `No se pudo conectar con el sistema` | `ERP_URL` mal escrita o el sistema caído. Al volver, **Sincronizar ahora**. |
 | `403` al sincronizar o en el log del sistema | `ERP_TOKEN` (aquí) e `INTEGRATION_TOKEN` (allá) no coinciden; tras corregir, `php artisan optimize` en ambos. |
-| Un cambio del sistema no aparece en la web | Pulsa **Sincronizar ahora** en Inventario. Si se repite, revisa `INTEGRATION_WEB_URL` en el sistema. |
+| Un cambio del sistema no aparece en la web | Aunque se pierda el aviso, se ve a más tardar en 60 segundos. Si tarda más, o un producto nuevo no aparece en el panel, pulsa **Sincronizar ahora** en Inventario y revisa `INTEGRATION_WEB_URL` en el sistema. |
+| "No pudimos confirmar el stock con nuestro sistema" al comprar | La web no logró hablar con el sistema al confirmar el pedido o el pago, y por eso no cobró. Revisa que el sistema esté arriba y `ERP_URL`. |
 | Nota interna "No se pudo registrar la venta en el sistema" en un pedido | El sistema no contestó al pagar. **Sincronizar ahora** (o el cron) lo registra. |
 | Se queda extrayendo y no termina | Baja `DEPLOY_CHUNK` en el `.env` (por ejemplo 400) y vuelve a lanzar. |

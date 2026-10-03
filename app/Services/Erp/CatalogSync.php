@@ -11,21 +11,30 @@ use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Str;
 
 /**
- * Copia en esta base lo que el sistema administra de cada ítem: nombre,
- * categoría, precio, costo, stock y si está activo.
+ * Enlaza cada ítem del sistema con su ficha web: la fila de aquí que guarda lo
+ * que es de la web (imagen, descripción, si se publica, la duración y quién
+ * atiende un servicio). Un ítem nuevo llega sin publicar; el personal decide
+ * qué mostrar.
  *
- * Lo que es de la web no se toca: imagen, descripción, si se publica, la
- * duración y quién atiende un servicio. Un ítem nuevo llega sin publicar; el
- * personal decide qué mostrar.
+ * Nombre, categoría, precio, stock, si sigue activo y lo de cada paquete no se
+ * copian: la web los lee en vivo del sistema (LiveCatalog). Aquí solo se
+ * actualiza el nombre, como etiqueta para buscar en el panel; los demás campos
+ * que la tabla trae de antes quedan sin uso mientras el sistema esté
+ * conectado. Una ficha nueva nace con los valores que la tabla exige.
  *
- * El stock de la copia no deja movimientos aquí: el kardex vive en el sistema.
+ * Las categorías se crean aquí por nombre porque son de las dos partes: el
+ * sistema decide a cuál va cada ítem y la web guarda su descripción.
  */
 class CatalogSync
 {
-    public function __construct(private readonly ErpClient $erp) {}
+    public function __construct(
+        private readonly ErpClient $erp,
+        private readonly LiveCatalog $live,
+    ) {}
 
     /**
-     * Aplica ítems con la forma del catálogo del sistema.
+     * Enlaza ítems con la forma del catálogo del sistema. Como algo cambió
+     * allá, la web vuelve a leer el catálogo en la próxima página.
      *
      * @param  list<array<string, mixed>>  $items
      */
@@ -34,47 +43,40 @@ class CatalogSync
         DB::transaction(function () use ($items) {
             foreach ($items as $item) {
                 match ($item['type']) {
-                    'service' => $this->applyService($item),
-                    'package' => $this->applyPackage($item),
-                    default => $this->applyProduct($item),
+                    'service' => $this->linkService($item),
+                    'package' => $this->linkPackage($item),
+                    default => $this->linkProduct($item),
                 };
             }
         });
+
+        $this->live->forget();
 
         return count($items);
     }
 
     /**
-     * Trae el catálogo completo. Lo que tiene enlace pero el sistema ya no
-     * devuelve (se borró allá) queda inactivo aquí, nunca se borra: sus
-     * atenciones y ventas lo siguen referenciando.
+     * Trae el catálogo completo, enlaza lo nuevo y lo deja como el catálogo
+     * vigente de la web.
      *
-     * @return array{actualizados:int, desactivados:int}
+     * Lo enlazado que el sistema ya no devuelve (se borró allá) deja de
+     * mostrarse solo, porque no está en lo que se lee de allá. La fila nunca se
+     * borra: sus pedidos y ventas la siguen referenciando.
+     *
+     * @return array{actualizados:int, fuera_del_sistema:int}
      */
     public function pull(): array
     {
         $items = $this->erp->catalog();
         $updated = $this->apply($items);
+        $this->live->put($items);
 
         $ids = array_column($items, 'id');
-        $deactivated = InventoryItem::whereNotNull('erp_id')->whereNotIn('erp_id', $ids)->where('active', true)->update(['active' => false])
-            + Service::whereNotNull('erp_id')->whereNotIn('erp_id', $ids)->where('active', true)->update(['active' => false])
-            + Package::whereNotNull('erp_id')->whereNotIn('erp_id', $ids)->where('active', true)->update(['active' => false]);
+        $gone = InventoryItem::whereNotNull('erp_id')->whereNotIn('erp_id', $ids)->count()
+            + Service::whereNotNull('erp_id')->whereNotIn('erp_id', $ids)->count()
+            + Package::whereNotNull('erp_id')->whereNotIn('erp_id', $ids)->count();
 
-        return ['actualizados' => $updated, 'desactivados' => $deactivated];
-    }
-
-    /**
-     * Stock que devolvió el sistema tras una operación (venta, anulación,
-     * consumo), indexado por su id de producto.
-     *
-     * @param  array<int|string, float|int|string>  $stock
-     */
-    public function applyStock(array $stock): void
-    {
-        foreach ($stock as $erpId => $quantity) {
-            InventoryItem::where('erp_id', (int) $erpId)->update(['stock' => (float) $quantity]);
-        }
+        return ['actualizados' => $updated, 'fuera_del_sistema' => $gone];
     }
 
     /** Código con el que un ítem de esta web se da de alta en el sistema (WEB-P-12, WEB-S-5). */
@@ -105,84 +107,74 @@ class CatalogSync
     }
 
     /** @param  array<string, mixed>  $item */
-    private function applyProduct(array $item): void
+    private function linkProduct(array $item): void
     {
         $local = $this->localFor(InventoryItem::class, $item);
 
         if (! $local->exists) {
             $local->fill([
                 'description' => Str::limit((string) ($item['description'] ?? ''), 497) ?: null,
+                'unit' => Str::limit((string) ($item['unit'] ?? 'unidad'), 20, '') ?: 'unidad',
                 'is_sellable' => true,
                 'is_published' => false,
             ]);
         }
 
-        $local->fill([
-            'name' => $item['name'],
-            'category_id' => $this->categoryId(InventoryCategory::class, $item['category'] ?? null),
-            'unit' => Str::limit((string) ($item['unit'] ?? $local->unit ?? 'unidad'), 20, '') ?: 'unidad',
-            'cost' => $item['cost'] ?? 0,
-            'sale_price' => ($item['price'] ?? 0) > 0 ? $item['price'] : null,
-            'min_stock' => $item['stock_min'] ?? 0,
-            'active' => (bool) $item['active'],
-        ]);
-        $local->forceFill(['erp_id' => $item['id'], 'stock' => (float) ($item['stock'] ?? 0)])->save();
+        // El producto no guarda su categoría, pero la categoría sí debe existir
+        // aquí: la web guarda su descripción.
+        $this->categoryId(InventoryCategory::class, $item['category'] ?? null);
+        $local->fill(['name' => $item['name']]);
+        $local->forceFill(['erp_id' => $item['id']])->save();
     }
 
     /** @param  array<string, mixed>  $item */
-    private function applyService(array $item): void
+    private function linkService(array $item): void
     {
         $local = $this->localFor(Service::class, $item);
+        $categoryId = $this->categoryId(ServiceCategory::class, $item['category'] ?? null)
+            ?? $this->categoryId(ServiceCategory::class, 'Otros');
 
         if (! $local->exists) {
             $local->fill([
                 'description' => $item['description'] ?? null,
                 'duration_minutes' => 60,
                 'is_published' => false,
+                // La tabla los exige; con el sistema conectado se leen de allá.
+                'category_id' => $categoryId,
+                'price' => $item['price'] ?? 0,
             ]);
         }
 
-        $local->fill([
-            'name' => $item['name'],
-            // Un servicio aquí siempre necesita categoría (la agenda las usa).
-            'category_id' => $this->categoryId(ServiceCategory::class, $item['category'] ?? null) ?? $this->categoryId(ServiceCategory::class, 'Otros'),
-            'price' => $item['price'] ?? 0,
-            'active' => (bool) $item['active'],
-        ]);
+        $local->fill(['name' => $item['name']]);
         $local->forceFill(['erp_id' => $item['id']])->save();
     }
 
     /**
-     * Paquete del sistema: sesiones, vigencia, precio y servicios incluidos son
-     * de allá; si se publica (y su descripción, una vez creado) es de aquí.
+     * Paquete del sistema. Sesiones, vigencia, precio y servicios incluidos se
+     * leen de allá; aquí quedan si se publica y su descripción.
      *
      * @param  array<string, mixed>  $item
      */
-    private function applyPackage(array $item): void
+    private function linkPackage(array $item): void
     {
         // Un paquete que nació aquí llega con código WEB-K-{id}: es esa fila.
         $code = (string) ($item['code'] ?? '');
         $local = Package::where('erp_id', $item['id'])->first()
             ?? (str_starts_with($code, 'WEB-K-') ? Package::whereKey((int) substr($code, 6))->whereNull('erp_id')->first() : null)
             ?? new Package;
-        $details = (array) ($item['package'] ?? []);
 
         if (! $local->exists) {
-            $local->fill(['description' => $item['description'] ?? null, 'is_published' => false]);
+            $local->fill([
+                'description' => $item['description'] ?? null,
+                'is_published' => false,
+                // La tabla los exige; con el sistema conectado se leen de allá.
+                'price' => $item['price'] ?? 0,
+                'total_sessions' => max(1, (int) ($item['package']['total_sessions'] ?? 1)),
+            ]);
         }
 
-        $local->fill([
-            'name' => $item['name'],
-            'price' => $item['price'] ?? 0,
-            'total_sessions' => max(1, (int) ($details['total_sessions'] ?? $local->total_sessions ?? 1)),
-            'validity_days' => $details['validity_days'] ?? null,
-            'active' => (bool) $item['active'],
-        ]);
+        $local->fill(['name' => $item['name']]);
         $local->forceFill(['erp_id' => $item['id']])->save();
-
-        if (array_key_exists('service_ids', $details)) {
-            $local->services()->sync(Service::whereIn('erp_id', (array) $details['service_ids'])->pluck('id')->all());
-        }
     }
 
     /** Las categorías se enlazan por nombre: es lo que comparten las dos bases. */

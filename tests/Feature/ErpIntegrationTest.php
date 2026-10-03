@@ -42,6 +42,8 @@ class ErpIntegrationTest extends TestCase
             'erp.url' => 'https://sistema.test',
             'erp.token' => 'secreto-de-prueba',
         ]);
+        // Cada prueba dice qué contesta el sistema; nada sale a la red.
+        Http::preventStrayRequests();
     }
 
     /** @return array<string, mixed> Ítem con la forma del catálogo del sistema. */
@@ -54,12 +56,23 @@ class ErpIntegrationTest extends TestCase
         ];
     }
 
-    private function linkedProduct(int $erpId, float $stock = 10, float $price = 40): InventoryItem
+    /** @param  list<array<string, mixed>>  $items */
+    private function catalog(array $items): array
     {
-        $item = InventoryItem::factory()->sellable($price)->withStock($stock)->create(['is_published' => true]);
+        return ['data' => $items];
+    }
+
+    private function linkedProduct(int $erpId, float $stock = 10, float $price = 40, string $name = 'Crema'): InventoryItem
+    {
+        $item = InventoryItem::factory()->sellable($price)->withStock($stock)->create(['is_published' => true, 'name' => $name]);
         $item->forceFill(['erp_id' => $erpId])->save();
 
         return $item;
+    }
+
+    private function orderPlaced(): array
+    {
+        return ['data' => ['order' => ['id' => 1], 'sale' => ['id' => 1], 'stock' => []]];
     }
 
     private function actingAsAdmin(): User
@@ -88,24 +101,25 @@ class ErpIntegrationTest extends TestCase
     // ------------------------------------------------- Aviso desde el sistema
 
     #[Test]
-    public function el_aviso_del_sistema_crea_la_copia_sin_publicarla(): void
+    public function el_aviso_del_sistema_enlaza_la_ficha_sin_publicarla_ni_copiar_precio_o_stock(): void
     {
         $this->withHeader('X-Integration-Token', 'secreto-de-prueba')
             ->postJson('/erp/catalogo', ['items' => [
-                $this->remote(7, ['stock' => 12]),
+                $this->remote(7, ['stock' => 12, 'price' => 55]),
                 $this->remote(8, ['type' => 'service', 'name' => 'Limpieza facial', 'category' => 'Faciales', 'price' => 120, 'stock' => null]),
             ]])
             ->assertOk()
             ->assertJson(['actualizados' => 2]);
 
         $product = InventoryItem::where('erp_id', 7)->firstOrFail();
-        $this->assertEquals(12, $product->stock);
-        $this->assertSame('Suplementos', $product->category->name);
+        $this->assertSame('Producto 7', $product->name, 'El nombre queda como etiqueta para el panel.');
         $this->assertFalse($product->is_published, 'Lo nuevo llega sin publicar: lo decide la web.');
+        $this->assertEquals(0, $product->stock, 'El stock no se copia: se lee del sistema.');
+        $this->assertNull($product->sale_price, 'El precio no se copia: se lee del sistema.');
+        $this->assertDatabaseHas('inventory_categories', ['name' => 'Suplementos']);
 
         $service = Service::where('erp_id', 8)->firstOrFail();
         $this->assertSame('Faciales', $service->category->name);
-        $this->assertEquals(120, $service->price);
         $this->assertFalse($service->is_published);
     }
 
@@ -121,8 +135,6 @@ class ErpIntegrationTest extends TestCase
 
         $item->refresh();
         $this->assertSame('Nombre nuevo', $item->name);
-        $this->assertEquals(55, $item->sale_price);
-        $this->assertEquals(3, $item->stock);
         $this->assertSame('Texto de la web', $item->description);
         $this->assertSame('catalog/products/foto.jpg', $item->image_path);
         $this->assertTrue($item->is_published);
@@ -143,16 +155,137 @@ class ErpIntegrationTest extends TestCase
     }
 
     #[Test]
-    public function sincronizar_desactiva_lo_que_el_sistema_ya_no_tiene(): void
+    public function lo_que_el_sistema_ya_no_tiene_deja_de_mostrarse(): void
     {
-        $sigue = $this->linkedProduct(7);
-        $borrado = $this->linkedProduct(9);
-        Http::fake([self::ERP.'/catalog*' => Http::response(['data' => [$this->remote(7, ['stock' => 4])]])]);
+        $this->linkedProduct(7, name: 'Sigue');
+        $borrado = $this->linkedProduct(9, name: 'Borrado');
+        Http::fake([self::ERP.'/catalog*' => Http::response($this->catalog([$this->remote(7, ['name' => 'Sigue', 'stock' => 4])]))]);
 
         $this->artisan('erp:sincronizar')->assertSuccessful();
 
-        $this->assertEquals(4, $sigue->fresh()->stock);
-        $this->assertFalse($borrado->fresh()->active, 'Se desactiva, nunca se borra: tiene historial.');
+        $this->get('/productos')->assertOk()->assertSee('Sigue')->assertDontSee('Borrado');
+        $this->assertModelExists($borrado);
+        Http::assertSentCount(1);
+    }
+
+    // ------------------------------------------------- Catálogo en vivo
+
+    #[Test]
+    public function la_tienda_muestra_el_precio_y_el_stock_del_sistema_no_los_de_la_base(): void
+    {
+        // La base tiene datos viejos; manda lo que dice el sistema.
+        $this->linkedProduct(7, stock: 10, price: 40, name: 'Crema');
+        Http::fake([self::ERP.'/catalog*' => Http::response($this->catalog([$this->remote(7, ['name' => 'Crema hidratante', 'price' => 55, 'stock' => 0])]))]);
+
+        $this->get('/productos')
+            ->assertOk()
+            ->assertSee('Crema hidratante')
+            ->assertSee('S/ 55.00')
+            ->assertDontSee('S/ 40.00')
+            ->assertSee('Agotado');
+    }
+
+    #[Test]
+    public function un_cambio_en_el_sistema_se_ve_en_cuanto_llega_su_aviso(): void
+    {
+        $this->linkedProduct(7);
+        Http::fake([self::ERP.'/catalog*' => Http::sequence()
+            ->push($this->catalog([$this->remote(7, ['price' => 40])]))
+            ->push($this->catalog([$this->remote(7, ['price' => 60])])),
+        ]);
+
+        $this->get('/productos')->assertSee('S/ 40.00');
+        $this->get('/productos')->assertSee('S/ 40.00');
+        Http::assertSentCount(1);
+
+        // El sistema avisa del cambio: la siguiente página lo vuelve a leer.
+        $this->withHeader('X-Integration-Token', 'secreto-de-prueba')
+            ->postJson('/erp/catalogo', ['items' => [$this->remote(7, ['price' => 60])]])
+            ->assertOk();
+
+        $this->get('/productos')->assertSee('S/ 60.00')->assertDontSee('S/ 40.00');
+    }
+
+    #[Test]
+    public function el_carrito_y_los_servicios_usan_el_precio_del_sistema(): void
+    {
+        $facial = Service::factory()->create(['name' => 'Facial', 'price' => 100, 'is_published' => true]);
+        $facial->forceFill(['erp_id' => 8])->save();
+        Http::fake([self::ERP.'/catalog*' => Http::response($this->catalog([
+            $this->remote(8, ['type' => 'service', 'name' => 'Facial', 'category' => 'Faciales', 'price' => 130, 'stock' => null]),
+        ]))]);
+
+        $this->get('/servicios')->assertOk()->assertSee('Faciales')->assertSee('S/ 130.00');
+
+        $this->post('/carrito', ['type' => 'service', 'id' => $facial->id])->assertSessionHas('success');
+        $this->get('/carrito')->assertSee('S/ 130.00')->assertDontSee('S/ 100.00');
+    }
+
+    #[Test]
+    public function el_pedido_se_arma_con_el_stock_del_momento(): void
+    {
+        $crema = $this->linkedProduct(7);
+        Http::fake([self::ERP.'/catalog*' => Http::sequence()
+            ->push($this->catalog([$this->remote(7, ['stock' => 10])]))   // al agregar al carrito
+            ->push($this->catalog([$this->remote(7, ['stock' => 2])])),   // al confirmar el pedido
+        ]);
+        $this->actingAs(ClientUser::factory()->create(), 'customer');
+
+        $this->post('/carrito', ['type' => 'product', 'id' => $crema->id, 'quantity' => 3])->assertSessionHas('success');
+        $this->post('/checkout', ['fulfillment' => 'pickup', 'recipient_name' => 'Ana Pérez', 'phone' => '987654321'])
+            ->assertSessionHasErrors('cart');
+
+        $this->assertDatabaseCount('online_orders', 0);
+    }
+
+    #[Test]
+    public function si_se_agota_antes_de_pagar_no_se_muestra_el_cobro(): void
+    {
+        $crema = $this->linkedProduct(7, name: 'Crema');
+        Http::fake([
+            self::ERP.'/catalog*' => Http::sequence()
+                ->push($this->catalog([$this->remote(7, ['name' => 'Crema', 'stock' => 5])]))   // carrito
+                ->push($this->catalog([$this->remote(7, ['name' => 'Crema', 'stock' => 5])]))   // pedido
+                ->push($this->catalog([$this->remote(7, ['name' => 'Crema', 'stock' => 0])])),  // pago: lo vendieron en el centro
+            self::ERP.'/orders' => Http::response($this->orderPlaced()),
+        ]);
+        $this->actingAs(ClientUser::factory()->create(), 'customer');
+        $this->post('/carrito', ['type' => 'product', 'id' => $crema->id, 'quantity' => 2]);
+        $this->post('/checkout', ['fulfillment' => 'pickup', 'recipient_name' => 'Ana Pérez', 'phone' => '987654321'])->assertRedirect();
+        $order = OnlineOrder::query()->latest('id')->firstOrFail();
+
+        $this->get("/checkout/pagar/{$order->code}")
+            ->assertOk()
+            ->assertSee('Crema se agotó')
+            ->assertSee('No se realizó ningún cargo')
+            ->assertDontSee('Simular pago aprobado');
+    }
+
+    #[Test]
+    public function si_el_sistema_no_contesta_la_tienda_sigue_con_lo_ultimo_pero_no_deja_comprar(): void
+    {
+        $crema = $this->linkedProduct(7, name: 'Crema');
+        Http::fake([self::ERP.'/catalog*' => Http::sequence()
+            ->push($this->catalog([$this->remote(7, ['name' => 'Crema', 'price' => 45])]))
+            ->whenEmpty(Http::response(['message' => 'Caído'], 503)),
+        ]);
+
+        $this->get('/productos')->assertSee('S/ 45.00');
+
+        // Un aviso obliga a volver a leer, pero el sistema ya no contesta.
+        $this->withHeader('X-Integration-Token', 'secreto-de-prueba')
+            ->postJson('/erp/catalogo', ['items' => [$this->remote(7, ['name' => 'Crema'])]])
+            ->assertOk();
+        $this->get('/productos')->assertOk()->assertSee('Crema')->assertSee('S/ 45.00');
+
+        // Se puede armar el carrito, pero el pedido exige confirmar el stock.
+        $this->actingAs(ClientUser::factory()->create(), 'customer');
+        $this->post('/carrito', ['type' => 'product', 'id' => $crema->id, 'quantity' => 1])->assertSessionHas('success');
+        $this->post('/checkout', ['fulfillment' => 'pickup', 'recipient_name' => 'Ana Pérez', 'phone' => '987654321'])
+            ->assertRedirect('/carrito')
+            ->assertSessionHas('error');
+
+        $this->assertDatabaseCount('online_orders', 0);
     }
 
     // --------------------------------------------------------- Alta inicial
@@ -213,13 +346,16 @@ class ErpIntegrationTest extends TestCase
     public function un_pedido_pagado_se_manda_al_sistema_que_registra_su_venta(): void
     {
         $crema = $this->linkedProduct(7, stock: 10, price: 40);
-        Http::fake([self::ERP.'/orders' => Http::response(['data' => ['order' => ['id' => 1], 'sale' => ['id' => 1], 'stock' => ['7' => 8]]])]);
+        Http::fake([
+            self::ERP.'/catalog*' => Http::response($this->catalog([$this->remote(7)])),
+            self::ERP.'/orders' => Http::response($this->orderPlaced()),
+        ]);
 
         $order = $this->paidOrder($crema, 2);
 
         $this->assertSame(OnlineOrderStatus::PAID, $order->status);
         $this->assertSame(OnlineOrder::ERP_REGISTERED, $order->erp_sale_status);
-        $this->assertEquals(8, $crema->fresh()->stock, 'El stock lo devuelve el sistema.');
+        $this->assertEquals(10, $crema->fresh()->stock, 'La web no lleva stock: lo descuenta la venta del sistema.');
         $this->assertDatabaseCount('inventory_movements', 0);
         Http::assertSent(fn (HttpRequest $r) => $r->url() === self::ERP.'/orders'
             && $r['code'] === $order->code
@@ -261,7 +397,10 @@ class ErpIntegrationTest extends TestCase
     public function el_seguimiento_de_los_pedidos_se_mueve_en_el_sistema(): void
     {
         $crema = $this->linkedProduct(7);
-        Http::fake([self::ERP.'/orders' => Http::response(['data' => ['order' => ['id' => 1], 'sale' => ['id' => 1], 'stock' => ['7' => 8]]])]);
+        Http::fake([
+            self::ERP.'/catalog*' => Http::response($this->catalog([$this->remote(7)])),
+            self::ERP.'/orders' => Http::response($this->orderPlaced()),
+        ]);
         $order = $this->paidOrder($crema, 2);
 
         $this->actingAsAdmin();
@@ -278,7 +417,6 @@ class ErpIntegrationTest extends TestCase
         $order->refresh();
         $this->assertSame(OnlineOrderStatus::CANCELLED, $order->status);
         $this->assertTrue($order->histories()->where('from_erp', true)->where('note', 'Empacando')->where('actor_name', 'Rosa')->exists());
-        $this->assertEquals(8, $crema->fresh()->stock, 'Anulado allá: el stock no se devuelve aquí, llega con el aviso de catálogo del sistema.');
         Http::assertNotSent(fn (HttpRequest $r) => str_contains($r->url(), '/cancel'));
     }
 
@@ -286,7 +424,10 @@ class ErpIntegrationTest extends TestCase
     public function el_aviso_de_estado_exige_el_token(): void
     {
         $crema = $this->linkedProduct(7);
-        Http::fake([self::ERP.'/orders' => Http::response(['data' => ['order' => ['id' => 1], 'sale' => null, 'stock' => []]])]);
+        Http::fake([
+            self::ERP.'/catalog*' => Http::response($this->catalog([$this->remote(7)])),
+            self::ERP.'/orders' => Http::response(['data' => ['order' => ['id' => 1], 'sale' => null, 'stock' => []]]),
+        ]);
         $order = $this->paidOrder($crema, 1);
 
         $this->postJson("/erp/pedidos/{$order->code}/estado", ['status' => 'preparing'])->assertForbidden();
@@ -333,7 +474,7 @@ class ErpIntegrationTest extends TestCase
             supplies: [['inventory_item_id' => $aguja->id, 'quantity' => 2]],
         ));
 
-        $this->assertEquals(98, $aguja->fresh()->stock);
+        $this->assertEquals(100, $aguja->fresh()->stock, 'La web no lleva stock: lo descuenta el sistema.');
         $this->assertDatabaseCount('attendance_supplies', 1);
         $this->assertDatabaseCount('inventory_movements', 0);
         Http::assertSent(fn (HttpRequest $r) => $r['reference'] === "atencion-{$attendance->id}"
@@ -389,11 +530,15 @@ class ErpIntegrationTest extends TestCase
         $item = $this->linkedProduct(7, price: 40);
         $service = Service::factory()->create(['price' => 120, 'duration_minutes' => 60]);
         $service->forceFill(['erp_id' => 8])->save();
+        Http::fake([self::ERP.'/catalog*' => Http::response($this->catalog([
+            $this->remote(7, ['price' => 40]),
+            $this->remote(8, ['type' => 'service', 'price' => 120, 'stock' => null]),
+        ]))]);
 
         $this->putJson("/api/inventory-items/{$item->id}", [
             'name' => 'Otro nombre', 'unit' => 'caja', 'min_stock' => 9, 'cost' => 99, 'sale_price' => 1,
             'description' => 'Descripción web', 'is_sellable' => true,
-        ])->assertOk();
+        ])->assertOk()->assertJsonPath('data.sale_price', 40);
         $this->putJson("/api/services/{$service->id}", [
             'name' => 'Otro', 'category_id' => ServiceCategory::factory()->create()->id, 'price' => 1,
             'duration_minutes' => 90, 'description' => 'Para la web',
@@ -408,6 +553,31 @@ class ErpIntegrationTest extends TestCase
         $this->assertEquals(120, $service->price);
         $this->assertSame(90, $service->duration_minutes);
         $this->assertSame('Para la web', $service->description);
+    }
+
+    #[Test]
+    public function el_panel_muestra_y_filtra_lo_que_dice_el_sistema(): void
+    {
+        $this->actingAsAdmin();
+        $this->linkedProduct(7, stock: 10, price: 40, name: 'Crema');
+        $this->linkedProduct(9, stock: 0, price: 40, name: 'Sérum');
+        Http::fake([self::ERP.'/catalog*' => Http::response($this->catalog([
+            $this->remote(7, ['name' => 'Crema', 'price' => 55, 'stock' => 1, 'stock_min' => 2]),
+            $this->remote(9, ['name' => 'Sérum', 'stock' => 30, 'stock_min' => 2]),
+        ]))]);
+
+        $this->getJson('/api/inventory-items')
+            ->assertOk()
+            ->assertJsonPath('meta.total', 2)
+            ->assertJsonPath('data.0.name', 'Crema')
+            ->assertJsonPath('data.0.stock', 1)
+            ->assertJsonPath('data.0.sale_price', 55)
+            ->assertJsonPath('data.0.category.name', 'Suplementos');
+
+        $this->getJson('/api/inventory-items?low_stock=1')
+            ->assertOk()
+            ->assertJsonPath('meta.total', 1)
+            ->assertJsonPath('data.0.name', 'Crema');
     }
 
     #[Test]

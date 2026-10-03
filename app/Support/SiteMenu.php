@@ -3,6 +3,7 @@
 namespace App\Support;
 
 use App\Models\InventoryCategory;
+use App\Services\Shop\StoreCatalog;
 use Illuminate\Support\Collection;
 
 /** Datos compartidos por el menú de la web pública. */
@@ -19,12 +20,7 @@ final class SiteMenu
         $attributes = request()->attributes;
 
         if (! $attributes->has('site.product_categories')) {
-            $attributes->set('site.product_categories', InventoryCategory::query()
-                ->where('active', true)
-                ->whereHas('items', fn ($q) => $q->published())
-                ->with(['items' => fn ($q) => $q->published()->orderBy('name')])
-                ->orderBy('id')
-                ->get());
+            $attributes->set('site.product_categories', app(StoreCatalog::class)->productCategories());
         }
 
         return $attributes->get('site.product_categories');

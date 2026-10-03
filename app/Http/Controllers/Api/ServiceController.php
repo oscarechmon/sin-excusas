@@ -7,24 +7,36 @@ use App\Http\Requests\StoreServiceRequest;
 use App\Http\Resources\ServiceResource;
 use App\Models\Service;
 use App\Services\Erp\ErpClient;
+use App\Services\Erp\LiveCatalog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
+use Illuminate\Pagination\LengthAwarePaginator;
 
 class ServiceController extends Controller
 {
-    public function index(Request $request): JsonResponse
+    public function index(Request $request, ErpClient $erp, LiveCatalog $live): JsonResponse
     {
-        $query = Service::with('category', 'employees');
+        $query = Service::with('category', 'employees')->orderBy('name');
 
-        if ($request->has('category_id')) {
-            $query->where('category_id', $request->input('category_id'));
+        if ($erp->enabled()) {
+            // Categoría y estado son del sistema: se filtran sobre lo que dice allá.
+            $all = $live->hydrate($query->get())
+                ->when($request->has('category_id'), fn ($services) => $services->where('category_id', $request->input('category_id')))
+                ->when($request->has('active'), fn ($services) => $services->where('active', $request->boolean('active')))
+                ->values();
+            $page = max(1, $request->integer('page', 1));
+            $services = new LengthAwarePaginator($all->forPage($page, 15)->values(), $all->count(), 15, $page);
+        } else {
+            if ($request->has('category_id')) {
+                $query->where('category_id', $request->input('category_id'));
+            }
+
+            if ($request->has('active')) {
+                $query->where('active', $request->boolean('active'));
+            }
+
+            $services = $query->paginate(15);
         }
-
-        if ($request->has('active')) {
-            $query->where('active', $request->boolean('active'));
-        }
-
-        $services = $query->orderBy('name')->paginate(15);
 
         return response()->json([
             'success' => true,

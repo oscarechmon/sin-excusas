@@ -12,6 +12,7 @@ use App\Http\Resources\InventoryItemResource;
 use App\Http\Resources\InventoryMovementResource;
 use App\Models\InventoryItem;
 use App\Services\Erp\ErpClient;
+use App\Services\Erp\LiveCatalog;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
@@ -19,8 +20,8 @@ use Illuminate\Http\Request;
  * Productos e insumos.
  *
  * Con el sistema (ERP) conectado, nombre, precio, categoría y stock se
- * administran allá y llegan por sincronización: aquí solo se edita lo de la
- * web (descripción y si se vende en la tienda; la imagen y publicar van por
+ * administran allá y se leen en vivo (LiveCatalog): aquí solo se edita lo de
+ * la web (descripción y si se vende en la tienda; la imagen y publicar van por
  * sus propios controladores). Crear, borrar y mover stock los corta la ruta
  * (middleware erp.local).
  */
@@ -28,18 +29,34 @@ class InventoryItemController extends Controller
 {
     use ApiResponses;
 
-    public function __construct(private readonly ErpClient $erp) {}
+    public function __construct(
+        private readonly ErpClient $erp,
+        private readonly LiveCatalog $live,
+    ) {}
 
     public function index(Request $request): JsonResponse
     {
-        $items = InventoryItem::query()
+        $query = InventoryItem::query()
             ->with('category')
             ->when($request->filled('search'), fn ($q) => $q->where('name', 'like', '%'.$request->string('search').'%'))
+            ->when($request->boolean('sellable'), fn ($q) => $q->where('is_sellable', true))
+            ->orderBy('name');
+
+        // Categoría, estado y stock son del sistema: se filtran sobre lo que
+        // dice allá, no sobre la base.
+        if ($this->erp->enabled()) {
+            $items = $this->live->hydrate($query->get())
+                ->when($request->filled('category_id'), fn ($items) => $items->where('category_id', $request->integer('category_id')))
+                ->when($request->filled('active'), fn ($items) => $items->where('active', $request->boolean('active')))
+                ->when($request->boolean('low_stock'), fn ($items) => $items->filter(fn (InventoryItem $item) => $item->isLowStock()));
+
+            return $this->paginatedCollection($items, $request->integer('per_page', 15), InventoryItemResource::class);
+        }
+
+        $items = $query
             ->when($request->filled('category_id'), fn ($q) => $q->where('category_id', $request->integer('category_id')))
             ->when($request->filled('active'), fn ($q) => $q->where('active', $request->boolean('active')))
-            ->when($request->boolean('sellable'), fn ($q) => $q->where('is_sellable', true))
             ->when($request->boolean('low_stock'), fn ($q) => $q->lowStock())
-            ->orderBy('name')
             ->paginate($request->integer('per_page', 15));
 
         return $this->paginated($items, InventoryItemResource::class);

@@ -13,6 +13,9 @@ use Illuminate\Support\Facades\Log;
  * Aviso del sistema (ERP): estos productos cambiaron (datos o stock). Llega
  * con el token compartido, no con sesión ni CSRF.
  *
+ * No se copia nada: se enlaza lo nuevo con su ficha web y la web vuelve a
+ * leer el catálogo del sistema en la próxima página.
+ *
  * Sin el sistema configurado la ruta no existe para nadie.
  */
 class ErpCatalogController extends Controller
@@ -35,7 +38,7 @@ class ErpCatalogController extends Controller
             'items.*.active' => ['required', 'boolean'],
         ]);
 
-        // validate() solo devuelve lo que se validó; el resto (stock,
+        // validate() solo devuelve lo que se validó; el resto (código,
         // categoría…) se toma del pedido completo.
         return response()->json(['ok' => true, 'actualizados' => $catalog->apply($request->input('items'))]);
     }

@@ -2,6 +2,7 @@
 
 namespace App\Http\Resources;
 
+use App\Services\Erp\LiveCatalog;
 use Illuminate\Http\Request;
 use Illuminate\Http\Resources\Json\JsonResource;
 
@@ -9,6 +10,10 @@ class ServiceResource extends JsonResource
 {
     public function toArray(Request $request): array
     {
+        // Con el sistema conectado, nombre, categoría, precio y estado se
+        // muestran como están allá ahora (la base no guarda copia).
+        app(LiveCatalog::class)->hydrate($this->resource);
+
         return [
             'id' => $this->id,
             'name' => $this->name,

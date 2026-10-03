@@ -11,9 +11,9 @@ use Illuminate\Console\Command;
 
 /**
  * Lo mismo que el botón "Sincronizar ahora" del panel: trae el catálogo
- * completo del sistema, reintenta los pedidos pagados que no llegaron allá,
- * enlaza los clientes de la tienda pendientes y trae el seguimiento de los
- * pedidos en curso.
+ * completo del sistema (enlaza lo nuevo y renueva el que lee la web),
+ * reintenta los pedidos pagados que no llegaron allá, enlaza los clientes de
+ * la tienda pendientes y trae el seguimiento de los pedidos en curso.
  *
  * Los cambios llegan solos al instante; esto recupera los avisos perdidos
  * (por ejemplo, si la web estaba caída). Se puede programar en un cron.
@@ -44,7 +44,7 @@ class ErpSincronizarCommand extends Command
         $pending = $orders->retryPending();
         $linked = $clients->linkPending();
 
-        $this->info("Catálogo: {$result['actualizados']} ítems actualizados, {$result['desactivados']} desactivados.");
+        $this->info("Catálogo: {$result['actualizados']} ítems enlazados; {$result['fuera_del_sistema']} ya no están en el sistema y no se muestran.");
         $this->info("Pedidos web: {$pending['registrados']} registrados, {$pending['pendientes']} siguen pendientes; {$tracking} con seguimiento nuevo.");
         $this->info("Clientes de la tienda: {$linked['enlazados']} enlazados, {$linked['pendientes']} pendientes.");
 

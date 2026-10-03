@@ -3,9 +3,7 @@
 namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Controller;
-use App\Models\InventoryItem;
-use App\Models\Package;
-use App\Models\ServiceCategory;
+use App\Services\Shop\StoreCatalog;
 use App\Support\SiteContentRepository;
 use App\Support\SiteMenu;
 use Illuminate\Contracts\View\View;
@@ -15,10 +13,13 @@ use Illuminate\Support\Str;
  * Web pública.
  *
  * Inicio y Nosotros toman sus fotos y textos de "Contenido web"; Servicios y
- * Productos se arman con lo que el administrador publicó desde el ERP.
+ * Productos se arman con lo que el administrador publicó, con precio y stock
+ * leídos del sistema (StoreCatalog).
  */
 class SiteController extends Controller
 {
+    public function __construct(private readonly StoreCatalog $catalog) {}
+
     public function home(): View
     {
         return view('site.home', ['content' => SiteContentRepository::all()]);
@@ -32,19 +33,10 @@ class SiteController extends Controller
     public function services(): View
     {
         // Una pestaña por categoría, y solo categorías con algo publicado.
-        $categories = ServiceCategory::query()
-            ->where('active', true)
-            ->whereHas('services', fn ($q) => $q->published())
-            ->with(['services' => fn ($q) => $q->published()->orderBy('name')])
-            ->orderBy('id')
-            ->get();
-
-        $packages = Package::published()
-            ->with(['services' => fn ($q) => $q->orderBy('name')])
-            ->orderBy('price')
-            ->get();
-
-        return view('site.services', compact('categories', 'packages'));
+        return view('site.services', [
+            'categories' => $this->catalog->serviceCategories(),
+            'packages' => $this->catalog->packages(),
+        ]);
     }
 
     /** Todos los productos, o los de una categoría (/productos/vitaminas). */
@@ -58,9 +50,7 @@ class SiteController extends Controller
 
         $groups = $current ? collect([$current]) : $categories;
 
-        $uncategorized = $current
-            ? collect()
-            : InventoryItem::published()->whereNull('category_id')->orderBy('name')->get();
+        $uncategorized = $current ? collect() : $this->catalog->uncategorizedProducts();
 
         return view('site.products', compact('categories', 'current', 'groups', 'uncategorized'));
     }

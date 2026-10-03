@@ -4,6 +4,7 @@ namespace App\Http\Controllers\Web\Shop;
 
 use App\Actions\Shop\ConfirmOnlinePaymentAction;
 use App\Actions\Shop\PlaceOnlineOrderAction;
+use App\Exceptions\ErpException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PlaceOnlineOrderRequest;
 use App\Models\OnlineOrder;
@@ -12,12 +13,15 @@ use App\Services\Payments\PaymentGatewayException;
 use App\Services\Payments\PaymentGatewayManager;
 use App\Services\Shop\Cart;
 use App\Services\Shop\CartLine;
+use App\Services\Shop\StoreCatalog;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
 
 class CheckoutController extends Controller
 {
+    private const STOCK_UNCONFIRMED = 'No pudimos confirmar el stock con nuestro sistema y, para no cobrarte algo que no tengamos, no seguimos con el pago. Intenta nuevamente en unos minutos.';
+
     public function show(Request $request, Cart $cart): View|RedirectResponse
     {
         $lines = $cart->lines();
@@ -38,14 +42,22 @@ class CheckoutController extends Controller
 
     public function store(PlaceOnlineOrderRequest $request, Cart $cart, PlaceOnlineOrderAction $placeOrder): RedirectResponse
     {
-        $order = $placeOrder->execute($request->user('customer'), $cart->lines(), $request->validated());
+        // El pedido se arma con el precio y el stock de este momento, no con
+        // lo que se vio al agregar al carrito.
+        try {
+            $lines = $cart->lines(fresh: true);
+        } catch (ErpException) {
+            return redirect()->route('shop.cart.show')->with('error', self::STOCK_UNCONFIRMED);
+        }
+
+        $order = $placeOrder->execute($request->user('customer'), $lines, $request->validated());
 
         $cart->clear();
 
         return redirect()->route('shop.checkout.pay', $order->code);
     }
 
-    public function pay(Request $request, string $code, PaymentGatewayManager $gateways): View|RedirectResponse
+    public function pay(Request $request, string $code, PaymentGatewayManager $gateways, StoreCatalog $catalog): View|RedirectResponse
     {
         $order = OnlineOrder::query()
             ->where('code', $code)
@@ -55,6 +67,18 @@ class CheckoutController extends Controller
 
         if (! $order->status->awaitsPayment()) {
             return redirect()->route('shop.account.order', $order->code);
+        }
+
+        // Entre armar el pedido y pagarlo pudo venderse lo último (en la web o
+        // en el centro): se confirma el stock justo antes de mostrar el cobro.
+        try {
+            $missing = $catalog->missingStock($order);
+        } catch (ErpException) {
+            $missing = self::STOCK_UNCONFIRMED;
+        }
+
+        if ($missing !== null) {
+            return view('site.shop.pay', ['order' => $order, 'checkout' => null, 'gatewayError' => $missing]);
         }
 
         try {

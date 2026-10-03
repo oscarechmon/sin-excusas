@@ -28,7 +28,8 @@ class ErpClient
      */
     public function catalog(?array $ids = null): array
     {
-        return $this->send(fn (PendingRequest $http) => $http->get('catalog', $ids === null ? [] : ['ids' => $ids]));
+        return $this->send(fn (PendingRequest $http) => $http->timeout((int) config('erp.read_timeout', 5))
+            ->get('catalog', $ids === null ? [] : ['ids' => $ids]));
     }
 
     /** @return array<string, mixed> El ítem tal como lo describe el catálogo. */
