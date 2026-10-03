@@ -94,12 +94,17 @@
   }
 
   /* ------------------------------------------------------------------
-   * Agregar al carrito sin recargar la página
+   * Carrito sin recargar la página
    *
-   * Antes cada clic costaba dos viajes al servidor (enviar el formulario y
-   * volver a pedir la página) y devolvía al inicio del listado. Ahora es una
-   * sola petición: se actualiza el contador del carrito y se muestra un
-   * aviso. Si algo falla, el formulario se envía de la forma normal.
+   * Agregar es una sola petición: se actualiza el contador y se abre el
+   * carrito lateral con lo elegido. "Comprar ahora" agrega y sigue directo a
+   * finalizar la compra. El ícono del carrito abre el carrito lateral en vez
+   * de ir a /carrito: ahí se cambian cantidades o se quita algo, y un botón
+   * lleva a la página del carrito.
+   *
+   * El contenido del carrito lateral lo arma el servidor: se pide al abrirlo
+   * y cada acción del carrito lo devuelve ya actualizado (`drawer`). Si algo
+   * falla, el formulario se envía de la forma normal, como sin JavaScript.
    * ------------------------------------------------------------------ */
   var toastTimer = null;
 
@@ -136,56 +141,212 @@
     });
   }
 
-  function initCartForms() {
-    // Un solo listener delegado: sirve también para el contenido que Turbo
-    // cambie después, sin volver a registrarlo en cada navegación.
-    document.addEventListener('submit', function (event) {
-      var form = event.target;
-      if (!form.matches || !form.matches('form[data-cart-add]') || !window.fetch) return;
-      event.preventDefault();
+  function visit(url) {
+    if (window.Turbo) window.Turbo.visit(url);
+    else window.location.href = url;
+  }
 
-      var button = form.querySelector('button[type="submit"]');
-      var label = button ? button.textContent : '';
-      if (button) { button.classList.add('is-busy'); button.textContent = 'Agregando…'; }
+  /** Envía el formulario por fetch y devuelve su JSON (null si hay que recargar). */
+  function sendForm(form, submitter) {
+    var body = new FormData(form);
+    // El botón pulsado ("Comprar ahora", + o −) no viene en FormData(form).
+    if (submitter && submitter.name) body.set(submitter.name, submitter.value);
 
-      fetch(form.action, {
-        method: 'POST',
-        headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
-        body: new FormData(form),
-        credentials: 'same-origin'
-      })
-        .then(function (response) {
-          // 419: la página llevaba mucho abierta y el token venció.
-          if (response.status === 419) { window.location.reload(); return null; }
-          return response.json();
-        })
-        .then(function (data) {
-          if (!data) return;
-          if (typeof data.count === 'number') updateCartCount(data.count);
-          showToast(data.message || 'Listo', !data.success);
-        })
-        .catch(function () { form.submit(); })
-        .finally(function () {
-          if (button) { button.classList.remove('is-busy'); button.textContent = label; }
-        });
+    return fetch(form.action, {
+      method: 'POST',
+      headers: { Accept: 'application/json', 'X-Requested-With': 'XMLHttpRequest' },
+      body: body,
+      credentials: 'same-origin'
+    }).then(function (response) {
+      // 419: la página llevaba mucho abierta y el token venció.
+      if (response.status === 419) { window.location.reload(); return null; }
+      return response.json();
     });
   }
+
+  /** Plan B: el envío normal del formulario, con el botón que se pulsó. */
+  function submitNatively(form, submitter) {
+    if (submitter && submitter.name) {
+      var input = document.createElement('input');
+      input.type = 'hidden';
+      input.name = submitter.name;
+      input.value = submitter.value;
+      form.appendChild(input);
+    }
+    form.submit();
+  }
+
+  function cartDrawer() {
+    return window.bootstrap ? document.querySelector('[data-cart-drawer]') : null;
+  }
+
+  function renderDrawer(html) {
+    var drawer = cartDrawer();
+    if (!drawer) return;
+    var body = drawer.querySelector('[data-cart-drawer-body]');
+    body.innerHTML = html;
+    body.removeAttribute('aria-busy');
+  }
+
+  function openDrawer() {
+    var drawer = cartDrawer();
+    if (drawer) bootstrap.Offcanvas.getOrCreateInstance(drawer).show();
+  }
+
+  /** Desde el ícono: abre el carrito lateral y pide su contenido al día. */
+  function showDrawer(fallbackUrl) {
+    var drawer = cartDrawer();
+    drawer.querySelector('[data-cart-drawer-body]').setAttribute('aria-busy', 'true');
+    openDrawer();
+
+    fetch(drawer.getAttribute('data-src'), {
+      headers: { Accept: 'text/html', 'X-Requested-With': 'XMLHttpRequest' },
+      credentials: 'same-origin'
+    })
+      .then(function (response) {
+        if (!response.ok) throw new Error('HTTP ' + response.status);
+        return response.text();
+      })
+      .then(renderDrawer, function () { visit(fallbackUrl); });
+  }
+
+  function addToCart(event, form) {
+    event.preventDefault();
+
+    var submitter = event.submitter || form.querySelector('button[type="submit"]');
+    var buyNow = !!submitter && submitter.name === 'buy_now';
+    var label = submitter ? submitter.textContent : '';
+    if (submitter) {
+      submitter.classList.add('is-busy');
+      submitter.textContent = buyNow ? 'Un momento…' : 'Agregando…';
+    }
+    function done() {
+      if (submitter) { submitter.classList.remove('is-busy'); submitter.textContent = label; }
+    }
+
+    sendForm(form, submitter).then(function (data) {
+      if (!data) return;
+      if (typeof data.count === 'number') updateCartCount(data.count);
+      if (data.success && data.redirect) { visit(data.redirect); return; }
+      done();
+      if (data.success && data.drawer && cartDrawer()) {
+        renderDrawer(data.drawer);
+        openDrawer();
+        return;
+      }
+      showToast(data.message || 'Listo', !data.success);
+    }, function () { done(); submitNatively(form, submitter); });
+  }
+
+  /** + / − y Quitar dentro del carrito lateral. */
+  function changeDrawerLine(event, form) {
+    event.preventDefault();
+
+    var submitter = event.submitter;
+    var focusKey = submitter ? submitter.getAttribute('data-focus') : null;
+    var body = form.closest('[data-cart-drawer-body]');
+    if (body) body.setAttribute('aria-busy', 'true');
+
+    sendForm(form, submitter).then(function (data) {
+      if (!data) return;
+      if (typeof data.count === 'number') updateCartCount(data.count);
+      if (typeof data.drawer !== 'string') {
+        if (body) body.removeAttribute('aria-busy');
+        showToast(data.message || 'No se pudo actualizar el carrito.', true);
+        return;
+      }
+      renderDrawer(data.drawer);
+
+      // El contenido se reemplazó: el foco vuelve al mismo botón (o al panel).
+      var drawer = cartDrawer();
+      var target = focusKey ? drawer.querySelector('[data-focus="' + focusKey + '"]') : null;
+      if (target && !target.disabled) target.focus();
+      else drawer.focus();
+    }, function () { submitNatively(form, submitter); });
+  }
+
+  function initCartForms() {
+    // Listeners delegados: sirven también para lo que Turbo o el carrito
+    // lateral cambien después, sin volver a registrarlos en cada navegación.
+    document.addEventListener('submit', function (event) {
+      var form = event.target;
+      if (!form.matches || !window.fetch) return;
+      if (form.matches('form[data-cart-add]')) addToCart(event, form);
+      else if (form.matches('form[data-cart-drawer-form]') && cartDrawer()) changeDrawerLine(event, form);
+    });
+
+    document.addEventListener('click', function (event) {
+      var link = event.target.closest ? event.target.closest('a[data-cart-link]') : null;
+      if (!link || !cartDrawer() || !window.fetch) return;
+      // Ctrl/⌘ + clic o clic central: que abra la página del carrito en otra pestaña.
+      if (event.button !== 0 || event.ctrlKey || event.metaKey || event.shiftKey || event.altKey) return;
+      event.preventDefault();
+      showDrawer(link.href);
+    });
+  }
+
+  /* ------------------------------------------------------------------
+   * Cantidad en la ficha de producto: botones − y + junto al número, sin
+   * pasarse de lo disponible (el servidor igual lo vuelve a revisar).
+   * ------------------------------------------------------------------ */
+  function syncStepper(stepper) {
+    var input = stepper.querySelector('input');
+    var value = parseInt(input.value, 10) || 0;
+    stepper.querySelector('[data-step="-1"]').disabled = value <= (parseInt(input.min, 10) || 1);
+    stepper.querySelector('[data-step="1"]').disabled = value >= (parseInt(input.max, 10) || 99);
+  }
+
+  function initQtySteppers() {
+    document.addEventListener('click', function (event) {
+      var button = event.target.closest ? event.target.closest('[data-qty-stepper] [data-step]') : null;
+      if (!button) return;
+      var stepper = button.closest('[data-qty-stepper]');
+      var input = stepper.querySelector('input');
+      var min = parseInt(input.min, 10) || 1;
+      var max = parseInt(input.max, 10) || 99;
+      var value = (parseInt(input.value, 10) || min) + parseInt(button.getAttribute('data-step'), 10);
+      input.value = String(Math.min(max, Math.max(min, value)));
+      syncStepper(stepper);
+    });
+
+    document.addEventListener('input', function (event) {
+      var stepper = event.target.closest ? event.target.closest('[data-qty-stepper]') : null;
+      if (stepper) syncStepper(stepper);
+    });
+  }
+
   function init() {
     initCategoryTabs();
     initCheckout();
     initResendCountdown();
+    document.querySelectorAll('[data-qty-stepper]').forEach(syncStepper);
   }
 
   initCartForms();
+  initQtySteppers();
 
   if (window.Turbo) {
     document.addEventListener('turbo:load', init);
 
     // Turbo guarda una copia de la página para mostrarla al volver atrás:
-    // se cierra el menú móvil antes para que no reaparezca abierto.
+    // se cierran antes el menú móvil y el carrito lateral para que no
+    // reaparezcan abiertos (ni con la página bloqueada para desplazarse).
     document.addEventListener('turbo:before-cache', function () {
       var menu = document.getElementById('seMainNav');
       if (menu) menu.classList.remove('show');
+
+      var drawer = cartDrawer();
+      if (!drawer) return;
+      var instance = bootstrap.Offcanvas.getInstance(drawer);
+      if (instance) instance.dispose();
+      drawer.classList.remove('show', 'showing', 'hiding');
+      drawer.removeAttribute('aria-modal');
+      drawer.removeAttribute('role');
+      document.querySelectorAll('.offcanvas-backdrop').forEach(function (backdrop) { backdrop.remove(); });
+      ['overflow', 'padding-right'].forEach(function (property) {
+        document.body.style.removeProperty(property);
+        document.body.removeAttribute('data-bs-' + property);
+      });
     });
   } else {
     init();

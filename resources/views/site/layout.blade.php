@@ -14,7 +14,7 @@
   <meta property="og:type" content="website">
   <meta property="og:title" content="@yield('title', 'Sin Excusas Centro Estético')">
   <meta property="og:description" content="@yield('description', 'Tu belleza, sin excusas.')">
-  <meta property="og:image" content="{{ asset('assets/img/logo-300.png') }}">
+  <meta property="og:image" content="@yield('og_image', asset('assets/img/logo-300.png'))">
   <meta property="og:locale" content="es_PE">
 
   <link rel="icon" href="{{ asset('assets/img/favicon-64.png') }}" type="image/png">
@@ -69,6 +69,22 @@
     </svg>
   </a>
   @endif
+
+  {{-- Carrito lateral: lo abre el ícono del carrito y se abre solo al agregar
+       algo (main.js). En el carrito y el checkout no hace falta: ahí el ícono
+       es un enlace normal. --}}
+  @unless (request()->routeIs('shop.cart.*', 'shop.checkout*'))
+    <div class="offcanvas offcanvas-end se-drawer" tabindex="-1" id="seCartDrawer" aria-labelledby="seCartDrawerTitle"
+         data-cart-drawer data-src="{{ route('shop.cart.summary') }}">
+      <div class="offcanvas-header">
+        <h2 class="se-drawer__title" id="seCartDrawerTitle">Tu carrito</h2>
+        <button type="button" class="btn-close" data-bs-dismiss="offcanvas" aria-label="Cerrar carrito"></button>
+      </div>
+      <div class="offcanvas-body" data-cart-drawer-body>
+        <p class="se-drawer__loading">Cargando tu carrito…</p>
+      </div>
+    </div>
+  @endunless
 
   {!! \App\Support\SiteSettings::script('body_end') !!}
 </body>

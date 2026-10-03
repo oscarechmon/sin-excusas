@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class InventoryItem extends Model
 {
@@ -58,6 +59,12 @@ class InventoryItem extends Model
         return $this->belongsToMany(Service::class, 'service_supplies')
             ->withPivot('default_quantity')
             ->withTimestamps();
+    }
+
+    /** Ficha del producto en la web pública. */
+    public function webUrl(): string
+    {
+        return route('site.product', [$this->id, Str::slug($this->name)]);
     }
 
     public function isLowStock(): bool

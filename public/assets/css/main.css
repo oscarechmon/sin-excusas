@@ -261,6 +261,7 @@ a:focus-visible {
 }
 
 .se-btn--outline {
+  background: transparent;    /* en un <button>, el navegador pone su gris */
   border-color: var(--se-gold);
   color: var(--se-gold-dark);
   padding: 16px 32px;
@@ -1710,4 +1711,432 @@ button:focus-visible,
   border-color: var(--se-gold);
   background: rgba(255, 255, 255, .06);
   color: var(--se-gold-light);
+}
+
+/* ==========================================================================
+   21. Ficha de producto (/producto/{id}/{nombre})
+   ========================================================================== */
+
+/* Tarjeta del listado: toda la tarjeta lleva a la ficha (stretched-link en
+   el título); el botón de compra queda por encima y funciona aparte. */
+.se-tile--product { position: relative; }
+.se-tile--product .se-tile__body { position: static; }
+.se-tile--product .se-tile__actions { position: relative; z-index: 2; }
+
+.se-tile__title a { color: inherit; }
+.se-tile__title a:focus-visible { outline: 0; }
+
+.se-tile--product:has(.stretched-link:focus-visible) {
+  outline: 2px solid var(--se-gold);
+  outline-offset: 3px;
+}
+
+.se-tile--product:hover .se-tile__title a { color: var(--se-gold-dark); }
+
+.se-tile--product .se-media > img { transition: transform .5s ease; }
+.se-tile--product:hover .se-media > img { transform: scale(1.04); }
+
+.se-product { padding-block: 40px 96px; }
+
+.se-breadcrumb {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px 0;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: .719rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--se-muted);
+}
+
+.se-breadcrumb li + li::before {
+  content: "/";
+  margin-inline: 10px;
+  color: var(--se-gold-light);
+}
+
+.se-breadcrumb a { color: var(--se-muted); }
+
+.se-breadcrumb a:hover,
+.se-breadcrumb a:focus-visible { color: var(--se-gold); }
+
+.se-breadcrumb [aria-current] { color: var(--se-ink); }
+
+/* La foto completa, sin recortes: los envases suelen venir con fondo blanco. */
+.se-product__media {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  aspect-ratio: 1;
+  background: #FFFFFF;
+  border: 1px solid var(--se-line);
+  overflow: hidden;
+}
+
+.se-product__media img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.se-product__title {
+  margin: 12px 0 20px;
+  font-family: var(--se-font-serif);
+  font-size: clamp(1.75rem, 1.3rem + 1.6vw, 2.625rem);
+  font-weight: 500;
+  line-height: 1.15;
+  color: var(--se-ink);
+  text-wrap: balance;
+}
+
+.se-product__price { font-size: 2rem; }
+
+.se-stock {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: .75rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: #3F5222;
+}
+
+.se-stock::before {
+  content: "";
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: currentColor;
+}
+
+.se-stock--low { color: #7A5A1E; }
+.se-stock--out { color: #7A2E1D; }
+
+.se-product__description {
+  margin-top: 28px;
+  font-size: .969rem;
+  line-height: 1.85;
+  color: var(--se-text);
+}
+
+.se-product__description p:last-child { margin-bottom: 0; }
+
+.se-buybox {
+  margin-top: 32px;
+  padding-top: 28px;
+  border-top: 1px solid var(--se-line);
+}
+
+.se-buybox__label {
+  display: block;
+  margin-bottom: 8px;
+  font-size: .72rem;
+  letter-spacing: .14em;
+  text-transform: uppercase;
+  color: var(--se-muted);
+}
+
+/* Cantidad + "Agregar": en celulares angostos el botón baja a su propia fila. */
+.se-buybox__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+}
+
+.se-buybox__row .se-btn {
+  flex: 1 1 200px;
+  padding-inline: 20px;
+}
+
+/* Selector de cantidad: − número + */
+.se-stepper {
+  display: inline-flex;
+  align-items: stretch;
+  border: 1px solid var(--se-line);
+  background: #FFFFFF;
+}
+
+.se-stepper button {
+  width: 44px;
+  border: 0;
+  background: transparent;
+  font-size: 1.125rem;
+  line-height: 1;
+  color: var(--se-ink);
+  transition: background-color var(--se-transition), color var(--se-transition);
+}
+
+.se-stepper button:hover:not(:disabled) {
+  background: var(--se-cream);
+  color: var(--se-gold-dark);
+}
+
+.se-stepper button:disabled {
+  color: #D5CCBB;
+  cursor: not-allowed;
+}
+
+.se-stepper input {
+  width: 52px;
+  border: 0;
+  border-inline: 1px solid var(--se-line);
+  text-align: center;
+  font-weight: 500;
+  color: var(--se-ink);
+  -moz-appearance: textfield;
+  appearance: textfield;
+}
+
+.se-stepper input:focus {
+  outline: 2px solid var(--se-gold);
+  outline-offset: -2px;
+}
+
+.se-stepper input::-webkit-outer-spin-button,
+.se-stepper input::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.se-stepper--sm button { width: 30px; height: 30px; font-size: 1rem; }
+
+.se-stepper__value {
+  display: grid;
+  place-items: center;
+  min-width: 32px;
+  border-inline: 1px solid var(--se-line);
+  font-size: .875rem;
+  font-weight: 500;
+  color: var(--se-ink);
+}
+
+.se-perks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px 28px;
+  margin: 28px 0 0;
+  padding: 0;
+  list-style: none;
+  font-size: .844rem;
+  color: var(--se-text);
+}
+
+.se-perks li {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+}
+
+.se-perks svg { flex: none; color: var(--se-gold); }
+
+@media (max-width: 991.98px) {
+  .se-product { padding-block: 28px 72px; }
+}
+
+/* ==========================================================================
+   22. Carrito lateral (offcanvas)
+   ========================================================================== */
+
+.se-drawer {
+  --bs-offcanvas-width: 420px;
+  --bs-offcanvas-padding-x: 24px;
+  border-left: 0 !important;
+  box-shadow: -18px 0 48px rgba(20, 17, 12, .16);
+}
+
+.se-drawer .offcanvas-header {
+  padding-block: 22px;
+  border-bottom: 1px solid var(--se-line);
+}
+
+.se-drawer__title {
+  margin: 0;
+  font-family: var(--se-font-serif);
+  font-size: 1.375rem;
+  font-weight: 500;
+  color: var(--se-ink);
+}
+
+.se-drawer .btn-close:focus { box-shadow: 0 0 0 .2rem rgba(176, 141, 75, .25); }
+
+/* El cuerpo no desplaza: lo hace la lista, y el total queda siempre a la vista. */
+.se-drawer .offcanvas-body {
+  display: flex;
+  flex-direction: column;
+  padding: 0;
+  overflow: hidden;
+}
+
+.se-drawer__content {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  transition: opacity var(--se-transition);
+}
+
+[aria-busy="true"] > .se-drawer__content {
+  opacity: .5;
+  pointer-events: none;
+}
+
+.se-drawer__loading {
+  padding: 32px 24px;
+  font-size: .875rem;
+  color: var(--se-muted);
+}
+
+.se-drawer__notice {
+  flex: none;
+  margin: 16px 24px 0;
+  padding: 10px 14px;
+  border-left: 3px solid #6E8B3D;
+  background: #F3F7EF;
+  font-size: .844rem;
+  color: #3F5222;
+}
+
+.se-drawer__notice--error {
+  border-color: #B4533C;
+  background: #FBF0EE;
+  color: #7A2E1D;
+}
+
+.se-drawer__list {
+  flex: 1 1 auto;
+  min-height: 0;
+  margin: 0;
+  padding: 4px 24px;
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  list-style: none;
+}
+
+.se-drawer__item {
+  display: grid;
+  grid-template-columns: 72px minmax(0, 1fr) auto;
+  gap: 14px;
+  align-items: start;
+  padding-block: 18px;
+  border-bottom: 1px solid var(--se-line-soft);
+}
+
+.se-drawer__item:last-child { border-bottom: 0; }
+
+.se-drawer__thumb {
+  display: block;
+  width: 72px;
+  height: 72px;
+  object-fit: contain;
+  background: #FFFFFF;
+  border: 1px solid var(--se-line-soft);
+}
+
+.se-drawer__info { min-width: 0; }
+
+.se-drawer__name {
+  display: block;
+  font-size: .906rem;
+  font-weight: 500;
+  line-height: 1.35;
+  color: var(--se-ink);
+}
+
+.se-drawer__name:hover,
+.se-drawer__name:focus-visible { color: var(--se-gold-dark); }
+
+.se-drawer__meta {
+  font-size: .781rem;
+  color: var(--se-muted);
+}
+
+.se-drawer__controls {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  margin-top: 10px;
+}
+
+.se-drawer__remove {
+  padding: 0;
+  border: 0;
+  background: none;
+  font-size: .688rem;
+  letter-spacing: .12em;
+  text-transform: uppercase;
+  color: var(--se-muted);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.se-drawer__remove:hover { color: #B4533C; }
+
+.se-drawer__line-total {
+  font-size: .906rem;
+  font-weight: 500;
+  color: var(--se-ink);
+  white-space: nowrap;
+}
+
+.se-drawer__footer {
+  flex: none;
+  padding: 20px 24px calc(20px + env(safe-area-inset-bottom, 0px));
+  border-top: 1px solid var(--se-line);
+  background: var(--se-cream-soft);
+}
+
+.se-drawer__total {
+  display: flex;
+  justify-content: space-between;
+  align-items: baseline;
+  font-weight: 500;
+  color: var(--se-ink);
+}
+
+.se-drawer__total strong {
+  font-size: 1.375rem;
+  font-weight: 600;
+  color: var(--se-gold-dark);
+}
+
+.se-drawer__continue {
+  display: block;
+  width: 100%;
+  margin-top: 14px;
+  padding: 6px 0;
+  border: 0;
+  background: none;
+  color: var(--se-gold-dark);
+}
+
+.se-drawer__continue:hover { color: var(--se-gold); }
+
+.se-drawer__empty {
+  display: flex;
+  flex: 1 1 auto;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  padding: 40px 24px;
+  text-align: center;
+  color: var(--se-muted);
+}
+
+.se-drawer__empty-icon {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  border-radius: 50%;
+  background: var(--se-cream);
+  color: var(--se-gold);
+}
+
+.se-drawer__empty-icon svg { width: 28px; height: 28px; }
+
+@media (max-width: 575.98px) {
+  .se-drawer { --bs-offcanvas-width: 100%; }
 }

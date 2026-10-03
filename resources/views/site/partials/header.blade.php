@@ -32,7 +32,7 @@
       </a>
 
       {{-- En móvil el carrito queda visible fuera del menú colapsado. --}}
-      <a class="se-cart-link d-lg-none ms-auto" data-cart-link href="{{ route('shop.cart.show') }}" aria-label="Carrito, {{ $cartCount }} artículos">
+      <a class="se-cart-link d-lg-none ms-auto" data-cart-link data-turbo-prefetch="false" href="{{ route('shop.cart.show') }}" aria-label="Carrito, {{ $cartCount }} artículos">
         @include('site.partials.cart-icon')
         @if ($cartCount > 0)<span class="se-cart-badge">{{ $cartCount }}</span>@endif
       </a>
@@ -54,7 +54,7 @@
           @endforeach
 
           <li class="nav-item dropdown">
-            <a @class(['nav-link dropdown-toggle', 'active' => request()->routeIs('site.products')])
+            <a @class(['nav-link dropdown-toggle', 'active' => request()->routeIs('site.products', 'site.product')])
                href="{{ route('site.products') }}" role="button" data-bs-toggle="dropdown" aria-expanded="false">
               Productos
             </a>
@@ -94,7 +94,7 @@
           @else
             <a class="se-cart-link" href="{{ route('shop.login') }}">Ingresar</a>
           @endif
-          <a class="se-cart-link d-none d-lg-inline-flex" data-cart-link href="{{ route('shop.cart.show') }}" aria-label="Carrito, {{ $cartCount }} artículos">
+          <a class="se-cart-link d-none d-lg-inline-flex" data-cart-link data-turbo-prefetch="false" href="{{ route('shop.cart.show') }}" aria-label="Carrito, {{ $cartCount }} artículos">
             @include('site.partials.cart-icon')
             @if ($cartCount > 0)<span class="se-cart-badge">{{ $cartCount }}</span>@endif
           </a>

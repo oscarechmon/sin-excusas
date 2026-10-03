@@ -187,6 +187,25 @@ class ErpIntegrationTest extends TestCase
     }
 
     #[Test]
+    public function la_ficha_del_producto_muestra_lo_del_sistema(): void
+    {
+        $crema = $this->linkedProduct(7, stock: 10, price: 40, name: 'Crema');
+        Http::fake([self::ERP.'/catalog*' => Http::response($this->catalog([$this->remote(7, [
+            'name' => 'Crema hidratante', 'price' => 55, 'stock' => 3, 'image_url' => 'https://sistema.test/storage/crema.jpg',
+        ])]))]);
+
+        // El enlace con el nombre de la base lleva al nombre que dice el sistema.
+        $this->get("/producto/{$crema->id}/crema")->assertStatus(301)->assertRedirect("/producto/{$crema->id}/crema-hidratante");
+
+        $this->get("/producto/{$crema->id}/crema-hidratante")
+            ->assertOk()
+            ->assertSee('S/ 55.00')
+            ->assertDontSee('S/ 40.00')
+            ->assertSee('Últimas 3 unidades')
+            ->assertSee('https://sistema.test/storage/crema.jpg', false);
+    }
+
+    #[Test]
     public function un_cambio_en_el_sistema_se_ve_en_cuanto_llega_su_aviso(): void
     {
         $this->linkedProduct(7);

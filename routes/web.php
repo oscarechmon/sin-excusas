@@ -26,6 +26,9 @@ Route::controller(SiteController::class)->name('site.')->group(function () {
     Route::get('/nosotros', 'about')->name('about');
     Route::get('/servicios', 'services')->name('services');
     Route::get('/productos/{category?}', 'products')->name('products');
+    // Ficha de un producto. El nombre en la URL es solo para que se lea bien:
+    // manda el id, así renombrarlo en el sistema no rompe enlaces.
+    Route::get('/producto/{id}/{slug?}', 'product')->whereNumber('id')->name('product');
 });
 
 // URLs antiguas: 301 para no romper enlaces ni perder posicionamiento.
@@ -43,6 +46,8 @@ Route::permanentRedirect('/catalogo', '/servicios');
 */
 Route::controller(CartController::class)->prefix('carrito')->name('shop.cart.')->group(function () {
     Route::get('/', 'show')->name('show');
+    // Contenido del carrito lateral (se pide al abrirlo).
+    Route::get('/resumen', 'summary')->name('summary');
     Route::post('/', 'add')->name('add');
     Route::patch('/{key}', 'update')->name('update');
     Route::delete('/{key}', 'remove')->name('remove');
