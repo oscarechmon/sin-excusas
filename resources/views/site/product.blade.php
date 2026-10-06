@@ -114,11 +114,18 @@
           @endif
 
           @if ($price > 0)
+            @php($rates = app(\App\Services\Shop\ShippingRates::class)->all())
             <ul class="se-perks">
-              @if (\App\Models\StoreSetting::deliveryEnabled())
+              @if ($rates['delivery']['enabled'])
                 <li>
                   <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M3 7h11v9H3zM14 10h4l3 3v3h-7"/><circle cx="7" cy="17.5" r="1.5"/><circle cx="17" cy="17.5" r="1.5"/></svg>
-                  Delivery a domicilio
+                  Delivery en Lima · S/ {{ number_format($rates['delivery']['fee'], 2) }}
+                </li>
+              @endif
+              @if ($rates['province']['enabled'])
+                <li>
+                  <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M12 21s-7-6.1-7-11a7 7 0 0 1 14 0c0 4.9-7 11-7 11Z"/><circle cx="12" cy="10" r="2.5"/></svg>
+                  Envío a provincia por Shalom · S/ {{ number_format($rates['province']['fee'], 2) }}
                 </li>
               @endif
               <li>

@@ -7,24 +7,30 @@
              alt="Sin Excusas, centro estético" width="150" height="150" loading="lazy">
       </div>
 
+      {{-- Solo las categorías con algo publicado en el sistema: una categoría
+           sin nada que mostrar no deja un enlace roto en el pie. --}}
       <div class="col-6 col-lg-3">
         <h2 class="se-footer__heading">Servicios</h2>
         <ul class="se-footer__list">
-          <li><a href="{{ route('site.services') }}#faciales">Faciales</a></li>
-          <li><a href="{{ route('site.services') }}#corporales">Corporales</a></li>
-          <li><a href="{{ route('site.services') }}#corporales">Post operatorio y post parto</a></li>
-          <li><a href="{{ route('site.services') }}#podologia">Podología</a></li>
+          @forelse (\App\Support\SiteMenu::serviceCategories() as $category)
+            <li><a href="{{ route('site.services') }}#{{ Str::slug($category->name) }}">{{ $category->name }}</a></li>
+          @empty
+            <li><a href="{{ route('site.services') }}">Nuestros tratamientos</a></li>
+          @endforelse
         </ul>
       </div>
 
       <div class="col-6 col-lg-3">
         <h2 class="se-footer__heading">Tienda</h2>
         <ul class="se-footer__list">
-          <li><a href="{{ route('site.products', 'suplementos') }}">Suplementos</a></li>
-          <li><a href="{{ route('site.products', 'vitaminas') }}">Vitaminas</a></li>
+          @foreach (\App\Support\SiteMenu::productCategories() as $category)
+            <li><a href="{{ route('site.products', Str::slug($category->name)) }}">{{ $category->name }}</a></li>
+          @endforeach
           <li><a href="{{ route('shop.cart.show') }}">Carrito</a></li>
           <li><a href="{{ route('shop.account.orders') }}">Mis pedidos</a></li>
-          <li><a href="{{ route('site.services') }}#paquetes">Paquetes</a></li>
+          @if (\App\Support\SiteMenu::packages()->isNotEmpty())
+            <li><a href="{{ route('site.services') }}#paquetes">Paquetes</a></li>
+          @endif
         </ul>
       </div>
 

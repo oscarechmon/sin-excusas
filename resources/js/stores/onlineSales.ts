@@ -3,9 +3,17 @@ import { ref } from 'vue'
 import { onlineOrdersApi, storeSettingsApi } from '@/api/onlineSales.api'
 import { usePaginatedList } from '@/composables/usePaginatedList'
 
+export interface ShippingRate {
+  enabled: boolean
+  fee: number
+}
+
+/** Costos de envío: delivery en Lima y envío a provincia (Shalom). */
 export interface StoreSettings {
-  delivery_enabled: boolean
-  delivery_fee: number
+  delivery: ShippingRate
+  province: ShippingRate
+  /** Con el sistema conectado se cambian allá; aquí solo se consultan. */
+  managed_by_erp?: boolean
 }
 
 export const useOnlineSalesStore = defineStore('onlineSales', () => {

@@ -1,6 +1,6 @@
 import { api as client } from './client'
 
-/** Ventas online: pedidos de la web y configuración del delivery. */
+/** Ventas online: pedidos de la web y costos de envío. */
 export const onlineOrdersApi = {
   async list(params: Record<string, unknown> = {}) {
     const { data } = await client.get('/online-orders', { params })
@@ -25,7 +25,7 @@ export const storeSettingsApi = {
     return data
   },
 
-  async update(payload: { delivery_enabled: boolean; delivery_fee: number }) {
+  async update(payload: Record<'delivery' | 'province', { enabled: boolean; fee: number }>) {
     const { data } = await client.put('/store-settings', payload)
     return data
   },

@@ -3,14 +3,17 @@
 namespace Tests\Feature;
 
 use App\Enums\RoleName;
+use App\Models\InventoryCategory;
 use App\Models\InventoryItem;
 use App\Models\Package;
 use App\Models\Service;
+use App\Models\ServiceCategory;
 use App\Models\User;
 use Database\Seeders\RolePermissionSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Storage;
+use Illuminate\Support\Str;
 use Laravel\Sanctum\Sanctum;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
@@ -39,6 +42,25 @@ class CatalogPublicationTest extends TestCase
         foreach (['/', '/nosotros', '/servicios', '/productos'] as $url) {
             $this->get($url)->assertOk();
         }
+    }
+
+    #[Test]
+    public function el_pie_solo_enlaza_categorias_con_algo_publicado(): void
+    {
+        $suplementos = InventoryCategory::create(['name' => 'Suplementos', 'active' => true]);
+        $vitaminas = InventoryCategory::create(['name' => 'Vitaminas', 'active' => true]);
+        InventoryItem::factory()->sellable(40)->withStock(5)->create(['category_id' => $suplementos->id, 'is_published' => true]);
+        InventoryItem::factory()->sellable(30)->withStock(5)->create(['category_id' => $vitaminas->id, 'is_published' => false]);
+        $faciales = ServiceCategory::factory()->create(['name' => 'Faciales']);
+        Service::factory()->create(['category_id' => $faciales->id, 'is_published' => true]);
+
+        $footer = Str::after($this->get('/')->assertOk()->getContent(), '<footer');
+
+        $this->assertStringContainsString('/productos/suplementos', $footer);
+        $this->assertStringNotContainsString('/productos/vitaminas', $footer);
+        $this->assertStringContainsString('/servicios#faciales', $footer);
+        $this->assertStringNotContainsString('/servicios#podologia', $footer);
+        $this->assertStringNotContainsString('/servicios#paquetes', $footer, 'Sin paquetes publicados no se enlaza la sección.');
     }
 
     #[Test]

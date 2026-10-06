@@ -5,13 +5,24 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Concerns\ApiResponses;
 use App\Http\Controllers\Controller;
 use App\Models\StoreSetting;
+use App\Services\Erp\ErpClient;
+use App\Services\Shop\ShippingRates;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 
-/** Configuración de la tienda online: delivery y su costo extra. */
+/**
+ * Costos de envío de la tienda online: delivery en Lima y envío a provincia.
+ * Con el sistema conectado se cambian allá (Pedidos online → Costos de
+ * envío) y aquí solo se consultan.
+ */
 class StoreSettingController extends Controller
 {
     use ApiResponses;
+
+    public function __construct(
+        private readonly ShippingRates $rates,
+        private readonly ErpClient $erp,
+    ) {}
 
     public function show(): JsonResponse
     {
@@ -20,22 +31,25 @@ class StoreSettingController extends Controller
 
     public function update(Request $request): JsonResponse
     {
+        abort_if($this->erp->enabled(), 409, 'Los costos de envío se cambian en el sistema: Pedidos online → Costos de envío.');
+
         $data = $request->validate([
-            'delivery_enabled' => ['required', 'boolean'],
-            'delivery_fee' => ['required', 'numeric', 'min:0', 'max:9999'],
+            'delivery.enabled' => ['required', 'boolean'],
+            'delivery.fee' => ['required', 'numeric', 'min:0', 'max:9999'],
+            'province.enabled' => ['required', 'boolean'],
+            'province.fee' => ['required', 'numeric', 'min:0', 'max:9999'],
         ]);
 
-        StoreSetting::put('delivery_enabled', $data['delivery_enabled'] ? '1' : '0');
-        StoreSetting::put('delivery_fee', number_format((float) $data['delivery_fee'], 2, '.', ''));
+        foreach (['delivery', 'province'] as $zone) {
+            StoreSetting::put("{$zone}_enabled", $data[$zone]['enabled'] ? '1' : '0');
+            StoreSetting::put("{$zone}_fee", number_format((float) $data[$zone]['fee'], 2, '.', ''));
+        }
 
-        return $this->ok($this->settings(), 'Configuración de delivery guardada.');
+        return $this->ok($this->settings(), 'Costos de envío guardados.');
     }
 
     private function settings(): array
     {
-        return [
-            'delivery_enabled' => StoreSetting::deliveryEnabled(),
-            'delivery_fee' => StoreSetting::deliveryFee(),
-        ];
+        return $this->rates->all() + ['managed_by_erp' => $this->erp->enabled()];
     }
 }

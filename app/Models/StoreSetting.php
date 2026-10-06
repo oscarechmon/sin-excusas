@@ -4,7 +4,11 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Model;
 
-/** Configuración de la tienda online, como pares clave/valor. */
+/**
+ * Configuración de la tienda online, como pares clave/valor. Con el sistema
+ * conectado, los costos de envío se cambian allá (ShippingRates); estos
+ * quedan para cuando la web funciona sola.
+ */
 class StoreSetting extends Model
 {
     protected $primaryKey = 'key';
@@ -14,6 +18,9 @@ class StoreSetting extends Model
     protected $keyType = 'string';
 
     protected $fillable = ['key', 'value'];
+
+    /** Lo que se cobra si nadie lo cambió todavía. */
+    public const DEFAULT_FEES = ['delivery' => '10.00', 'province' => '12.00'];
 
     public static function get(string $key, ?string $default = null): ?string
     {
@@ -25,14 +32,22 @@ class StoreSetting extends Model
         static::query()->updateOrCreate(['key' => $key], ['value' => $value]);
     }
 
-    public static function deliveryEnabled(): bool
+    /**
+     * Costos de envío de aquí: delivery en Lima y envío a provincia.
+     *
+     * @return array<string, array{enabled: bool, fee: float}>
+     */
+    public static function shippingRates(): array
     {
-        return filter_var(static::get('delivery_enabled', '1'), FILTER_VALIDATE_BOOL);
-    }
+        $rates = [];
 
-    /** Costo extra que el administrador cobra por el delivery. */
-    public static function deliveryFee(): float
-    {
-        return round((float) static::get('delivery_fee', '0'), 2);
+        foreach (self::DEFAULT_FEES as $zone => $default) {
+            $rates[$zone] = [
+                'enabled' => filter_var(static::get("{$zone}_enabled", '1'), FILTER_VALIDATE_BOOL),
+                'fee' => round((float) static::get("{$zone}_fee", $default), 2),
+            ];
+        }
+
+        return $rates;
     }
 }

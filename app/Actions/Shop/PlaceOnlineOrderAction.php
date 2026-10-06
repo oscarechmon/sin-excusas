@@ -6,9 +6,9 @@ use App\Enums\FulfillmentType;
 use App\Enums\OnlineOrderStatus;
 use App\Models\ClientUser;
 use App\Models\OnlineOrder;
-use App\Models\StoreSetting;
 use App\Services\Erp\OnlineOrderRegistrar;
 use App\Services\Shop\CartLine;
+use App\Services\Shop\ShippingRates;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Validation\ValidationException;
@@ -21,7 +21,10 @@ use Illuminate\Validation\ValidationException;
  */
 class PlaceOnlineOrderAction
 {
-    public function __construct(private readonly OnlineOrderRegistrar $registrar) {}
+    public function __construct(
+        private readonly OnlineOrderRegistrar $registrar,
+        private readonly ShippingRates $shipping,
+    ) {}
 
     /**
      * @param  Collection<int,CartLine>  $lines
@@ -36,12 +39,20 @@ class PlaceOnlineOrderAction
         $fulfillment = FulfillmentType::from($data['fulfillment']);
         $hasProducts = $lines->contains(fn (CartLine $line) => $line->isProduct());
 
-        // Los servicios se atienden en el centro: el delivery es solo para productos.
-        if ($fulfillment === FulfillmentType::DELIVERY && (! $hasProducts || ! StoreSetting::deliveryEnabled())) {
+        // Los servicios se atienden en el centro: los envíos son solo para productos.
+        if ($fulfillment->isShipped() && ! $hasProducts) {
             throw ValidationException::withMessages([
-                'fulfillment' => 'El delivery solo está disponible para pedidos con productos.',
+                'fulfillment' => 'Los envíos solo están disponibles para pedidos con productos.',
             ]);
         }
+
+        // El costo se pregunta ahora: es lo que se cobra, no lo que se mostró.
+        if (! $this->shipping->enabled($fulfillment, fresh: true)) {
+            throw ValidationException::withMessages([
+                'fulfillment' => "{$fulfillment->label()} no está disponible por el momento. Elige otra forma de recibir tu pedido.",
+            ]);
+        }
+        $deliveryFee = $this->shipping->fee($fulfillment);
 
         foreach ($lines as $line) {
             if ($line->exceedsAvailable()) {
@@ -51,10 +62,10 @@ class PlaceOnlineOrderAction
             }
         }
 
-        $order = DB::transaction(function () use ($customer, $lines, $data, $fulfillment) {
+        $order = DB::transaction(function () use ($customer, $lines, $data, $fulfillment, $deliveryFee) {
             $isDelivery = $fulfillment === FulfillmentType::DELIVERY;
+            $isProvince = $fulfillment === FulfillmentType::PROVINCE;
             $subtotal = round($lines->sum(fn (CartLine $line) => $line->subtotal()), 2);
-            $deliveryFee = $isDelivery ? StoreSetting::deliveryFee() : 0.0;
 
             $order = OnlineOrder::create([
                 'code' => OnlineOrder::generateCode(),
@@ -63,10 +74,15 @@ class PlaceOnlineOrderAction
                 'status' => OnlineOrderStatus::PENDING_PAYMENT,
                 'fulfillment' => $fulfillment,
                 'recipient_name' => $data['recipient_name'],
+                'document_type' => $isProvince ? $data['document_type'] : null,
+                'document_number' => $isProvince ? $data['document_number'] : null,
                 'phone' => $data['phone'],
                 'address' => $isDelivery ? $data['address'] : null,
                 'district' => $isDelivery ? $data['district'] : null,
                 'reference' => $isDelivery ? ($data['reference'] ?? null) : null,
+                'department' => $isProvince ? $data['department'] : null,
+                'province' => $isProvince ? $data['province'] : null,
+                'agency' => $isProvince ? $data['agency'] : null,
                 'notes' => $data['notes'] ?? null,
                 'subtotal' => $subtotal,
                 'delivery_fee' => $deliveryFee,

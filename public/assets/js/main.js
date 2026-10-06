@@ -35,32 +35,55 @@
   }
 
   /* ------------------------------------------------------------------
-   * Checkout: muestra los campos de dirección y recalcula el total al
-   * elegir delivery o recojo. El servidor vuelve a calcular el total: esto
-   * es solo para que el cliente vea el monto antes de continuar.
+   * Checkout: muestra los campos de la forma de entrega elegida (dirección
+   * en Lima, documento y agencia Shalom en provincia) y recalcula el total
+   * con su costo. El servidor vuelve a calcular el total: esto es solo para
+   * que el cliente vea el monto antes de continuar.
    * ------------------------------------------------------------------ */
   function initCheckout() {
     var form = document.querySelector('[data-checkout]');
     if (!form) return;
 
-    var fields = form.querySelector('[data-delivery-fields]');
     var feeRow = form.querySelector('[data-fee-row]');
+    var feeLabel = form.querySelector('[data-fee-label]');
+    var feeAmount = form.querySelector('[data-fee-amount]');
     var total = form.querySelector('[data-total]');
     var subtotal = parseFloat(form.getAttribute('data-subtotal')) || 0;
-    var fee = parseFloat(form.getAttribute('data-fee')) || 0;
+    var money = function (value) {
+      return 'S/ ' + value.toLocaleString('en-US', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    };
 
     function sync() {
       var checked = form.querySelector('input[name="fulfillment"]:checked');
-      var isDelivery = !!checked && checked.value === 'delivery';
+      var mode = checked ? checked.value : 'pickup';
+      var fee = checked ? parseFloat(checked.getAttribute('data-fee')) || 0 : 0;
 
-      if (fields) {
-        fields.hidden = !isDelivery;
-        fields.querySelectorAll('[data-delivery-required]').forEach(function (input) {
-          input.required = isDelivery;
+      // Lo de un grupo oculto no se exige: solo se pide lo de la entrega elegida.
+      form.querySelectorAll('[data-fields]').forEach(function (group) {
+        var active = group.getAttribute('data-fields') === mode;
+        group.hidden = !active;
+        group.querySelectorAll('[data-group-required]').forEach(function (input) {
+          input.required = active;
         });
-      }
-      if (feeRow) feeRow.hidden = !isDelivery;
-      if (total) total.textContent = 'S/ ' + (subtotal + (isDelivery ? fee : 0)).toFixed(2);
+      });
+
+      if (feeRow) feeRow.hidden = fee <= 0;
+      if (feeLabel && checked) feeLabel.textContent = checked.getAttribute('data-label');
+      if (feeAmount) feeAmount.textContent = money(fee);
+      if (total) total.textContent = money(subtotal + fee);
+
+      syncDocument();
+    }
+
+    // El DNI son 8 dígitos; el carné de extranjería admite letras y hasta 12.
+    var docType = form.querySelector('[name="document_type"]');
+    var docNumber = form.querySelector('[name="document_number"]');
+    function syncDocument() {
+      if (!docType || !docNumber) return;
+      var isDni = docType.value === 'dni';
+      docNumber.maxLength = isDni ? 8 : 12;
+      docNumber.inputMode = isDni ? 'numeric' : 'text';
+      docNumber.placeholder = isDni ? 'Ej.: 45678912' : 'Ej.: 001234567';
     }
 
     form.addEventListener('change', sync);

@@ -4,6 +4,7 @@ namespace Tests\Feature;
 
 use App\Actions\Attendances\ConfirmAttendanceAction;
 use App\DTOs\AttendanceData;
+use App\Enums\FulfillmentType;
 use App\Enums\OnlineOrderStatus;
 use App\Enums\RoleName;
 use App\Exceptions\ErpException;
@@ -74,6 +75,15 @@ class ErpIntegrationTest extends TestCase
     private function orderPlaced(): array
     {
         return ['data' => ['order' => ['id' => 1], 'sale' => ['id' => 1], 'stock' => []]];
+    }
+
+    /** Costos de envío tal como los responde el sistema. */
+    private function shipping(float $delivery = 10, float $province = 12, bool $provinceEnabled = true): array
+    {
+        return ['data' => [
+            'delivery' => ['enabled' => true, 'fee' => $delivery, 'label' => 'Delivery en Lima'],
+            'province' => ['enabled' => $provinceEnabled, 'fee' => $province, 'label' => 'Envío a provincia (Shalom)'],
+        ]];
     }
 
     private function actingAsAdmin(): User
@@ -190,9 +200,12 @@ class ErpIntegrationTest extends TestCase
     public function la_ficha_del_producto_muestra_lo_del_sistema(): void
     {
         $crema = $this->linkedProduct(7, stock: 10, price: 40, name: 'Crema');
-        Http::fake([self::ERP.'/catalog*' => Http::response($this->catalog([$this->remote(7, [
-            'name' => 'Crema hidratante', 'price' => 55, 'stock' => 3, 'image_url' => 'https://sistema.test/storage/crema.jpg',
-        ])]))]);
+        Http::fake([
+            self::ERP.'/catalog*' => Http::response($this->catalog([$this->remote(7, [
+                'name' => 'Crema hidratante', 'price' => 55, 'stock' => 3, 'image_url' => 'https://sistema.test/storage/crema.jpg',
+            ])])),
+            self::ERP.'/shipping' => Http::response($this->shipping(delivery: 10, province: 15)),
+        ]);
 
         // El enlace con el nombre de la base lleva al nombre que dice el sistema.
         $this->get("/producto/{$crema->id}/crema")->assertStatus(301)->assertRedirect("/producto/{$crema->id}/crema-hidratante");
@@ -202,7 +215,10 @@ class ErpIntegrationTest extends TestCase
             ->assertSee('S/ 55.00')
             ->assertDontSee('S/ 40.00')
             ->assertSee('Últimas 3 unidades')
-            ->assertSee('https://sistema.test/storage/crema.jpg', false);
+            ->assertSee('https://sistema.test/storage/crema.jpg', false)
+            // Los costos de envío también los dice el sistema.
+            ->assertSee('Delivery en Lima · S/ 10.00')
+            ->assertSee('Envío a provincia por Shalom · S/ 15.00');
     }
 
     #[Test]
@@ -387,6 +403,70 @@ class ErpIntegrationTest extends TestCase
             && $r->header('X-Integration-Token')[0] === 'secreto-de-prueba');
         // También se mandó al crearse, todavía sin cobrar (para que el sistema lo vea).
         Http::assertSent(fn (HttpRequest $r) => $r->url() === self::ERP.'/orders' && $r['status'] === 'pending_payment');
+    }
+
+    #[Test]
+    public function el_envio_a_provincia_cobra_lo_que_dice_el_sistema_y_le_manda_los_datos_de_la_agencia(): void
+    {
+        $crema = $this->linkedProduct(7, stock: 10, price: 40);
+        Http::fake([
+            self::ERP.'/catalog*' => Http::response($this->catalog([$this->remote(7)])),
+            self::ERP.'/shipping' => Http::response($this->shipping(delivery: 10, province: 12)),
+            self::ERP.'/orders' => Http::response($this->orderPlaced()),
+        ]);
+
+        $this->actingAs(ClientUser::factory()->create(), 'customer');
+        $this->post('/carrito', ['type' => 'product', 'id' => $crema->id, 'quantity' => 2]);
+
+        $this->get('/checkout')->assertOk()
+            ->assertSee('Envío a provincia')
+            ->assertSee('S/ 12.00')
+            ->assertSee('assets/img/pagos/shalom.png', false)
+            ->assertSee('assets/img/pagos/visa.svg', false)
+            ->assertSee('assets/img/pagos/izipay.png', false);
+
+        $this->post('/checkout', [
+            'fulfillment' => 'province', 'recipient_name' => 'Ana María Pérez Quispe', 'phone' => '987654321',
+            'document_type' => 'dni', 'document_number' => '4567 8912', 'department' => 'Arequipa',
+            'province' => 'Arequipa', 'agency' => 'Shalom Av. Ejército, Cayma',
+        ])->assertRedirect();
+
+        $order = OnlineOrder::query()->latest('id')->firstOrFail();
+        $this->assertSame(FulfillmentType::PROVINCE, $order->fulfillment);
+        $this->assertEquals(12, $order->delivery_fee);
+        $this->assertEquals(92, $order->total);
+        $this->assertSame('45678912', $order->document_number, 'El documento se guarda sin espacios.');
+        Http::assertSent(fn (HttpRequest $r) => $r->url() === self::ERP.'/orders'
+            && $r['fulfillment'] === 'province'
+            && $r['delivery_fee'] == 12
+            && $r['document_type'] === 'dni'
+            && $r['document_number'] === '45678912'
+            && $r['department'] === 'Arequipa'
+            && $r['agency'] === 'Shalom Av. Ejército, Cayma');
+    }
+
+    #[Test]
+    public function si_el_sistema_apaga_el_envio_a_provincia_no_se_ofrece_ni_se_acepta(): void
+    {
+        $crema = $this->linkedProduct(7);
+        Http::fake([
+            self::ERP.'/catalog*' => Http::response($this->catalog([$this->remote(7)])),
+            self::ERP.'/shipping' => Http::response($this->shipping(provinceEnabled: false)),
+        ]);
+
+        $this->actingAs(ClientUser::factory()->create(), 'customer');
+        $this->post('/carrito', ['type' => 'product', 'id' => $crema->id, 'quantity' => 1]);
+
+        $this->get('/checkout')->assertOk()
+            ->assertDontSee('value="province"', false)
+            ->assertSee('Por el momento no hacemos envíos a provincia.');
+
+        $this->post('/checkout', [
+            'fulfillment' => 'province', 'recipient_name' => 'Ana María Pérez', 'phone' => '987654321',
+            'document_type' => 'dni', 'document_number' => '45678912', 'department' => 'Cusco',
+            'province' => 'Cusco', 'agency' => 'Shalom Cusco',
+        ])->assertSessionHasErrors('fulfillment');
+        $this->assertDatabaseCount('online_orders', 0);
     }
 
     #[Test]

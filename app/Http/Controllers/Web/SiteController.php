@@ -35,8 +35,8 @@ class SiteController extends Controller
     {
         // Una pestaña por categoría, y solo categorías con algo publicado.
         return view('site.services', [
-            'categories' => $this->catalog->serviceCategories(),
-            'packages' => $this->catalog->packages(),
+            'categories' => SiteMenu::serviceCategories(),
+            'packages' => SiteMenu::packages(),
         ]);
     }
 

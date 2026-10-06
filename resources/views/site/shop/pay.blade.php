@@ -37,6 +37,11 @@
     <div class="se-container">
       <p class="se-eyebrow se-eyebrow--row">Pedido {{ $order->code }}</p>
       <h1 class="se-pagehead__title">Pago seguro</h1>
+      <ol class="se-checkout-steps" aria-label="Pasos de la compra">
+        <li class="is-done"><span>✓</span> Datos y entrega</li>
+        <li class="is-current" aria-current="step"><span>2</span> Pago seguro</li>
+        <li><span>3</span> Seguimiento</li>
+      </ol>
     </div>
   </section>
 
@@ -49,11 +54,21 @@
               <div class="se-alert se-alert--error mb-4">El intento anterior no fue aprobado. Puedes volver a intentarlo.</div>
             @endif
 
+            <div class="se-pay-head">
+              <h2 class="se-checkout-title mb-0">Paga con tu tarjeta</h2>
+              <span class="se-secure__logos">
+                <span class="se-card-logo" title="Visa"><img src="{{ asset('assets/img/pagos/visa.svg') }}" alt="Visa" width="46" height="15"></span>
+                <span class="se-card-logo" title="Mastercard"><img src="{{ asset('assets/img/pagos/mastercard.svg') }}" alt="Mastercard" width="34" height="21"></span>
+              </span>
+            </div>
+
             @if ($gatewayError)
               <div class="se-alert se-alert--error">{{ $gatewayError }}</div>
             @elseif ($checkout['driver'] === 'izipay')
-              <p class="se-muted-note mb-4">Ingresa los datos de tu tarjeta. El cobro lo procesa Izipay; nosotros no vemos ni guardamos tu tarjeta.</p>
-              <div class="kr-embedded" kr-form-token="{{ $checkout['formToken'] }}"></div>
+              <p class="se-muted-note mb-4">Ingresa los datos de tu tarjeta Visa o Mastercard. Total a pagar: <strong>{{ $money($order->total) }}</strong>.</p>
+              <div class="se-pay-form">
+                <div class="kr-embedded" kr-form-token="{{ $checkout['formToken'] }}"></div>
+              </div>
             @else
               <div class="se-alert se-alert--warning mb-4">
                 <strong>Modo de prueba.</strong> Izipay aún no está configurado: elige el resultado del pago para simularlo.
@@ -69,6 +84,8 @@
                 @endforeach
               </div>
             @endif
+
+            @include('site.shop.partials.secure-payment', ['class' => 'mt-4', 'hideCards' => true])
           </div>
         </div>
 
@@ -83,10 +100,11 @@
             @endforeach
             <div class="se-summary-row se-summary-row--divider"><span>Subtotal</span><span>{{ $money($order->subtotal) }}</span></div>
             @if ((float) $order->delivery_fee > 0)
-              <div class="se-summary-row"><span>Delivery</span><span>{{ $money($order->delivery_fee) }}</span></div>
+              <div class="se-summary-row"><span>{{ $order->fulfillment->label() }}</span><span>{{ $money($order->delivery_fee) }}</span></div>
             @endif
             <div class="se-summary-row se-summary-row--total"><span>Total a pagar</span><span>{{ $money($order->total) }}</span></div>
-            <p class="se-muted-note mt-3 mb-0">{{ $order->fulfillment->label() }}@if ($order->address) · {{ $order->address }}, {{ $order->district }}@endif</p>
+
+            @include('site.shop.partials.delivery-card', ['order' => $order, 'class' => 'mt-4'])
           </aside>
         </div>
       </div>

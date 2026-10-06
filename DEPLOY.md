@@ -146,9 +146,10 @@ y la web es un cascarón que muestra lo que dice el sistema:
 |---|---|
 | Catálogo completo: productos, insumos, servicios, paquetes, precios, stock, compras, kardex | Contenido web (textos y fotos de las páginas) |
 | Lo que la web muestra de cada uno: **foto, descripción, "Publicar en la web"** y la duración de los servicios | Datos de la web (contacto, redes, medición) |
-| Clientes (ficha completa), agenda, atenciones y el saldo de sesiones de cada cliente | Delivery de la tienda (Ventas online → Delivery) |
-| Ventas (también de servicios y paquetes), cobros de saldos, caja, personal, comisiones, reportes | Usuarios de este panel |
+| Clientes (ficha completa), agenda, atenciones y el saldo de sesiones de cada cliente | Usuarios de este panel |
+| Ventas (también de servicios y paquetes), cobros de saldos, caja, personal, comisiones, reportes | |
 | Seguimiento de los pedidos online (preparación, envío, entrega, anulación) | |
+| **Costos de envío**: delivery en Lima y envío a provincia por Shalom (Pedidos online → Costos de envío) | Ventas online → Envíos solo los muestra |
 
 - El menú oculta lo que se hace allá y muestra **Ir al sistema**; la API lo
   rechaza (409) con un mensaje que dice dónde hacerlo.

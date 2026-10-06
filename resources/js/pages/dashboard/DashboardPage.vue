@@ -228,7 +228,7 @@ const { erp } = useErp()
 
 const shortcuts = computed(() => [
   { route: 'site-content', icon: 'pi pi-images', label: 'Contenido web', hint: 'Textos y fotos de la página', permission: 'settings.manage' },
-  { route: 'online-sales', icon: 'pi pi-globe', label: 'Tienda online', hint: 'Delivery y pedidos (consulta)', permission: 'online_sales.view' },
+  { route: 'online-sales', icon: 'pi pi-globe', label: 'Tienda online', hint: 'Pedidos y envíos (consulta)', permission: 'online_sales.view' },
   { route: 'site-settings', icon: 'pi pi-at', label: 'Datos de la web', hint: 'Contacto, redes y medición', permission: 'settings.manage' },
 ].filter((s) => authStore.hasPermission(s.permission)))
 

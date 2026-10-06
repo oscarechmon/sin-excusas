@@ -12,12 +12,12 @@
     <Tabs v-model:value="tab">
       <TabList>
         <Tab value="orders">Pedidos</Tab>
-        <Tab value="settings">Delivery</Tab>
+        <Tab value="settings">Envíos</Tab>
       </TabList>
 
       <TabPanels>
         <TabPanel value="orders">
-          <ErpNotice what="Los pedidos online" detail="Su preparación, envío y entrega se mueven allá; aquí se consultan y se configura el delivery." :syncable="false" />
+          <ErpNotice what="Los pedidos online" detail="Su preparación, envío y entrega se mueven allá, igual que los costos de envío; aquí se consultan." :syncable="false" />
           <Card class="filter-card">
             <template #content>
               <div class="filters">
@@ -82,7 +82,7 @@
             </Column>
             <Column header="Entrega" :style="{ width: '160px' }">
               <template #body="{ data }">
-                <i :class="data.fulfillment === 'delivery' ? 'pi pi-truck' : 'pi pi-shop'" class="fulfillment-icon" />
+                <i :class="fulfillmentIcon(data.fulfillment)" class="fulfillment-icon" />
                 {{ data.fulfillment_label }}
               </template>
             </Column>
@@ -106,33 +106,40 @@
 
         <TabPanel value="settings">
           <Card class="settings-card">
-            <template #title>Costo de delivery</template>
+            <template #title>Costos de envío</template>
             <template #subtitle>
-              Se suma al total cuando el cliente elige delivery. Solo aplica a pedidos con productos:
+              Se suman al total según cómo el cliente recibe su pedido. Solo aplican a pedidos con productos:
               los servicios se atienden en el centro.
             </template>
             <template #content>
               <div class="settings-form">
-                <div class="form-field form-field--inline">
-                  <ToggleSwitch v-model="settingsForm.delivery_enabled" input-id="delivery_enabled" :disabled="!canConfigure" />
-                  <label for="delivery_enabled">Ofrecer delivery en la web</label>
-                </div>
-                <div class="form-field">
-                  <label for="delivery_fee">Precio extra por delivery</label>
+                <Message v-if="managedByErp" severity="info" :closable="false">
+                  Se cambian en el
+                  <a :href="erp.url ?? '#'" target="_blank" rel="noopener">sistema</a>:
+                  Pedidos online → Costos de envío. Aquí ves lo que la web cobra hoy.
+                </Message>
+                <div v-for="zone in zones" :key="zone.key" class="shipping-zone">
+                  <div class="form-field form-field--inline">
+                    <ToggleSwitch v-model="settingsForm[zone.key].enabled" :input-id="zone.key + '_enabled'" :disabled="!editable" />
+                    <label :for="zone.key + '_enabled'">
+                      <strong>{{ zone.label }}</strong>
+                      <span class="cell-block zone-hint">{{ zone.hint }}</span>
+                    </label>
+                  </div>
                   <InputNumber
-                    v-model="settingsForm.delivery_fee"
-                    input-id="delivery_fee"
+                    v-model="settingsForm[zone.key].fee"
+                    :input-id="zone.key + '_fee'"
                     mode="currency"
                     currency="PEN"
                     locale="es-PE"
                     :min="0"
-                    :disabled="!canConfigure || !settingsForm.delivery_enabled"
+                    :disabled="!editable || !settingsForm[zone.key].enabled"
                   />
                 </div>
-                <Message v-if="!canConfigure" severity="info" :closable="false">
-                  Solo quien tiene el permiso de configuración puede cambiar el costo.
+                <Message v-if="!managedByErp && !canConfigure" severity="info" :closable="false">
+                  Solo quien tiene el permiso de configuración puede cambiar los costos.
                 </Message>
-                <div>
+                <div v-if="!managedByErp">
                   <Button label="Guardar" icon="pi pi-check" :loading="savingSettings" :disabled="!canConfigure" @click="saveSettings" />
                 </div>
               </div>
@@ -155,6 +162,7 @@ import { useFormat } from '@/composables/useFormat'
 import { extractMessage } from '@/composables/usePaginatedList'
 import OnlineOrderDetailDialog from './OnlineOrderDetailDialog.vue'
 import ErpNotice from '@/components/common/ErpNotice.vue'
+import { useErp } from '@/composables/useErp'
 import Button from 'primevue/button'
 import Card from 'primevue/card'
 import Column from 'primevue/column'
@@ -174,6 +182,10 @@ import Tag from 'primevue/tag'
 import ToggleSwitch from 'primevue/toggleswitch'
 
 const store = useOnlineSalesStore()
+const { erp } = useErp()
+
+const fulfillmentIcon = (value: string) =>
+  ({ delivery: 'pi pi-truck', province: 'pi pi-send' } as Record<string, string>)[value] ?? 'pi pi-shop'
 const auth = useAuthStore()
 const toast = useToast()
 const format = useFormat()
@@ -199,8 +211,14 @@ const statusOptions = [
 ]
 
 const fulfillmentOptions = [
-  { label: 'Delivery', value: 'delivery' },
+  { label: 'Delivery en Lima', value: 'delivery' },
+  { label: 'Envío a provincia', value: 'province' },
   { label: 'Recojo en el centro', value: 'pickup' },
+]
+
+const zones = [
+  { key: 'delivery' as const, label: 'Delivery en Lima', hint: 'A la dirección del cliente.' },
+  { key: 'province' as const, label: 'Envío a provincia (Shalom)', hint: 'Se recoge en la agencia Shalom con DNI o CE.' },
 ]
 
 const params = (page = 1) => ({
@@ -223,13 +241,23 @@ watch(detailVisible, (open) => {
   if (!open) store.reload()
 })
 
-const settingsForm = ref({ delivery_enabled: true, delivery_fee: 0 })
+const settingsForm = ref({
+  delivery: { enabled: true, fee: 10 },
+  province: { enabled: true, fee: 12 },
+})
+const managedByErp = computed(() => store.settings?.managed_by_erp ?? false)
+const editable = computed(() => canConfigure.value && !managedByErp.value)
 const savingSettings = ref(false)
 
 const loadSettings = async () => {
   try {
     await store.loadSettings()
-    if (store.settings) settingsForm.value = { ...store.settings }
+    if (store.settings) {
+      settingsForm.value = {
+        delivery: { ...store.settings.delivery },
+        province: { ...store.settings.province },
+      }
+    }
   } catch (err) {
     toast.add({ severity: 'error', summary: 'Error', detail: extractMessage(err, 'No se pudo cargar la configuración.'), life: 5000 })
   }
@@ -239,8 +267,8 @@ const saveSettings = async () => {
   savingSettings.value = true
   try {
     const response = await store.saveSettings({
-      delivery_enabled: settingsForm.value.delivery_enabled,
-      delivery_fee: Number(settingsForm.value.delivery_fee ?? 0),
+      delivery: { enabled: settingsForm.value.delivery.enabled, fee: Number(settingsForm.value.delivery.fee ?? 0) },
+      province: { enabled: settingsForm.value.province.enabled, fee: Number(settingsForm.value.province.fee ?? 0) },
     })
     toast.add({ severity: 'success', summary: 'Listo', detail: response.message, life: 3000 })
   } catch (err) {
@@ -277,5 +305,20 @@ onMounted(reload)
   display: flex;
   flex-direction: column;
   gap: 1.25rem;
+}
+
+.shipping-zone {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  padding: 0.85rem 1rem;
+  border: 1px solid var(--p-content-border-color, #e5e7eb);
+  border-radius: 10px;
+}
+
+.zone-hint {
+  color: #6b7280;
 }
 </style>

@@ -114,6 +114,62 @@ class OnlineStoreTest extends TestCase
     }
 
     #[Test]
+    public function sin_configurar_el_delivery_en_lima_cuesta_10_y_el_envio_a_provincia_12(): void
+    {
+        $customer = ClientUser::factory()->create();
+        $this->actingAs($customer, 'customer');
+        $this->post('/carrito', ['type' => 'product', 'id' => $this->product(price: 40)->id, 'quantity' => 1]);
+
+        $html = $this->get('/checkout')->assertOk()
+            ->assertSee('Delivery en Lima')
+            ->assertSee('S/ 10.00')
+            ->assertSee('Envío a provincia')
+            ->assertSee('S/ 12.00')
+            ->assertSee('Recojo en el centro')
+            ->getContent();
+        foreach (['document_number', 'province', 'agency', 'address'] as $field) {
+            $this->assertMatchesRegularExpression("/name=\"{$field}\" type=\"text\"\\s+value=\"\"/", $html, "«{$field}» empieza vacío.");
+        }
+
+        $this->post('/checkout', [
+            'fulfillment' => 'province', 'recipient_name' => 'Ana María Pérez Quispe', 'phone' => '987654321',
+            'document_type' => 'ce', 'document_number' => '001234567', 'department' => 'Piura',
+            'province' => 'Sullana', 'agency' => 'Shalom Sullana Centro',
+        ])->assertRedirect();
+
+        $order = OnlineOrder::query()->latest('id')->firstOrFail();
+        $this->assertEquals(12, $order->delivery_fee);
+        $this->assertEquals(52, $order->total);
+        $this->assertSame('ce', $order->document_type);
+        $this->assertSame('Sullana', $order->province);
+        $this->assertNull($order->address, 'Un envío a provincia no lleva dirección: se recoge en la agencia.');
+    }
+
+    #[Test]
+    public function el_envio_a_provincia_pide_documento_valido_nombre_completo_y_agencia(): void
+    {
+        $this->actingAs(ClientUser::factory()->create(), 'customer');
+        $this->post('/carrito', ['type' => 'product', 'id' => $this->product()->id, 'quantity' => 1]);
+
+        $this->post('/checkout', ['fulfillment' => 'province', 'recipient_name' => 'Ana Pérez', 'phone' => '987654321'])
+            ->assertSessionHasErrors(['document_type', 'document_number', 'department', 'province', 'agency']);
+
+        $this->post('/checkout', [
+            'fulfillment' => 'province', 'recipient_name' => 'Ana', 'phone' => '987654321',
+            'document_type' => 'dni', 'document_number' => '1234567', 'department' => 'Cusco',
+            'province' => 'Cusco', 'agency' => 'Shalom Cusco',
+        ])->assertSessionHasErrors(['document_number' => 'El DNI debe tener 8 dígitos.']);
+
+        $this->post('/checkout', [
+            'fulfillment' => 'province', 'recipient_name' => 'Ana', 'phone' => '987654321',
+            'document_type' => 'dni', 'document_number' => '12345678', 'department' => 'Atlántida',
+            'province' => 'Cusco', 'agency' => 'Shalom Cusco',
+        ])->assertSessionHasErrors(['recipient_name', 'department']);
+
+        $this->assertSame(0, OnlineOrder::count());
+    }
+
+    #[Test]
     public function el_recojo_en_el_centro_no_cobra_delivery(): void
     {
         StoreSetting::put('delivery_fee', '12.50');
@@ -294,7 +350,31 @@ class OnlineStoreTest extends TestCase
         Sanctum::actingAs($user);
 
         $this->getJson('/api/online-orders')->assertOk();
-        $this->putJson('/api/store-settings', ['delivery_enabled' => true, 'delivery_fee' => 1])->assertForbidden();
+        $this->putJson('/api/store-settings', [
+            'delivery' => ['enabled' => true, 'fee' => 1],
+            'province' => ['enabled' => true, 'fee' => 1],
+        ])->assertForbidden();
+    }
+
+    #[Test]
+    public function sin_el_sistema_el_panel_cambia_los_costos_de_lima_y_provincia(): void
+    {
+        $admin = User::factory()->create(['active' => true]);
+        $admin->assignRole(RoleName::ADMINISTRADOR->value);
+        Sanctum::actingAs($admin);
+
+        $this->getJson('/api/store-settings')->assertOk()
+            ->assertJsonPath('data.delivery.fee', 10)
+            ->assertJsonPath('data.province.fee', 12)
+            ->assertJsonPath('data.managed_by_erp', false);
+
+        $this->putJson('/api/store-settings', [
+            'delivery' => ['enabled' => true, 'fee' => 11],
+            'province' => ['enabled' => false, 'fee' => 14.5],
+        ])->assertOk()
+            ->assertJsonPath('data.delivery.fee', 11)
+            ->assertJsonPath('data.province.enabled', false)
+            ->assertJsonPath('data.province.fee', 14.5);
     }
     /** La web agrega por fetch: una sola petición, sin recargar la página. */
     #[Test]

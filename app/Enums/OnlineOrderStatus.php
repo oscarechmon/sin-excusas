@@ -52,7 +52,7 @@ enum OnlineOrderStatus: string
             self::PENDING_PAYMENT, self::PAYMENT_FAILED => [self::CANCELLED],
             self::PAID => [self::PREPARING, self::CANCELLED],
             self::PREPARING => [
-                $fulfillment === FulfillmentType::DELIVERY ? self::SHIPPED : self::READY_FOR_PICKUP,
+                $fulfillment->isShipped() ? self::SHIPPED : self::READY_FOR_PICKUP,
                 self::CANCELLED,
             ],
             self::SHIPPED, self::READY_FOR_PICKUP => [self::DELIVERED],
@@ -81,7 +81,7 @@ enum OnlineOrderStatus: string
         return [
             self::PAID,
             self::PREPARING,
-            $fulfillment === FulfillmentType::DELIVERY ? self::SHIPPED : self::READY_FOR_PICKUP,
+            $fulfillment->isShipped() ? self::SHIPPED : self::READY_FOR_PICKUP,
             self::DELIVERED,
         ];
     }

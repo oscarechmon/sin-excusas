@@ -8,11 +8,11 @@ use App\Exceptions\ErpException;
 use App\Http\Controllers\Controller;
 use App\Http\Requests\PlaceOnlineOrderRequest;
 use App\Models\OnlineOrder;
-use App\Models\StoreSetting;
 use App\Services\Payments\PaymentGatewayException;
 use App\Services\Payments\PaymentGatewayManager;
 use App\Services\Shop\Cart;
 use App\Services\Shop\CartLine;
+use App\Services\Shop\ShippingRates;
 use App\Services\Shop\StoreCatalog;
 use Illuminate\Contracts\View\View;
 use Illuminate\Http\RedirectResponse;
@@ -22,7 +22,7 @@ class CheckoutController extends Controller
 {
     private const STOCK_UNCONFIRMED = 'No pudimos confirmar el stock con nuestro sistema y, para no cobrarte algo que no tengamos, no seguimos con el pago. Intenta nuevamente en unos minutos.';
 
-    public function show(Request $request, Cart $cart): View|RedirectResponse
+    public function show(Request $request, Cart $cart, ShippingRates $shipping): View|RedirectResponse
     {
         $lines = $cart->lines();
 
@@ -34,8 +34,7 @@ class CheckoutController extends Controller
             'lines' => $lines,
             'subtotal' => round($lines->sum(fn (CartLine $line) => $line->subtotal()), 2),
             'hasProducts' => $lines->contains(fn (CartLine $line) => $line->isProduct()),
-            'deliveryEnabled' => StoreSetting::deliveryEnabled(),
-            'deliveryFee' => StoreSetting::deliveryFee(),
+            'rates' => $shipping->all(),
             'customer' => $request->user('customer'),
         ]);
     }

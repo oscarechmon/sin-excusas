@@ -29,7 +29,12 @@
         <section class="order-detail__box">
           <h3>Entrega · {{ order.fulfillment_label }}</h3>
           <p class="cell-strong">{{ order.recipient_name }} · {{ order.phone }}</p>
+          <p v-if="order.document_number">{{ order.document_type === 'ce' ? 'CE' : 'DNI' }} {{ order.document_number }}</p>
           <p v-if="order.address">{{ order.address }}, {{ order.district }}</p>
+          <template v-if="order.fulfillment === 'province'">
+            <p>{{ order.province }}, {{ order.department }}</p>
+            <p class="cell-muted">Agencia Shalom: {{ order.agency }}</p>
+          </template>
           <p v-if="order.reference" class="cell-muted">Ref.: {{ order.reference }}</p>
           <p v-if="order.notes" class="cell-muted">Nota del cliente: {{ order.notes }}</p>
         </section>
@@ -53,7 +58,7 @@
 
       <div class="order-detail__totals">
         <span>Subtotal</span><span>{{ format.money(order.subtotal) }}</span>
-        <span>Delivery</span><span>{{ format.money(order.delivery_fee) }}</span>
+        <span>{{ order.fulfillment_label }}</span><span>{{ format.money(order.delivery_fee) }}</span>
         <strong>Total</strong><strong>{{ format.money(order.total) }}</strong>
       </div>
 

@@ -32,6 +32,16 @@ class ErpClient
             ->get('catalog', $ids === null ? [] : ['ids' => $ids]));
     }
 
+    /**
+     * Costos de envío que se cobran: delivery en Lima y envío a provincia.
+     *
+     * @return array<string, array{enabled: bool, fee: float}>
+     */
+    public function shippingRates(): array
+    {
+        return $this->send(fn (PendingRequest $http) => $http->timeout((int) config('erp.read_timeout', 5))->get('shipping'));
+    }
+
     /** @return array<string, mixed> El ítem tal como lo describe el catálogo. */
     public function importProduct(array $payload): array
     {

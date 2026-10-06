@@ -71,7 +71,7 @@
             </table>
             <div class="se-summary-row se-summary-row--divider"><span>Subtotal</span><span>{{ $money($order->subtotal) }}</span></div>
             @if ((float) $order->delivery_fee > 0)
-              <div class="se-summary-row"><span>Delivery</span><span>{{ $money($order->delivery_fee) }}</span></div>
+              <div class="se-summary-row"><span>{{ $order->fulfillment->label() }}</span><span>{{ $money($order->delivery_fee) }}</span></div>
             @endif
             <div class="se-summary-row se-summary-row--total"><span>Total</span><span>{{ $money($order->total) }}</span></div>
           </div>
@@ -80,12 +80,7 @@
         <div class="col-12 col-lg-5">
           <div class="se-panel mb-4">
             <h2 class="se-serif mb-3" style="--fs: 1.75rem;">Entrega</h2>
-            <p class="mb-1"><strong>{{ $order->fulfillment->label() }}</strong></p>
-            <p class="se-muted-note mb-0">
-              {{ $order->recipient_name }} · {{ $order->phone }}
-              @if ($order->address)<br>{{ $order->address }}, {{ $order->district }}@endif
-              @if ($order->reference)<br>Ref.: {{ $order->reference }}@endif
-            </p>
+            @include('site.shop.partials.delivery-card', ['order' => $order])
           </div>
 
           <div class="se-panel">
