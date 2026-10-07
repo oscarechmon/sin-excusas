@@ -104,7 +104,9 @@ class ErpFichasCommand extends Command
     {
         $current = $remote[$local->erp_id] ?? null;
 
-        if ($current === null) {
+        // Lo eliminado o desactivado allá no se muestra: no hay ficha que pasar
+        // (y a un eliminado el sistema ni la recibe).
+        if ($current === null || ! ($current['active'] ?? false)) {
             $this->skipped++;
 
             return;

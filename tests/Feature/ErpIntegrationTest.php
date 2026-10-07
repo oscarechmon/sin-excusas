@@ -757,15 +757,18 @@ class ErpIntegrationTest extends TestCase
         $sinFotoAlla->update(['description' => 'Crema de la web', 'image_path' => 'catalog/products/crema.jpg']);
         $conFotoAlla = $this->linkedProduct(9, name: 'Sérum');
         $conFotoAlla->update(['image_path' => 'catalog/products/serum.jpg']);
+        $eliminadoAlla = $this->linkedProduct(11, name: 'Eliminado');
+        $eliminadoAlla->update(['image_path' => 'catalog/products/serum.jpg']);
         Storage::disk('public')->put('catalog/products/crema.jpg', 'imagen');
         Storage::disk('public')->put('catalog/products/serum.jpg', 'imagen');
 
         $serum = $this->remote(9, ['web_published' => true, 'image_url' => 'https://sistema.test/storage/products/9/serum.webp']);
+        $eliminado = $this->remote(11, ['web_published' => null, 'image_url' => null, 'active' => false]);
         Http::fake([
             self::ERP.'/catalog*' => Http::sequence()
-                ->push($this->catalog([$this->remote(7, ['web_published' => true, 'image_url' => null]), $serum]))
+                ->push($this->catalog([$this->remote(7, ['web_published' => true, 'image_url' => null]), $serum, $eliminado]))
                 // La segunda vez, la foto ya está allá.
-                ->push($this->catalog([$this->remote(7, ['web_published' => true, 'image_url' => 'https://sistema.test/storage/products/7/crema.webp']), $serum])),
+                ->push($this->catalog([$this->remote(7, ['web_published' => true, 'image_url' => 'https://sistema.test/storage/products/7/crema.webp']), $serum, $eliminado])),
             self::ERP.'/products/*/web' => Http::response(['data' => []]),
             self::ERP.'/categories/describe' => Http::response(['data' => ['updated' => false]]),
         ]);
@@ -777,6 +780,7 @@ class ErpIntegrationTest extends TestCase
             && $r->isMultipart()
             && collect($r->data())->pluck('name')->all() === ['image']);
         Http::assertNotSent(fn (HttpRequest $r) => $r->url() === self::ERP.'/products/9/web');
+        Http::assertNotSent(fn (HttpRequest $r) => $r->url() === self::ERP.'/products/11/web');
 
         // Ya pasada, repetirlo (como en cada despliegue) no manda nada.
         $this->artisan('erp:fichas')->assertSuccessful();
