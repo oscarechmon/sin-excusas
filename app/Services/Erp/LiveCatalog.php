@@ -20,9 +20,9 @@ use Illuminate\Support\Facades\Log;
  * La web no administra nada de eso: es un cascarón que muestra lo que dice el
  * sistema. Sus filas de productos, servicios y paquetes solo enlazan cada ítem
  * (`erp_id`) para el carrito y los pedidos, y al mostrarlas se completan con lo
- * del sistema (`hydrate`) sin escribir en la base. Lo que el sistema todavía no
- * tiene (si se publica, imagen, duración de lo que venía de la web) se toma de
- * lo que la fila tenía de antes.
+ * del sistema (`hydrate`) sin escribir en la base. La foto es solo la del
+ * sistema; lo que allá todavía no se decidió (si se publica, la descripción y
+ * la duración de lo que venía de la web) se toma de lo que la fila tenía.
  *
  * Para no consultar al sistema en cada página, lo leído se reutiliza unos
  * segundos (`erp.catalog_ttl`) y cada aviso de cambio del sistema lo invalida.
@@ -133,6 +133,7 @@ class LiveCatalog
     {
         if ($item === null) {
             $this->overlay($model, ['active' => false, 'stock' => 0]);
+            $model->useErpImage(null);
 
             return;
         }
@@ -156,6 +157,7 @@ class LiveCatalog
     {
         if ($item === null) {
             $this->overlay($model, ['active' => false]);
+            $model->useErpImage(null);
 
             return;
         }

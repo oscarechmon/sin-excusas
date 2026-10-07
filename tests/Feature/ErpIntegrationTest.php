@@ -682,6 +682,25 @@ class ErpIntegrationTest extends TestCase
     }
 
     #[Test]
+    public function la_foto_es_solo_la_del_sistema_aunque_aqui_quede_una(): void
+    {
+        $conFoto = $this->linkedProduct(7, name: 'Crema');
+        $conFoto->update(['image_path' => 'catalog/products/crema-vieja.jpg']);
+        $sinFoto = $this->linkedProduct(9, name: 'Sérum');
+        $sinFoto->update(['image_path' => 'catalog/products/serum-viejo.jpg']);
+        Http::fake([self::ERP.'/catalog*' => Http::response($this->catalog([
+            $this->remote(7, ['name' => 'Crema', 'web_published' => true, 'image_url' => 'https://sistema.test/storage/products/7/crema.webp']),
+            $this->remote(9, ['name' => 'Sérum', 'web_published' => true, 'image_url' => null]),
+        ]))]);
+
+        $this->get('/productos')
+            ->assertOk()
+            ->assertSee('https://sistema.test/storage/products/7/crema.webp', false)
+            ->assertDontSee('crema-vieja.jpg')
+            ->assertDontSee('serum-viejo.jpg');
+    }
+
+    #[Test]
     public function si_el_sistema_lo_retira_o_lo_elimina_deja_de_verse(): void
     {
         $this->linkedProduct(7, name: 'Retirada');   // publicada aquí desde antes
@@ -728,6 +747,40 @@ class ErpIntegrationTest extends TestCase
             && $r['duration_minutes'] === 45 && $r['web_published'] === true && $r['description'] === 'Facial web');
         Http::assertNotSent(fn (HttpRequest $r) => $r->url() === self::ERP."/products/{$yaPasado->erp_id}/web");
         Http::assertSent(fn (HttpRequest $r) => str_ends_with($r->url(), '/categories/describe') && $r['description'] === 'Para el rostro');
+    }
+
+    #[Test]
+    public function fichas_pasa_la_foto_que_falta_en_el_sistema_aunque_alla_ya_se_publique(): void
+    {
+        Storage::fake('public');
+        $sinFotoAlla = $this->linkedProduct(7, name: 'Crema');
+        $sinFotoAlla->update(['description' => 'Crema de la web', 'image_path' => 'catalog/products/crema.jpg']);
+        $conFotoAlla = $this->linkedProduct(9, name: 'Sérum');
+        $conFotoAlla->update(['image_path' => 'catalog/products/serum.jpg']);
+        Storage::disk('public')->put('catalog/products/crema.jpg', 'imagen');
+        Storage::disk('public')->put('catalog/products/serum.jpg', 'imagen');
+
+        $serum = $this->remote(9, ['web_published' => true, 'image_url' => 'https://sistema.test/storage/products/9/serum.webp']);
+        Http::fake([
+            self::ERP.'/catalog*' => Http::sequence()
+                ->push($this->catalog([$this->remote(7, ['web_published' => true, 'image_url' => null]), $serum]))
+                // La segunda vez, la foto ya está allá.
+                ->push($this->catalog([$this->remote(7, ['web_published' => true, 'image_url' => 'https://sistema.test/storage/products/7/crema.webp']), $serum])),
+            self::ERP.'/products/*/web' => Http::response(['data' => []]),
+            self::ERP.'/categories/describe' => Http::response(['data' => ['updated' => false]]),
+        ]);
+
+        $this->artisan('erp:fichas')->assertSuccessful();
+
+        // Solo la foto: si se publica y la descripción ya las decide el sistema.
+        Http::assertSent(fn (HttpRequest $r) => $r->url() === self::ERP.'/products/7/web'
+            && $r->isMultipart()
+            && collect($r->data())->pluck('name')->all() === ['image']);
+        Http::assertNotSent(fn (HttpRequest $r) => $r->url() === self::ERP.'/products/9/web');
+
+        // Ya pasada, repetirlo (como en cada despliegue) no manda nada.
+        $this->artisan('erp:fichas')->assertSuccessful();
+        $this->assertCount(1, Http::recorded(fn (HttpRequest $r) => str_ends_with($r->url(), '/web')));
     }
 
     #[Test]

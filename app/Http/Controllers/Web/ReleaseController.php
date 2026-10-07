@@ -4,11 +4,13 @@ namespace App\Http\Controllers\Web;
 
 use App\Http\Controllers\Concerns\VerifiesDeployToken;
 use App\Http\Controllers\Controller;
+use App\Services\Erp\ErpClient;
 use FilesystemIterator;
 use Illuminate\Http\JsonResponse;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Log;
 use RecursiveDirectoryIterator;
 use RecursiveIteratorIterator;
 use ZipArchive;
@@ -175,6 +177,20 @@ class ReleaseController extends Controller
         foreach (['optimize:clear' => [], 'migrate' => ['--force' => true], 'optimize' => []] as $command => $options) {
             Artisan::call($command, $options);
             $output[$command] = trim(Artisan::output());
+        }
+
+        // La web solo muestra las fotos del sistema: si aquí quedó alguna que
+        // allá falta, se pasa. Solo manda lo que falta, así que repetirlo en
+        // cada despliegue no cambia nada; si el sistema no contesta, se intenta
+        // en el próximo sin frenar este.
+        if (app(ErpClient::class)->enabled()) {
+            try {
+                Artisan::call('erp:fichas');
+                $output['erp:fichas'] = trim(Artisan::output());
+            } catch (\Throwable $e) {
+                Log::warning('No se pudieron pasar las fichas al sistema al desplegar.', ['error' => $e->getMessage()]);
+                $output['erp:fichas'] = 'No se pudo: '.$e->getMessage();
+            }
         }
 
         return $output;

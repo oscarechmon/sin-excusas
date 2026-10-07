@@ -235,26 +235,32 @@ el enlace `erp_id`).
    corta, la siguiente corrida sigue donde quedó. Desde aquí la operación diaria
    se hace en el sistema.
 
-### Pasar las fotos y descripciones de la web al sistema (una vez)
+### Pasar las fotos y descripciones de la web al sistema
 
 Antes, la foto, la descripción y qué se publicaba se editaban en este panel.
-Para que desde ahora todo se edite en el sistema, primero despliega el
-**sistema** y después esta web, y entonces, por SSH:
+Ahora todo se edita en el sistema y **la web muestra solo la foto del
+sistema**: si allá un ítem no tiene foto, aquí sale sin foto, aunque esta web
+tenga una de antes.
+
+Lo que la web tenía lo pasa `php artisan erp:fichas`, que **corre solo al final
+de cada despliegue** (aparece como `erp:fichas` en la respuesta de
+`/deploy/release`). También se puede lanzar a mano por SSH:
 
 ```bash
 cd ~/domains/sinexcusas.org.pe/public_html
 php artisan erp:fichas
 ```
 
-Manda al sistema la foto, la descripción, si se publicaba y la duración de cada
-producto, servicio y paquete enlazado, y las descripciones de las categorías
-(solo a las que allá no tienen una). Se puede repetir: lo que en el sistema ya
-tiene decidido "Publicar en la web" no se toca. Mientras no lo ejecutes, la web
-sigue mostrando lo que tenía, así que no queda vacía en ningún momento.
+Manda al sistema la foto de cada producto, servicio y paquete enlazado que allá
+**no tiene foto**, y —solo si allá todavía no se decidió "Publicar en la
+web"— su descripción, si se publicaba y la duración; además, las descripciones
+de las categorías que allá no tienen una. Repetirlo no cambia nada: solo manda
+lo que falta.
 
-Revisa después en el sistema **Productos y servicios**: tienen que verse las
-fotos y la etiqueta **En la web** en lo publicado. Si las fotos salen rotas,
-en el sistema falta `php artisan storage:link` o su `APP_URL` está mal.
+Revisa después en el sistema **Centro › Servicios** e **Inventario ›
+Productos**: tienen que verse las fotos. Si salen rotas, revisa el `APP_URL` del
+sistema (el enlace `public/storage` lo crea su despliegue y, si faltara, las
+fotos se sirven igual).
 
 **Recomendado: sincronización periódica.** Los avisos llegan solos, pero si una
 de las dos estuvo caída alguno se pierde (un pedido, un cliente, un paso del
@@ -293,7 +299,8 @@ volver a vender.
 | `No se pudo conectar con el sistema` | `ERP_URL` mal escrita o el sistema caído. Al volver, **Sincronizar ahora**. |
 | `403` al sincronizar o en el log del sistema | `ERP_TOKEN` (aquí) e `INTEGRATION_TOKEN` (allá) no coinciden; tras corregir, `php artisan optimize` en ambos. |
 | Un cambio del sistema no aparece en la web | Aunque se pierda el aviso, se ve a más tardar en 60 segundos. Revisa que en el sistema tenga **Publicar en la web** y esté activo. Si tarda más, pulsa **Sincronizar ahora** en el Dashboard y revisa `INTEGRATION_WEB_URL` en el sistema. |
-| Fotos rotas en la web | Las fotos se muestran desde el sistema: ahí falta `php artisan storage:link` o su `APP_URL` está mal. |
+| Fotos rotas en la web | Las fotos se muestran desde el sistema: abre la dirección de la foto (`sistema.sinexcusas.org.pe/storage/…`). Si da 404, despliega la última versión del sistema (sirve las fotos aunque falte `public/storage`). |
+| Un producto o servicio sale sin foto | En el sistema no tiene foto: súbela allá. La web ya no usa las suyas; las que tenía las pasa `erp:fichas` al desplegar. |
 | "No pudimos confirmar el stock con nuestro sistema" al comprar | La web no logró hablar con el sistema al confirmar el pedido o el pago, y por eso no cobró. Revisa que el sistema esté arriba y `ERP_URL`. |
 | Nota interna "No se pudo registrar la venta en el sistema" en un pedido | El sistema no contestó al pagar. **Sincronizar ahora** (o el cron) lo registra. |
 | Se queda extrayendo y no termina | Baja `DEPLOY_CHUNK` en el `.env` (por ejemplo 400) y vuelve a lanzar. |

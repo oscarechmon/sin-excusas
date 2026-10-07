@@ -338,13 +338,40 @@
     });
   }
 
+  /* ------------------------------------------------------------------
+   * Fotos del catálogo que no cargan
+   *
+   * Las fotos vienen del sistema (sistema.sinexcusas.org.pe). Si una no
+   * carga, en vez del ícono roto con el nombre encima se ve el mismo
+   * recuadro que cuando el ítem no tiene foto.
+   * ------------------------------------------------------------------ */
+  function replaceBrokenPhoto(img) {
+    if (!img.closest('.se-media')) return;
+    var placeholder = document.createElement('div');
+    placeholder.className = 'se-placeholder';
+    placeholder.textContent = img.alt;
+    img.replaceWith(placeholder);
+  }
+
+  function initBrokenPhotos() {
+    // El error no burbujea: se escucha en la fase de captura.
+    document.addEventListener('error', function (event) {
+      if (event.target instanceof HTMLImageElement) replaceBrokenPhoto(event.target);
+    }, true);
+  }
+
   function init() {
     initCategoryTabs();
     initCheckout();
     initResendCountdown();
     document.querySelectorAll('[data-qty-stepper]').forEach(syncStepper);
+    // Las que fallaron antes de que este script cargara (va con defer).
+    document.querySelectorAll('.se-media img').forEach(function (img) {
+      if (img.complete && img.naturalWidth === 0 && img.getAttribute('src')) replaceBrokenPhoto(img);
+    });
   }
 
+  initBrokenPhotos();
   initCartForms();
   initQtySteppers();
 

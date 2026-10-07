@@ -21,9 +21,10 @@ use Illuminate\Support\Facades\Storage;
  * categorías. Desde ahí todo se administra en el sistema y la web solo lo
  * muestra.
  *
- * Se puede repetir sin miedo: lo que en el sistema ya tiene decidido si se
- * publica (porque ya se pasó o porque se editó allá) no se toca, y una
- * categoría solo toma la descripción si allá no tiene una.
+ * Se puede repetir sin miedo (corre en cada despliegue): lo que en el sistema
+ * ya tiene decidido si se publica (porque ya se pasó o porque se editó allá) no
+ * se toca, la foto solo se manda si allá no tiene una, y una categoría solo
+ * toma la descripción si allá no tiene una.
  */
 class ErpFichasCommand extends Command
 {
@@ -103,17 +104,29 @@ class ErpFichasCommand extends Command
     {
         $current = $remote[$local->erp_id] ?? null;
 
-        // Ya se decidió allá (se pasó antes o se editó en el sistema): manda el sistema.
-        if ($current === null || ($current['web_published'] ?? null) !== null) {
+        if ($current === null) {
             $this->skipped++;
 
             return;
         }
 
-        $fields = array_filter($fields, fn ($value) => $value !== null && $value !== '');
-        $image = $local->image_path && Storage::disk('public')->exists($local->image_path)
+        // Si se publica, la descripción y la duración: solo si allá no se
+        // decidió todavía (se pasó antes o se editó en el sistema: manda el sistema).
+        $fields = ($current['web_published'] ?? null) === null
+            ? array_filter($fields, fn ($value) => $value !== null && $value !== '')
+            : [];
+
+        // La foto va aparte: la web solo muestra la del sistema, así que si allá
+        // no hay una se pasa la de aquí, aunque lo demás ya se haya decidido allá.
+        $image = blank($current['image_url'] ?? null) && $local->image_path && Storage::disk('public')->exists($local->image_path)
             ? Storage::disk('public')->path($local->image_path)
             : null;
+
+        if ($fields === [] && $image === null) {
+            $this->skipped++;
+
+            return;
+        }
 
         try {
             $erp->sendWebDetails($local->erp_id, $fields, $image);
