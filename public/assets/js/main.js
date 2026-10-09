@@ -339,6 +339,25 @@
   }
 
   /* ------------------------------------------------------------------
+   * Galería de la ficha (producto o servicio): al tocar una miniatura,
+   * esa foto pasa a verse en grande en lugar de la principal.
+   * ------------------------------------------------------------------ */
+  function initGalleries() {
+    document.addEventListener('click', function (event) {
+      var thumb = event.target.closest ? event.target.closest('[data-gallery-thumb]') : null;
+      if (!thumb) return;
+      var gallery = thumb.closest('[data-gallery]');
+      var main = gallery ? gallery.querySelector('[data-gallery-main]') : null;
+      if (!main) return;
+      main.src = thumb.getAttribute('data-src');
+      gallery.querySelectorAll('[data-gallery-thumb]').forEach(function (other) {
+        if (other === thumb) other.setAttribute('aria-current', 'true');
+        else other.removeAttribute('aria-current');
+      });
+    });
+  }
+
+  /* ------------------------------------------------------------------
    * Fotos del catálogo que no cargan
    *
    * Las fotos vienen del sistema (sistema.sinexcusas.org.pe). Si una no
@@ -374,6 +393,7 @@
   initBrokenPhotos();
   initCartForms();
   initQtySteppers();
+  initGalleries();
 
   if (window.Turbo) {
     document.addEventListener('turbo:load', init);

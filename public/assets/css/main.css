@@ -1951,27 +1951,35 @@ button:focus-visible,
 }
 
 /* ==========================================================================
-   21. Ficha de producto (/producto/{id}/{nombre})
+   21. Ficha de producto o servicio (/producto/{id}/{nombre}, /servicio/…)
    ========================================================================== */
 
-/* Tarjeta del listado: toda la tarjeta lleva a la ficha (stretched-link en
-   el título); el botón de compra queda por encima y funciona aparte. */
-.se-tile--product { position: relative; }
-.se-tile--product .se-tile__body { position: static; }
-.se-tile--product .se-tile__actions { position: relative; z-index: 2; }
+/* Tarjeta del listado (producto o servicio): toda la tarjeta lleva a la
+   ficha (stretched-link en el título); el botón de compra y el enlace de
+   WhatsApp quedan por encima y funcionan aparte. */
+.se-tile--product,
+.se-tile--link { position: relative; }
+.se-tile--product .se-tile__body,
+.se-tile--link .se-tile__body { position: static; }
+.se-tile--product .se-tile__actions,
+.se-tile--link .se-tile__actions { position: relative; z-index: 2; }
 
 .se-tile__title a { color: inherit; }
 .se-tile__title a:focus-visible { outline: 0; }
 
-.se-tile--product:has(.stretched-link:focus-visible) {
+.se-tile--product:has(.stretched-link:focus-visible),
+.se-tile--link:has(.stretched-link:focus-visible) {
   outline: 2px solid var(--se-gold);
   outline-offset: 3px;
 }
 
-.se-tile--product:hover .se-tile__title a { color: var(--se-gold-dark); }
+.se-tile--product:hover .se-tile__title a,
+.se-tile--link:hover .se-tile__title a { color: var(--se-gold-dark); }
 
-.se-tile--product .se-media > img { transition: transform .5s ease; }
-.se-tile--product:hover .se-media > img { transform: scale(1.04); }
+.se-tile--product .se-media > img,
+.se-tile--link .se-media > img { transition: transform .5s ease; }
+.se-tile--product:hover .se-media > img,
+.se-tile--link:hover .se-media > img { transform: scale(1.04); }
 
 .se-product { padding-block: 40px 96px; }
 
@@ -2016,6 +2024,55 @@ button:focus-visible,
   width: 100%;
   height: 100%;
   object-fit: contain;
+}
+
+/* Servicio: fotos de ambiente, más anchas que altas (como su tarjeta). */
+.se-product__media--photo { aspect-ratio: 4 / 3; }
+
+/* Miniaturas bajo la foto: la elegida pasa a verse en grande (main.js). */
+.se-gallery__thumbs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+.se-gallery__thumb {
+  display: block;
+  width: 76px;
+  height: 76px;
+  padding: 0;
+  background: #FFFFFF;
+  border: 1px solid var(--se-line);
+  opacity: .72;
+  overflow: hidden;
+  cursor: pointer;
+  transition: border-color var(--se-transition), opacity var(--se-transition);
+}
+
+.se-gallery__thumb img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+}
+
+.se-gallery__thumb:hover { opacity: 1; border-color: var(--se-gold-light); }
+
+.se-gallery__thumb:focus-visible {
+  opacity: 1;
+  outline: 2px solid var(--se-gold);
+  outline-offset: 2px;
+}
+
+.se-gallery__thumb[aria-current="true"] {
+  opacity: 1;
+  border: 2px solid var(--se-gold);
+}
+
+@media (max-width: 575.98px) {
+  .se-gallery__thumb { width: 62px; height: 62px; }
 }
 
 .se-product__title {

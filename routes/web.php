@@ -25,6 +25,8 @@ Route::controller(SiteController::class)->name('site.')->group(function () {
     Route::get('/', 'home')->name('home');
     Route::get('/nosotros', 'about')->name('about');
     Route::get('/servicios', 'services')->name('services');
+    // Ficha de un servicio, igual que la de un producto (el id manda).
+    Route::get('/servicio/{id}/{slug?}', 'service')->whereNumber('id')->name('service');
     Route::get('/productos/{category?}', 'products')->name('products');
     // Ficha de un producto. El nombre en la URL es solo para que se lea bien:
     // manda el id, así renombrarlo en el sistema no rompe enlaces.

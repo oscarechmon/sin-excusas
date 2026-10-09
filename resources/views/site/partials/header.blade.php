@@ -46,9 +46,11 @@
       <div class="collapse navbar-collapse" id="seMainNav">
         <ul class="navbar-nav se-nav d-flex flex-lg-row gap-lg-4 mb-0">
           @foreach ($links as $route => $label)
+            {{-- La ficha de un servicio también marca "Servicios". --}}
+            @php($active = request()->routeIs($route) || ($route === 'site.services' && request()->routeIs('site.service')))
             <li class="nav-item">
-              <a @class(['nav-link', 'active' => request()->routeIs($route)])
-                 @if (request()->routeIs($route)) aria-current="page" @endif
+              <a @class(['nav-link', 'active' => $active])
+                 @if ($active) aria-current="page" @endif
                  href="{{ route($route) }}">{{ $label }}</a>
             </li>
           @endforeach

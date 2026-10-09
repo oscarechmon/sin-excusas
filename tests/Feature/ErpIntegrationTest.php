@@ -701,6 +701,41 @@ class ErpIntegrationTest extends TestCase
     }
 
     #[Test]
+    public function las_fichas_muestran_las_fotos_adicionales_del_sistema_debajo_de_la_principal(): void
+    {
+        $crema = $this->linkedProduct(7, name: 'Crema');
+        $facial = Service::factory()->create(['name' => 'Limpieza facial', 'is_published' => false]);
+        $facial->forceFill(['erp_id' => 8])->save();
+        Http::fake([self::ERP.'/shipping' => Http::response($this->shipping()), self::ERP.'/catalog*' => Http::response($this->catalog([
+            $this->remote(7, ['name' => 'Crema', 'web_published' => true,
+                'image_url' => 'https://sistema.test/storage/products/7/principal.webp',
+                'gallery' => ['https://sistema.test/storage/products/7/textura.webp', 'https://sistema.test/storage/products/7/uso.webp'],
+            ]),
+            $this->remote(8, ['type' => 'service', 'name' => 'Limpieza facial', 'category' => 'Faciales', 'stock' => null,
+                'web_published' => true, 'duration_minutes' => 60,
+                'image_url' => 'https://sistema.test/storage/products/8/cabina.webp',
+                'gallery' => ['https://sistema.test/storage/products/8/antes-despues.webp'],
+            ]),
+        ]))]);
+
+        $ficha = $this->get($crema->webUrl())->assertOk();
+        $ficha->assertSee('src="https://sistema.test/storage/products/7/principal.webp" alt="Crema" data-gallery-main', false)
+            ->assertSee('data-src="https://sistema.test/storage/products/7/textura.webp"', false)
+            ->assertSee('data-src="https://sistema.test/storage/products/7/uso.webp"', false)
+            ->assertSee('Ver foto 3 de 3');
+
+        // La tarjeta del listado sigue solo con la principal.
+        $this->get('/productos')->assertOk()->assertDontSee('textura.webp');
+
+        $this->get('/servicios')->assertOk()->assertSee($facial->webUrl(), false)->assertDontSee('antes-despues.webp');
+        $this->get($facial->webUrl())
+            ->assertOk()
+            ->assertSee('data-src="https://sistema.test/storage/products/8/cabina.webp"', false)
+            ->assertSee('data-src="https://sistema.test/storage/products/8/antes-despues.webp"', false)
+            ->assertSee('Ver foto 2 de 2');
+    }
+
+    #[Test]
     public function si_el_sistema_lo_retira_o_lo_elimina_deja_de_verse(): void
     {
         $this->linkedProduct(7, name: 'Retirada');   // publicada aquí desde antes

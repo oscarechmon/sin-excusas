@@ -21,7 +21,7 @@
   @else
     <ul class="se-drawer__list">
       @foreach ($lines as $line)
-        @php($url = $line->isProduct() ? $line->model->webUrl() : route('site.services'))
+        @php($url = $line->model->webUrl())
         <li class="se-drawer__item">
           <a href="{{ $url }}" tabindex="-1" aria-hidden="true">
             @if ($line->model->imageUrl())

@@ -52,38 +52,7 @@
           <div class="row g-4 mt-3">
             @foreach ($category->services as $service)
               <div class="col-12 col-md-6 col-lg-4">
-                <article class="se-tile">
-                  <div class="se-media se-media--card">
-                    @if ($service->imageUrl())
-                      <img src="{{ $service->imageUrl() }}" alt="{{ $service->name }}" loading="lazy">
-                    @else
-                      <div class="se-placeholder">{{ $service->name }}</div>
-                    @endif
-                  </div>
-                  <div class="se-tile__body p-4">
-                    <h3 class="se-tile__title" style="--fs: 1.625rem;">{{ $service->name }}</h3>
-                    @if ($service->description)
-                      <p class="se-tile__text se-clamp">{{ $service->description }}</p>
-                    @endif
-                    @if ((float) $service->price > 0)
-                      <p class="se-price mb-0">{{ $money($service->price) }}</p>
-                    @endif
-                    <div class="se-tile__meta">
-                      <span class="se-tile__duration">{{ $service->duration_minutes }} min</span>
-                      @if ($link = $ask($service->name))
-                        <a class="se-link-mini" href="{{ $link }}" target="_blank" rel="noopener">Consultar →</a>
-                      @endif
-                    </div>
-                    @if ((float) $service->price > 0)
-                      <form method="post" action="{{ route('shop.cart.add') }}" class="mt-3" data-cart-add data-turbo="false">
-                        @csrf
-                        <input type="hidden" name="type" value="service">
-                        <input type="hidden" name="id" value="{{ $service->id }}">
-                        <button type="submit" class="se-btn se-btn--gold se-btn--sm w-100">Comprar en línea</button>
-                      </form>
-                    @endif
-                  </div>
-                </article>
+                @include('site.partials.service-card')
               </div>
             @endforeach
           </div>

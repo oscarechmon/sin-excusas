@@ -12,7 +12,7 @@
     '@context' => 'https://schema.org',
     '@type' => 'Product',
     'name' => $product->name,
-    'image' => $product->imageUrl(),
+    'image' => $product->photoUrls() ?: null,
     'description' => $product->description ? Str::squish($product->description) : null,
     'category' => $category?->name,
     'offers' => $price > 0 ? [
@@ -49,13 +49,7 @@
 
       <div class="row g-4 g-lg-5 mt-0">
         <div class="col-12 col-lg-6">
-          <div class="se-product__media">
-            @if ($product->imageUrl())
-              <img src="{{ $product->imageUrl() }}" alt="{{ $product->name }}">
-            @else
-              <div class="se-placeholder">{{ $product->name }}</div>
-            @endif
-          </div>
+          @include('site.partials.gallery', ['item' => $product])
         </div>
 
         <div class="col-12 col-lg-6">

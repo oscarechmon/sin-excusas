@@ -76,4 +76,23 @@ class SiteController extends Controller
 
         return view('site.product', compact('product', 'category', 'related'));
     }
+
+    /**
+     * Ficha de un servicio, como la de un producto: sale de lo mismo que arma
+     * /servicios (todo servicio publicado tiene categoría) y los relacionados
+     * son los de su misma categoría.
+     */
+    public function service(int $id, ?string $slug = null): View|RedirectResponse
+    {
+        $category = SiteMenu::serviceCategories()->first(fn ($c) => $c->services->contains('id', $id)) ?? abort(404);
+        $service = $category->services->firstWhere('id', $id);
+
+        if ($slug !== Str::slug($service->name)) {
+            return redirect()->to($service->webUrl(), 301);
+        }
+
+        $related = $category->services->where('id', '!=', $service->id)->take(3)->values();
+
+        return view('site.service', compact('service', 'category', 'related'));
+    }
 }

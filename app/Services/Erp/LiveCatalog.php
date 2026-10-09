@@ -14,8 +14,9 @@ use Illuminate\Support\Facades\Log;
 
 /**
  * El catálogo del sistema leído en vivo por su API: nombre, categoría, precio,
- * stock, si sigue activo, si se publica en la web, imagen, descripción, la
- * duración de un servicio y, en un paquete, sus sesiones, vigencia y servicios.
+ * stock, si sigue activo, si se publica en la web, imagen y fotos adicionales,
+ * descripción, la duración de un servicio y, en un paquete, sus sesiones,
+ * vigencia y servicios.
  *
  * La web no administra nada de eso: es un cascarón que muestra lo que dice el
  * sistema. Sus filas de productos, servicios y paquetes solo enlazan cada ítem
@@ -150,7 +151,7 @@ class LiveCatalog
             'min_stock' => $item['stock_min'] ?? 0,
             'active' => (bool) $item['active'],
         ] + $this->webFields($model, $item));
-        $model->setRelation('category', $category)->useErpImage($item['image_url'] ?? null);
+        $model->setRelation('category', $category)->useErpImage($item['image_url'] ?? null, (array) ($item['gallery'] ?? []));
     }
 
     private function service(Service $model, ?array $item): void
@@ -173,7 +174,7 @@ class LiveCatalog
             'active' => (bool) $item['active'],
             'duration_minutes' => $item['duration_minutes'] ?? $model->duration_minutes,
         ] + $this->webFields($model, $item));
-        $model->setRelation('category', $category)->useErpImage($item['image_url'] ?? null);
+        $model->setRelation('category', $category)->useErpImage($item['image_url'] ?? null, (array) ($item['gallery'] ?? []));
     }
 
     /** @param  array<int, Service>  $includedServices  Servicios de aquí por id del sistema. */

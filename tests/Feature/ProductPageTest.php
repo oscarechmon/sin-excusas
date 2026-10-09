@@ -4,12 +4,14 @@ namespace Tests\Feature;
 
 use App\Models\InventoryCategory;
 use App\Models\InventoryItem;
+use App\Models\Service;
+use App\Models\ServiceCategory;
 use App\Services\Shop\Cart;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use PHPUnit\Framework\Attributes\Test;
 use Tests\TestCase;
 
-/** Ficha de producto ("Comprar ahora") y carrito lateral. */
+/** Fichas de producto y de servicio ("Comprar ahora") y carrito lateral. */
 class ProductPageTest extends TestCase
 {
     use RefreshDatabase;
@@ -62,6 +64,52 @@ class ProductPageTest extends TestCase
         $this->get($oculto->webUrl())->assertNotFound();
         $this->get($insumo->webUrl())->assertNotFound();
         $this->get('/producto/999999/lo-que-sea')->assertNotFound();
+    }
+
+    #[Test]
+    public function con_una_sola_foto_no_hay_miniaturas(): void
+    {
+        $product = $this->product(['name' => 'Omega 3', 'image_path' => 'catalog/products/omega.jpg']);
+
+        $this->get($product->webUrl())
+            ->assertOk()
+            ->assertSee('catalog/products/omega.jpg', false)
+            ->assertDontSee('data-gallery-thumb', false);
+    }
+
+    #[Test]
+    public function la_ficha_de_un_servicio_muestra_el_servicio_con_su_compra(): void
+    {
+        $faciales = ServiceCategory::factory()->create(['name' => 'Faciales']);
+        $service = Service::factory()->create([
+            'name' => 'Limpieza facial premium', 'category_id' => $faciales->id, 'price' => 150,
+            'duration_minutes' => 90, 'description' => "Limpieza profunda.\n\nPiel luminosa.", 'is_published' => true,
+        ]);
+        Service::factory()->create(['name' => 'Hidratación intensiva', 'category_id' => $faciales->id, 'is_published' => true]);
+
+        $this->get('/servicios')->assertOk()->assertSee($service->webUrl(), false);
+
+        $this->get($service->webUrl())
+            ->assertOk()
+            ->assertSee('Limpieza facial premium')
+            ->assertSee('S/ 150.00')
+            ->assertSee('90 min')
+            ->assertSee('<p>Piel luminosa.</p>', false)
+            ->assertSee('name="type" value="service"', false)
+            ->assertSee('Comprar ahora')
+            ->assertSee('También te puede interesar')
+            ->assertSee('Hidratación intensiva');
+    }
+
+    #[Test]
+    public function la_ficha_de_un_servicio_tiene_una_sola_url_y_solo_si_esta_publicado(): void
+    {
+        $service = Service::factory()->create(['name' => 'Dermapen', 'is_published' => true]);
+        $oculto = Service::factory()->create(['name' => 'Oculto', 'is_published' => false]);
+
+        $this->get("/servicio/{$service->id}/nombre-viejo")->assertStatus(301)->assertRedirect($service->webUrl());
+        $this->get($oculto->webUrl())->assertNotFound();
+        $this->get('/servicio/999999/lo-que-sea')->assertNotFound();
     }
 
     #[Test]

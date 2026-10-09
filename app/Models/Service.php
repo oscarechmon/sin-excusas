@@ -9,6 +9,7 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Support\Str;
 
 class Service extends Model
 {
@@ -53,6 +54,12 @@ class Service extends Model
     public function attendances(): HasMany
     {
         return $this->hasMany(Attendance::class);
+    }
+
+    /** Ficha del servicio en la web pública. */
+    public function webUrl(): string
+    {
+        return route('site.service', [$this->id, Str::slug($this->name)]);
     }
 
     public function scopeActive(Builder $query): Builder
