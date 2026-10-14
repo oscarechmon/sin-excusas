@@ -1,5 +1,8 @@
 @php
     $productCategories = \App\Support\SiteMenu::productCategories();
+    // «Promociones» solo aparece cuando el sistema tiene alguna publicada.
+    $promotionsActive = request()->routeIs('site.promotions');
+    $showPromotions = $promotionsActive || \App\Support\SiteMenu::hasPromotions();
     $cartCount = app(\App\Services\Shop\Cart::class)->count();
     $customer = auth('customer')->user();
     $whatsapp = \App\Support\SiteSettings::whatsappUrl();
@@ -69,6 +72,14 @@
               @endforeach
             </ul>
           </li>
+
+          @if ($showPromotions)
+            <li class="nav-item">
+              <a @class(['nav-link se-nav__promo', 'active' => $promotionsActive])
+                 @if ($promotionsActive) aria-current="page" @endif
+                 href="{{ route('site.promotions') }}">Promociones</a>
+            </li>
+          @endif
         </ul>
 
         <div class="se-header__actions ms-lg-auto mt-3 mt-lg-0">

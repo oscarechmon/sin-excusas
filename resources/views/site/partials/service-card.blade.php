@@ -12,6 +12,7 @@
     @else
       <div class="se-placeholder">{{ $service->name }}</div>
     @endif
+    @include('site.partials.promo-badge', ['item' => $service])
   </div>
   <div class="se-tile__body p-4">
     <h3 class="se-tile__title" style="--fs: 1.625rem;">
@@ -21,7 +22,7 @@
       <p class="se-tile__text se-clamp">{{ $service->description }}</p>
     @endif
     @if ($price > 0)
-      <p class="se-price mb-0">S/ {{ number_format($price, 2) }}</p>
+      @include('site.partials.price', ['item' => $service, 'price' => $price, 'class' => 'mb-0'])
     @endif
     <div class="se-tile__meta">
       <span class="se-tile__duration">{{ $service->duration_minutes }} min</span>

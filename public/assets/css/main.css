@@ -2434,3 +2434,42 @@ button:focus-visible,
 @media (max-width: 575.98px) {
   .se-drawer { --bs-offcanvas-width: 100%; }
 }
+
+/* ==========================================================================
+   23. Promociones (se marcan en el sistema: /promociones y en cada tarjeta)
+   ========================================================================== */
+
+/* Etiqueta sobre la foto de la tarjeta («−20 %» o «Promoción»). No tapa el
+   enlace de la tarjeta: los clics pasan de largo. */
+.se-promo-badge {
+  position: absolute;
+  top: 14px;
+  left: 14px;
+  z-index: 2;
+  padding: 7px 12px;
+  background: var(--se-ink);
+  color: var(--se-gold-pale);
+  font-size: .656rem;
+  letter-spacing: .2em;
+  line-height: 1;
+  text-transform: uppercase;
+  pointer-events: none;
+}
+
+/* En la ficha va junto al precio. */
+.se-promo-badge--inline {
+  position: static;
+  display: inline-block;
+}
+
+/* Precio normal tachado delante del de promoción. */
+.se-price__old {
+  margin-right: .35em;
+  font-size: .62em;
+  font-weight: 400;
+  color: var(--se-muted-light);
+  text-decoration-thickness: 1px;
+}
+
+/* «Promociones» en el menú: en dorado para que se note. */
+.se-nav .nav-link.se-nav__promo { color: var(--se-gold); }

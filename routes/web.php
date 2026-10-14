@@ -31,6 +31,8 @@ Route::controller(SiteController::class)->name('site.')->group(function () {
     // Ficha de un producto. El nombre en la URL es solo para que se lea bien:
     // manda el id, así renombrarlo en el sistema no rompe enlaces.
     Route::get('/producto/{id}/{slug?}', 'product')->whereNumber('id')->name('product');
+    // Lo que el sistema tiene en promoción: servicios y productos.
+    Route::get('/promociones', 'promotions')->name('promotions');
 });
 
 // URLs antiguas: 301 para no romper enlaces ni perder posicionamiento.

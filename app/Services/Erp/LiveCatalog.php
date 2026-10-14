@@ -13,8 +13,9 @@ use Illuminate\Support\Facades\Cache;
 use Illuminate\Support\Facades\Log;
 
 /**
- * El catálogo del sistema leído en vivo por su API: nombre, categoría, precio,
- * stock, si sigue activo, si se publica en la web, imagen y fotos adicionales,
+ * El catálogo del sistema leído en vivo por su API: nombre, categoría, precio
+ * (el de promoción, si está en promoción con uno), stock, si sigue activo, si
+ * se publica en la web y si está en promoción, imagen y fotos adicionales,
  * descripción, la duración de un servicio y, en un paquete, sus sesiones,
  * vigencia y servicios.
  *
@@ -140,13 +141,14 @@ class LiveCatalog
         }
 
         $category = $this->category(InventoryCategory::class, $item);
+        $price = $this->chargedPrice($model, $item);
 
         $this->overlay($model, [
             'name' => $item['name'],
             'category_id' => $category?->getKey(),
             'unit' => $item['unit'] ?? $model->unit,
             'cost' => $item['cost'] ?? 0,
-            'sale_price' => ($item['price'] ?? 0) > 0 ? $item['price'] : null,
+            'sale_price' => $price > 0 ? $price : null,
             'stock' => (float) ($item['stock'] ?? 0),
             'min_stock' => $item['stock_min'] ?? 0,
             'active' => (bool) $item['active'],
@@ -170,7 +172,7 @@ class LiveCatalog
         $this->overlay($model, [
             'name' => $item['name'],
             'category_id' => $category->getKey(),
-            'price' => $item['price'] ?? 0,
+            'price' => $this->chargedPrice($model, $item),
             'active' => (bool) $item['active'],
             'duration_minutes' => $item['duration_minutes'] ?? $model->duration_minutes,
         ] + $this->webFields($model, $item));
@@ -228,6 +230,23 @@ class LiveCatalog
         $services = Service::whereIn('erp_id', array_unique($erpIds))->orderBy('name')->get();
 
         return $this->hydrate($services, $items + $this->snapshot())->keyBy('erp_id')->all();
+    }
+
+    /**
+     * Lo que se cobra: el precio de promoción si el sistema lo tiene en
+     * promoción con uno; si no, el normal. El normal queda en el ítem solo para
+     * mostrarlo tachado.
+     *
+     * @param  array<string, mixed>  $item
+     */
+    private function chargedPrice(InventoryItem|Service $model, array $item): float
+    {
+        $price = (float) ($item['price'] ?? 0);
+        $promotion = isset($item['promotion_price']) ? (float) $item['promotion_price'] : null;
+
+        $model->useErpPromotion((bool) ($item['on_promotion'] ?? false), $price, $promotion);
+
+        return $model->regularPrice() !== null ? (float) $promotion : $price;
     }
 
     /**

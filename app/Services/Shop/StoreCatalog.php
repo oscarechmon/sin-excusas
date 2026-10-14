@@ -97,6 +97,26 @@ class StoreCatalog
     }
 
     /**
+     * Si hay algún producto o servicio publicado en promoción. Se mira en lo
+     * leído del sistema, sin armar el catálogo: lo usa el menú en cada página.
+     */
+    public function hasPromotions(): bool
+    {
+        if (! $this->erp->enabled()) {
+            return false;
+        }
+
+        foreach ($this->live->snapshot() as $item) {
+            if (in_array($item['type'] ?? 'product', ['product', 'service'], true)
+                && $item['active'] && ($item['web_published'] ?? false) && ($item['on_promotion'] ?? false)) {
+                return true;
+            }
+        }
+
+        return false;
+    }
+
+    /**
      * Productos que se pueden comprar en línea (publicados y con precio), por id.
      *
      * Con `$fresh`, precio y stock se le preguntan al sistema en el momento;

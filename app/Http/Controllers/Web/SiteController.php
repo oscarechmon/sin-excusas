@@ -40,6 +40,19 @@ class SiteController extends Controller
         ]);
     }
 
+    /**
+     * Servicios y productos que el sistema tiene en promoción, en una pestaña
+     * cada uno. Salen de lo mismo que arma /servicios y /productos: aquí nunca
+     * se ve algo que esos listados no publican.
+     */
+    public function promotions(): View
+    {
+        return view('site.promotions', [
+            'services' => SiteMenu::promotedServices(),
+            'products' => SiteMenu::promotedProducts(),
+        ]);
+    }
+
     /** Todos los productos, o los de una categoría (/productos/vitaminas). */
     public function products(?string $category = null): View
     {

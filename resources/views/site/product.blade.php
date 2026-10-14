@@ -58,7 +58,8 @@
 
           @if ($price > 0)
             <div class="d-flex flex-wrap align-items-center gap-3">
-              <p class="se-price se-product__price mb-0">S/ {{ number_format($price, 2) }}</p>
+              @include('site.partials.price', ['item' => $product, 'price' => $price, 'class' => 'se-product__price mb-0'])
+              @include('site.partials.promo-badge', ['item' => $product, 'inline' => true])
               @if ($stock < 1)
                 <span class="se-stock se-stock--out">Agotado</span>
               @elseif ($stock <= 5)

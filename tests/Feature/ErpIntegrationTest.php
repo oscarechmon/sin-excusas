@@ -868,4 +868,72 @@ class ErpIntegrationTest extends TestCase
         config(['erp.token' => null]);
         $this->getJson('/api/erp/status')->assertOk()->assertJsonPath('data.enabled', false);
     }
+
+    // ------------------------------------------------- Promociones
+
+    #[Test]
+    public function las_promociones_se_ven_con_su_precio_en_su_pagina_y_en_el_menu(): void
+    {
+        Http::fake([self::ERP.'/catalog*' => Http::response($this->catalog([
+            $this->remote(21, ['name' => 'Sérum vitamina C', 'price' => 100, 'web_published' => true,
+                'on_promotion' => true, 'promotion_price' => 80]),
+            $this->remote(22, ['type' => 'service', 'name' => 'Facial profundo', 'category' => 'Faciales', 'price' => 150,
+                'stock' => null, 'web_published' => true, 'duration_minutes' => 75, 'on_promotion' => true, 'promotion_price' => null]),
+            $this->remote(23, ['name' => 'Crema de siempre', 'price' => 60, 'web_published' => true]),
+            // En promoción pero sin publicar: no se ve en ningún lado.
+            $this->remote(24, ['name' => 'Insumo interno', 'web_published' => false, 'on_promotion' => true]),
+        ]))]);
+
+        // En su listado de siempre, con el precio normal tachado y el descuento.
+        $this->get('/productos')
+            ->assertOk()
+            ->assertSee('<del class="se-price__old">', false)
+            ->assertSee('S/ 100.00')
+            ->assertSee('S/ 80.00')
+            ->assertSee('−20&nbsp;%', false)
+            ->assertSee(route('site.promotions'), false);
+
+        $this->get('/promociones')
+            ->assertOk()
+            ->assertSee('Sérum vitamina C')
+            ->assertSee('Facial profundo')
+            ->assertSee('data-category="servicios"', false)
+            ->assertSee('data-category="productos"', false)
+            ->assertSee('Promoción')
+            ->assertDontSee('Crema de siempre')
+            ->assertDontSee('Insumo interno');
+
+        // Sin precio de promoción se ve al precio normal, sin tachar.
+        $facial = Service::where('erp_id', 22)->sole();
+        $this->get($facial->webUrl())->assertOk()->assertSee('S/ 150.00')->assertDontSee('se-price__old');
+    }
+
+    #[Test]
+    public function sin_promociones_el_menu_no_las_muestra(): void
+    {
+        Http::fake([self::ERP.'/catalog*' => Http::response($this->catalog([
+            $this->remote(21, ['name' => 'Sérum vitamina C', 'web_published' => true]),
+        ]))]);
+
+        $this->get('/productos')->assertOk()->assertDontSee(route('site.promotions'), false)->assertDontSee('se-promo-badge');
+        $this->get('/promociones')->assertOk()->assertSee('Por ahora no tenemos promociones activas.');
+    }
+
+    #[Test]
+    public function el_pedido_cobra_el_precio_de_promocion(): void
+    {
+        $crema = $this->linkedProduct(7, stock: 10, price: 40);
+        Http::fake([
+            self::ERP.'/catalog*' => Http::response($this->catalog([$this->remote(7, ['on_promotion' => true, 'promotion_price' => 30])])),
+            self::ERP.'/orders' => Http::response($this->orderPlaced()),
+        ]);
+
+        $order = $this->paidOrder($crema, 2);
+
+        $this->assertEquals(60, $order->total);
+        Http::assertSent(fn (HttpRequest $r) => $r->url() === self::ERP.'/orders'
+            && $r['status'] === 'paid'
+            && $r['items'][0]['product_id'] === 7
+            && $r['items'][0]['unit_price'] == 30);
+    }
 }

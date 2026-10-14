@@ -13,6 +13,7 @@
     @else
       <div class="se-placeholder">{{ $product->name }}</div>
     @endif
+    @include('site.partials.promo-badge', ['item' => $product])
   </div>
   <div class="se-tile__body">
     <p class="se-tile__kicker mb-0">{{ $kicker }}</p>
@@ -24,7 +25,7 @@
     @endif
 
     @if ($price > 0)
-      <p class="se-price mb-3">S/ {{ number_format($price, 2) }}</p>
+      @include('site.partials.price', ['item' => $product, 'price' => $price, 'class' => 'mb-3'])
       @if ($inStock)
         <form method="post" action="{{ route('shop.cart.add') }}" class="se-tile__actions mt-auto" data-cart-add data-turbo="false">
           @csrf

@@ -3,6 +3,7 @@
 namespace App\Models;
 
 use App\Models\Concerns\HasCatalogImage;
+use App\Models\Concerns\HasPromotion;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
@@ -13,7 +14,7 @@ use Illuminate\Support\Str;
 
 class InventoryItem extends Model
 {
-    use HasCatalogImage, HasFactory;
+    use HasCatalogImage, HasFactory, HasPromotion;
 
     protected $fillable = [
         'name',

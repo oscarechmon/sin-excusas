@@ -53,8 +53,9 @@
 
           <div class="d-flex flex-wrap align-items-center gap-3">
             @if ($price > 0)
-              <p class="se-price se-product__price mb-0">S/ {{ number_format($price, 2) }}</p>
+              @include('site.partials.price', ['item' => $service, 'price' => $price, 'class' => 'se-product__price mb-0'])
             @endif
+            @include('site.partials.promo-badge', ['item' => $service, 'inline' => true])
             @if ($service->duration_minutes)
               <span class="se-tile__duration">{{ $service->duration_minutes }} min</span>
             @endif
