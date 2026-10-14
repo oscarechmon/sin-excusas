@@ -49,7 +49,8 @@ final class SiteMenu
     }
 
     /**
-     * Servicios publicados en promoción, de lo mismo que arma /servicios.
+     * Servicios publicados en promoción, de lo mismo que arma /servicios y en
+     * su mismo orden.
      *
      * @return Collection<int,Service>
      */
@@ -58,13 +59,12 @@ final class SiteMenu
         return self::remember('site.promoted_services', fn () => self::serviceCategories()
             ->flatMap(fn (ServiceCategory $category) => $category->services)
             ->filter(fn (Service $service) => $service->onPromotion())
-            ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
             ->values());
     }
 
     /**
      * Productos publicados en promoción (con o sin categoría), de lo mismo que
-     * arma /productos.
+     * arma /productos y en su mismo orden.
      *
      * @return Collection<int,InventoryItem>
      */
@@ -74,7 +74,6 @@ final class SiteMenu
             ->flatMap(fn (InventoryCategory $category) => $category->items)
             ->concat(app(StoreCatalog::class)->uncategorizedProducts())
             ->filter(fn (InventoryItem $item) => $item->onPromotion())
-            ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
             ->values());
     }
 

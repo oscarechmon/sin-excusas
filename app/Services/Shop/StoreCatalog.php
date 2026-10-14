@@ -20,9 +20,9 @@ use Illuminate\Support\Collection;
  * Lo que la tienda muestra y vende.
  *
  * Sin el sistema conectado se lee de esta base, como siempre. Con el sistema,
- * la web es un cascarón: qué se publica, nombre, precio, stock, categoría,
- * imagen y descripción se leen en vivo del sistema (LiveCatalog), y aquí solo
- * queda el enlace de cada ítem para el carrito y los pedidos.
+ * la web es un cascarón: qué se publica y en qué orden, nombre, precio, stock,
+ * categoría, imagen y descripción se leen en vivo del sistema (LiveCatalog), y
+ * aquí solo queda el enlace de cada ítem para el carrito y los pedidos.
  */
 class StoreCatalog
 {
@@ -77,9 +77,7 @@ class StoreCatalog
                 ->get();
         }
 
-        $services = $this->published(Service::query(), 'service')->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE);
-
-        return $this->grouped($services, 'services');
+        return $this->grouped($this->inWebOrder($this->published(Service::query(), 'service')), 'services');
     }
 
     /** @return Collection<int, Package> Paquetes publicados con sus servicios, del más barato al más caro. */
@@ -185,12 +183,30 @@ class StoreCatalog
         return null;
     }
 
-    /** @return Collection<int, InventoryItem> Productos publicados, por nombre. */
+    /** @return Collection<int, InventoryItem> Productos publicados, en el orden del sistema. */
     private function publishedProducts(): Collection
     {
-        return $this->published(InventoryItem::query(), 'product')
-            ->sortBy('name', SORT_NATURAL | SORT_FLAG_CASE)
-            ->values();
+        return $this->inWebOrder($this->published(InventoryItem::query(), 'product'));
+    }
+
+    /**
+     * En el orden que se les dio en el sistema («Orden en la web»); lo que
+     * nunca se ordenó va al final, por nombre.
+     *
+     * @template TModel of InventoryItem|Service
+     *
+     * @param  Collection<int, TModel>  $items
+     * @return Collection<int, TModel>
+     */
+    private function inWebOrder(Collection $items): Collection
+    {
+        $snapshot = $this->live->snapshot();
+        $position = fn (Model $item): int => $snapshot[$item->erp_id]['sort_order'] ?? PHP_INT_MAX;
+
+        return $items->sortBy([
+            fn (Model $a, Model $b) => $position($a) <=> $position($b),
+            fn (Model $a, Model $b) => strnatcasecmp($a->name, $b->name),
+        ])->values();
     }
 
     /**
@@ -233,17 +249,27 @@ class StoreCatalog
     }
 
     /**
-     * Agrupa por la categoría que dice el sistema, en el orden en que se
-     * crearon aquí (las que aún no existen aquí, al final).
+     * Agrupa por la categoría que dice el sistema, en el orden que se les dio
+     * allá; las que nunca se ordenaron, después, en el orden en que se crearon
+     * aquí (las que aún no existen aquí, como «Otros», al final).
      *
      * @param  Collection<int, InventoryItem|Service>  $items
      * @return Collection<int, InventoryCategory|ServiceCategory>
      */
     private function grouped(Collection $items, string $relation): Collection
     {
+        $snapshot = $this->live->snapshot();
+
         return $items->groupBy(fn (Model $item) => $item->category->name)
-            ->map(fn (Collection $group) => $group->first()->category->setRelation($relation, $group->values()))
-            ->sortBy(fn (Model $category) => $category->getKey() ?? PHP_INT_MAX)
+            ->map(fn (Collection $group) => [
+                'order' => $snapshot[$group->first()->erp_id]['category_order'] ?? PHP_INT_MAX,
+                'category' => $group->first()->category->setRelation($relation, $group->values()),
+            ])
+            ->sortBy([
+                fn (array $a, array $b) => $a['order'] <=> $b['order'],
+                fn (array $a, array $b) => ($a['category']->getKey() ?? PHP_INT_MAX) <=> ($b['category']->getKey() ?? PHP_INT_MAX),
+            ])
+            ->pluck('category')
             ->values();
     }
 }

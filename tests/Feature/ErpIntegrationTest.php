@@ -869,6 +869,36 @@ class ErpIntegrationTest extends TestCase
         $this->getJson('/api/erp/status')->assertOk()->assertJsonPath('data.enabled', false);
     }
 
+    // ------------------------------------------------- Orden en la web
+
+    #[Test]
+    public function la_web_muestra_en_el_orden_que_se_dio_en_el_sistema(): void
+    {
+        Http::fake([self::ERP.'/catalog*' => Http::response($this->catalog([
+            // Productos: primero el que se puso primero; lo nunca ordenado, al final por nombre.
+            $this->remote(21, ['name' => 'Alfa colágeno', 'web_published' => true, 'sort_order' => 2, 'category_order' => 1]),
+            $this->remote(22, ['name' => 'Zeta omega', 'web_published' => true, 'sort_order' => 1, 'category_order' => 1]),
+            $this->remote(23, ['name' => 'Beta nuevo', 'web_published' => true, 'sort_order' => null, 'category_order' => 1]),
+            // Servicios: Corporales antes que Faciales, como se ordenó.
+            $this->remote(31, ['type' => 'service', 'name' => 'Limpieza facial', 'category' => 'Faciales', 'stock' => null,
+                'web_published' => true, 'sort_order' => 2, 'category_order' => 2]),
+            $this->remote(32, ['type' => 'service', 'name' => 'Dermapen', 'category' => 'Faciales', 'stock' => null,
+                'web_published' => true, 'sort_order' => 3, 'category_order' => 2, 'on_promotion' => true]),
+            $this->remote(33, ['type' => 'service', 'name' => 'Masaje reductor', 'category' => 'Corporales', 'stock' => null,
+                'web_published' => true, 'sort_order' => 1, 'category_order' => 1, 'on_promotion' => true]),
+        ]))]);
+
+        $this->get('/productos')->assertOk()->assertSeeInOrder(['Zeta omega', 'Alfa colágeno', 'Beta nuevo']);
+
+        $this->get('/servicios')->assertOk()->assertSeeInOrder([
+            'data-category="corporales"', 'data-category="faciales"',
+            'Masaje reductor', 'Limpieza facial', 'Dermapen',
+        ], false);
+
+        // Promociones sigue el mismo orden.
+        $this->get('/promociones')->assertOk()->assertSeeInOrder(['Masaje reductor', 'Dermapen']);
+    }
+
     // ------------------------------------------------- Promociones
 
     #[Test]
